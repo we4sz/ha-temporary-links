@@ -39,7 +39,7 @@ public class ApiController : ControllerBase
                 sendSmsImmediately: request.SendSms,
                 maxUses: request.MaxUses);
 
-            var fullUrl = _linkService.GetLinkUrl(link, baseUrl);
+            var fullUrl = await _linkService.GetLinkUrlAsync(link, baseUrl);
 
             return Ok(new CreateLinkResponse
             {

@@ -4,7 +4,6 @@ set -e
 CONFIG_PATH=/data/options.json
 
 # Extract configuration values from Home Assistant addon options
-EXTERNAL_URL=$(jq -r '.external_url' $CONFIG_PATH)
 TWILIO_ACCOUNT_SID=$(jq -r '.twilio_account_sid' $CONFIG_PATH)
 TWILIO_AUTH_TOKEN=$(jq -r '.twilio_auth_token' $CONFIG_PATH)
 TWILIO_PHONE_NUMBER=$(jq -r '.twilio_phone_number' $CONFIG_PATH)
@@ -12,7 +11,6 @@ DEFAULT_MESSAGE_TEMPLATE=$(jq -r '.default_message_template' $CONFIG_PATH)
 LOG_LEVEL=$(jq -r '.log_level' $CONFIG_PATH)
 
 # Export environment variables for the .NET application
-export HomeAssistant__ExternalUrl="$EXTERNAL_URL"
 export Twilio__AccountSid="$TWILIO_ACCOUNT_SID"
 export Twilio__AuthToken="$TWILIO_AUTH_TOKEN"
 export Twilio__PhoneNumber="$TWILIO_PHONE_NUMBER"

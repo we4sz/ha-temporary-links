@@ -12,6 +12,8 @@ public class TemporaryLink
     public int MaxUses { get; set; } = 1;
     public int UsageCount { get; set; } = 0;
     public string? WebhookId { get; set; }
+    public string? CloudhookId { get; set; }
+    public string? CloudhookUrl { get; set; }
     public string? RecipientPhoneNumber { get; set; }
     public string? CustomMessage { get; set; }
     public LinkStatus Status { get; set; } = LinkStatus.Pending;

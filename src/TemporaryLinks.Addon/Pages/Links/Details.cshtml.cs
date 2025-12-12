@@ -24,7 +24,7 @@ public class DetailsModel : PageModel
         if (Link != null)
         {
             var fallbackBaseUrl = GetFallbackBaseUrl();
-            LinkUrl = _linkService.GetLinkUrl(Link, fallbackBaseUrl);
+            LinkUrl = await _linkService.GetLinkUrlAsync(Link, fallbackBaseUrl);
         }
 
         return Page();

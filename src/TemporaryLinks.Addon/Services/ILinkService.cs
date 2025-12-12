@@ -17,7 +17,7 @@ public interface ILinkService
         bool sendSmsImmediately = true,
         int maxUses = 1);
 
-    string GetLinkUrl(TemporaryLink link, string fallbackBaseUrl);
+    Task<string> GetLinkUrlAsync(TemporaryLink link, string fallbackBaseUrl);
     Task<TemporaryLink?> GetLinkByTokenAsync(string token);
     Task<TemporaryLink?> GetLinkByIdAsync(int id);
     Task<IList<TemporaryLink>> GetLinksAsync(string? statusFilter = null);

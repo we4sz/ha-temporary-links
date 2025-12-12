@@ -69,9 +69,7 @@ public class LinkService : ILinkService
             $"Link created by {createdBy} for script {scriptEntityId} (max uses: {maxUses})");
 
         // Use external URL if configured, otherwise fall back to provided baseUrl
-        var effectiveBaseUrl = !string.IsNullOrWhiteSpace(_config.ExternalUrl)
-            ? _config.ExternalUrl
-            : baseUrl;
+        var effectiveBaseUrl = baseUrl;
 
         // Create webhook automation in HA
         var webhookId = await _haService.CreateWebhookAutomationAsync(
@@ -83,6 +81,23 @@ public class LinkService : ILinkService
             await _context.SaveChangesAsync();
             await AddAuditEntryAsync(link.Id, "WebhookCreated",
                 $"Webhook automation created: {webhookId}");
+
+            // Create cloudhook for the webhook to get public URL
+            var cloudhook = await _haService.CreateCloudhookAsync(webhookId);
+            if (cloudhook != null)
+            {
+                link.CloudhookId = cloudhook.CloudhookId;
+                link.CloudhookUrl = cloudhook.CloudhookUrl;
+                await _context.SaveChangesAsync();
+                await AddAuditEntryAsync(link.Id, "CloudhookCreated",
+                    $"Cloudhook created: {cloudhook.CloudhookId}, URL: {cloudhook.CloudhookUrl}");
+            }
+            else
+            {
+                await AddAuditEntryAsync(link.Id, "CloudhookFailed",
+                    "Failed to create cloudhook - will use webhook URL instead",
+                    success: false);
+            }
         }
         else
         {
@@ -91,8 +106,8 @@ public class LinkService : ILinkService
                 success: false);
         }
 
-        // Generate link URL (webhook URL if external_url configured, otherwise direct)
-        var linkUrl = GetLinkUrl(link, effectiveBaseUrl);
+        // Generate link URL (cloudhook URL if available, otherwise webhook URL or direct)
+        var linkUrl = await GetLinkUrlAsync(link, effectiveBaseUrl);
 
         if (sendSmsImmediately && !string.IsNullOrWhiteSpace(recipientPhoneNumber) && _twilioService.IsConfigured)
         {
@@ -126,15 +141,32 @@ public class LinkService : ILinkService
         return link;
     }
 
-    public string GetLinkUrl(TemporaryLink link, string fallbackBaseUrl)
+    public async Task<string> GetLinkUrlAsync(TemporaryLink link, string fallbackBaseUrl)
     {
-        // If external URL is configured, use webhook URL format
-        if (!string.IsNullOrWhiteSpace(_config.ExternalUrl))
+        // Priority 1: Use cloudhook URL if available (publicly accessible via Nabu Casa)
+        if (!string.IsNullOrWhiteSpace(link.CloudhookUrl))
         {
-            return $"{_config.ExternalUrl.TrimEnd('/')}/api/webhook/temp_link_{link.Token}";
+            return link.CloudhookUrl;
         }
 
-        // Fallback to direct link (for local/port-forwarded access)
+        // Priority 2: If webhook was created, use webhook URL format
+        if (!string.IsNullOrEmpty(link.WebhookId))
+        {
+            // Try to get HA's external URL for public webhook access
+            var haConfig = await _haService.GetConfigAsync();
+            var baseUrl = haConfig?.ExternalUrl ?? haConfig?.InternalUrl;
+
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return $"{baseUrl.TrimEnd('/')}/api/webhook/temp_link_{link.Token}";
+            }
+
+            // Fallback: use fallbackBaseUrl but with webhook path
+            _logger.LogWarning("HA config has no external/internal URL, using fallback for webhook URL");
+            return $"{fallbackBaseUrl.TrimEnd('/')}/api/webhook/temp_link_{link.Token}";
+        }
+
+        // Priority 3: No webhook created - use direct link
         return $"{fallbackBaseUrl.TrimEnd('/')}/link/{link.Token}";
     }
 
@@ -211,7 +243,7 @@ public class LinkService : ILinkService
                 {
                     link.Status = LinkStatus.Used;
 
-                    // Delete the webhook automation
+                    // Delete the webhook automation (cloudhook is auto-deleted by HA)
                     if (!string.IsNullOrEmpty(link.WebhookId))
                     {
                         await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
@@ -305,7 +337,7 @@ public class LinkService : ILinkService
         link.Status = LinkStatus.Revoked;
         await _context.SaveChangesAsync();
 
-        // Delete the webhook automation
+        // Delete the webhook automation (cloudhook is auto-deleted by HA)
         if (!string.IsNullOrEmpty(link.WebhookId))
         {
             await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
@@ -330,7 +362,7 @@ public class LinkService : ILinkService
         {
             link.Status = LinkStatus.Expired;
 
-            // Delete the webhook automation
+            // Delete the webhook automation (cloudhook is auto-deleted by HA)
             if (!string.IsNullOrEmpty(link.WebhookId))
             {
                 await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
