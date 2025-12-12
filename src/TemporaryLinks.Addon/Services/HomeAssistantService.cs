@@ -148,6 +148,117 @@ public class HomeAssistantService : IHomeAssistantService
         }
     }
 
+    public async Task<string?> CreateWebhookAutomationAsync(
+        string token,
+        string linkName,
+        DateTimeOffset validFrom,
+        DateTimeOffset validUntil,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var webhookId = $"temp_link_{token}";
+            var automationId = $"temp_link_{token}";
+
+            // Create automation config
+            var automation = new
+            {
+                alias = $"Temp Link: {linkName}",
+                description = $"Webhook handler for temporary link: {linkName}",
+                trigger = new[]
+                {
+                    new
+                    {
+                        platform = "webhook",
+                        webhook_id = webhookId,
+                        allowed_methods = new[] { "GET", "POST" },
+                        local_only = false
+                    }
+                },
+                condition = new[]
+                {
+                    new
+                    {
+                        condition = "time",
+                        after = validFrom.ToString("HH:mm:ss"),
+                        before = validUntil.ToString("HH:mm:ss")
+                    }
+                },
+                action = new[]
+                {
+                    new
+                    {
+                        service = "shell_command.temp_link_callback",
+                        data = new { token = token }
+                    }
+                },
+                mode = "single"
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(automation, _jsonOptions),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PostAsync(
+                $"config/automation/config/{automationId}",
+                content,
+                cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Created webhook automation {AutomationId} for token {Token}",
+                    automationId, token);
+                return automationId;
+            }
+
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError("Failed to create webhook automation: {StatusCode} - {Body}",
+                response.StatusCode, errorBody);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception creating webhook automation for token {Token}", token);
+            return null;
+        }
+    }
+
+    public async Task<bool> DeleteWebhookAutomationAsync(
+        string automationId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.DeleteAsync(
+                $"config/automation/config/{automationId}",
+                cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Deleted webhook automation {AutomationId}", automationId);
+                return true;
+            }
+
+            // 404 is ok - automation might already be deleted
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogInformation("Webhook automation {AutomationId} not found (already deleted?)", automationId);
+                return true;
+            }
+
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError("Failed to delete webhook automation: {StatusCode} - {Body}",
+                response.StatusCode, errorBody);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception deleting webhook automation {AutomationId}", automationId);
+            return false;
+        }
+    }
+
     private class HaStateResponse
     {
         [System.Text.Json.Serialization.JsonPropertyName("entity_id")]

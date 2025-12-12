@@ -9,6 +9,9 @@ public class TemporaryLink
     public string? ScriptData { get; set; }
     public required DateTimeOffset ValidFrom { get; set; }
     public required DateTimeOffset ValidUntil { get; set; }
+    public int MaxUses { get; set; } = 1;
+    public int UsageCount { get; set; } = 0;
+    public string? WebhookId { get; set; }
     public string? RecipientPhoneNumber { get; set; }
     public string? CustomMessage { get; set; }
     public LinkStatus Status { get; set; } = LinkStatus.Pending;

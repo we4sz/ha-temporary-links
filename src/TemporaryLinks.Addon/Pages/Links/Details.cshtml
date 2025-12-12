@@ -37,6 +37,10 @@ else
                 <td>@Model.Link.ValidUntil.ToLocalTime().ToString("f")</td>
             </tr>
             <tr>
+                <th>Usage</th>
+                <td>@Model.Link.UsageCount / @Model.Link.MaxUses</td>
+            </tr>
+            <tr>
                 <th>Created</th>
                 <td>@Model.Link.CreatedAt.ToLocalTime().ToString("f") by @Model.Link.CreatedBy</td>
             </tr>

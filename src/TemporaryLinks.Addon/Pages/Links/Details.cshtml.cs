@@ -23,14 +23,14 @@ public class DetailsModel : PageModel
 
         if (Link != null)
         {
-            var baseUrl = GetBaseUrl();
-            LinkUrl = $"{baseUrl.TrimEnd('/')}/link/{Link.Token}";
+            var fallbackBaseUrl = GetFallbackBaseUrl();
+            LinkUrl = _linkService.GetLinkUrl(Link, fallbackBaseUrl);
         }
 
         return Page();
     }
 
-    private string GetBaseUrl()
+    private string GetFallbackBaseUrl()
     {
         var ingressPath = Request.Headers["X-Ingress-Path"].FirstOrDefault();
         if (!string.IsNullOrEmpty(ingressPath))

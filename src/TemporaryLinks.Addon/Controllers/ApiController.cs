@@ -36,9 +36,10 @@ public class ApiController : ControllerBase
                 scriptData: request.ScriptData != null ? JsonSerializer.Serialize(request.ScriptData) : null,
                 createdBy: "API/Automation",
                 baseUrl: baseUrl,
-                sendSmsImmediately: request.SendSms);
+                sendSmsImmediately: request.SendSms,
+                maxUses: request.MaxUses);
 
-            var fullUrl = $"{baseUrl.TrimEnd('/')}/link/{link.Token}";
+            var fullUrl = _linkService.GetLinkUrl(link, baseUrl);
 
             return Ok(new CreateLinkResponse
             {
@@ -74,6 +75,8 @@ public class ApiController : ControllerBase
             Status = link.Status.ToString(),
             ValidFrom = link.ValidFrom,
             ValidUntil = link.ValidUntil,
+            UsageCount = link.UsageCount,
+            MaxUses = link.MaxUses,
             UsedAt = link.UsedAt,
             SmsSent = link.SmsSent
         });
@@ -104,9 +107,38 @@ public class ApiController : ControllerBase
             Status = l.Status.ToString(),
             ValidFrom = l.ValidFrom,
             ValidUntil = l.ValidUntil,
+            UsageCount = l.UsageCount,
+            MaxUses = l.MaxUses,
             UsedAt = l.UsedAt,
             SmsSent = l.SmsSent
         }));
+    }
+
+    /// <summary>
+    /// Webhook callback endpoint - called by HA automation when webhook is triggered
+    /// </summary>
+    [HttpPost("webhook-callback/{token}")]
+    [HttpGet("webhook-callback/{token}")]
+    public async Task<IActionResult> WebhookCallback(string token)
+    {
+        _logger.LogInformation("Webhook callback received for token {Token}", token);
+
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = Request.Headers.UserAgent.ToString();
+
+        var result = await _linkService.ExecuteLinkAsync(token, ipAddress, userAgent);
+
+        return result.Status switch
+        {
+            LinkExecutionStatus.Success => Ok(new { success = true, message = "Link executed successfully" }),
+            LinkExecutionStatus.NotFound => NotFound(new { success = false, error = "Link not found" }),
+            LinkExecutionStatus.AlreadyUsed => Ok(new { success = false, error = "Link has already been used" }),
+            LinkExecutionStatus.NotYetValid => Ok(new { success = false, error = "Link is not yet valid" }),
+            LinkExecutionStatus.Expired => Ok(new { success = false, error = "Link has expired" }),
+            LinkExecutionStatus.Revoked => Ok(new { success = false, error = "Link has been revoked" }),
+            LinkExecutionStatus.Error => StatusCode(500, new { success = false, error = result.ErrorMessage }),
+            _ => StatusCode(500, new { success = false, error = "Unknown error" })
+        };
     }
 
     private string GetBaseUrl()
@@ -130,6 +162,7 @@ public class CreateLinkRequest
     public string? CustomMessage { get; set; }
     public object? ScriptData { get; set; }
     public bool SendSms { get; set; } = true;
+    public int MaxUses { get; set; } = 1;
 }
 
 public class CreateLinkResponse
@@ -150,6 +183,8 @@ public class LinkStatusResponse
     public required string Status { get; set; }
     public DateTimeOffset ValidFrom { get; set; }
     public DateTimeOffset ValidUntil { get; set; }
+    public int UsageCount { get; set; }
+    public int MaxUses { get; set; }
     public DateTimeOffset? UsedAt { get; set; }
     public bool SmsSent { get; set; }
 }

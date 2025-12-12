@@ -41,7 +41,8 @@ public class LinkService : ILinkService
         string? scriptData,
         string createdBy,
         string baseUrl,
-        bool sendSmsImmediately = true)
+        bool sendSmsImmediately = true,
+        int maxUses = 1)
     {
         var token = _tokenGenerator.GenerateSecureToken();
 
@@ -53,6 +54,8 @@ public class LinkService : ILinkService
             ScriptData = scriptData,
             ValidFrom = validFrom,
             ValidUntil = validUntil,
+            MaxUses = maxUses,
+            UsageCount = 0,
             RecipientPhoneNumber = recipientPhoneNumber,
             CustomMessage = customMessage,
             CreatedBy = createdBy,
@@ -63,11 +66,36 @@ public class LinkService : ILinkService
         await _context.SaveChangesAsync();
 
         await AddAuditEntryAsync(link.Id, "Created",
-            $"Link created by {createdBy} for script {scriptEntityId}");
+            $"Link created by {createdBy} for script {scriptEntityId} (max uses: {maxUses})");
+
+        // Use external URL if configured, otherwise fall back to provided baseUrl
+        var effectiveBaseUrl = !string.IsNullOrWhiteSpace(_config.ExternalUrl)
+            ? _config.ExternalUrl
+            : baseUrl;
+
+        // Create webhook automation in HA
+        var webhookId = await _haService.CreateWebhookAutomationAsync(
+            token, name, validFrom, validUntil);
+
+        if (webhookId != null)
+        {
+            link.WebhookId = webhookId;
+            await _context.SaveChangesAsync();
+            await AddAuditEntryAsync(link.Id, "WebhookCreated",
+                $"Webhook automation created: {webhookId}");
+        }
+        else
+        {
+            await AddAuditEntryAsync(link.Id, "WebhookFailed",
+                "Failed to create webhook automation - link will only work via direct access",
+                success: false);
+        }
+
+        // Generate link URL (webhook URL if external_url configured, otherwise direct)
+        var linkUrl = GetLinkUrl(link, effectiveBaseUrl);
 
         if (sendSmsImmediately && !string.IsNullOrWhiteSpace(recipientPhoneNumber) && _twilioService.IsConfigured)
         {
-            var linkUrl = $"{baseUrl.TrimEnd('/')}/link/{token}";
             var message = FormatMessage(link, linkUrl, customMessage);
             var result = await _twilioService.SendSmsAsync(recipientPhoneNumber, message);
 
@@ -98,6 +126,18 @@ public class LinkService : ILinkService
         return link;
     }
 
+    public string GetLinkUrl(TemporaryLink link, string fallbackBaseUrl)
+    {
+        // If external URL is configured, use webhook URL format
+        if (!string.IsNullOrWhiteSpace(_config.ExternalUrl))
+        {
+            return $"{_config.ExternalUrl.TrimEnd('/')}/api/webhook/temp_link_{link.Token}";
+        }
+
+        // Fallback to direct link (for local/port-forwarded access)
+        return $"{fallbackBaseUrl.TrimEnd('/')}/link/{link.Token}";
+    }
+
     public async Task<LinkExecutionResult> ExecuteLinkAsync(
         string token, string? ipAddress, string? userAgent)
     {
@@ -112,10 +152,11 @@ public class LinkService : ILinkService
 
         var now = DateTimeOffset.UtcNow;
 
-        if (link.Status == LinkStatus.Used)
+        // Check if max uses reached
+        if (link.Status == LinkStatus.Used || link.UsageCount >= link.MaxUses)
         {
             await AddAuditEntryAsync(link.Id, "ExecutionAttempt",
-                "Attempted to use already-used link", ipAddress, userAgent, false);
+                $"Attempted to use exhausted link (used {link.UsageCount}/{link.MaxUses})", ipAddress, userAgent, false);
             return new LinkExecutionResult
             {
                 Status = LinkExecutionStatus.AlreadyUsed,
@@ -161,13 +202,28 @@ public class LinkService : ILinkService
 
             if (success)
             {
-                link.Status = LinkStatus.Used;
+                link.UsageCount++;
                 link.UsedAt = now;
                 link.UsedByIpAddress = ipAddress;
+
+                // Mark as used and cleanup webhook when max uses is reached
+                if (link.UsageCount >= link.MaxUses)
+                {
+                    link.Status = LinkStatus.Used;
+
+                    // Delete the webhook automation
+                    if (!string.IsNullOrEmpty(link.WebhookId))
+                    {
+                        await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
+                        await AddAuditEntryAsync(link.Id, "WebhookDeleted",
+                            "Webhook automation deleted (max uses reached)");
+                    }
+                }
+
                 await _context.SaveChangesAsync();
 
                 await AddAuditEntryAsync(link.Id, "Executed",
-                    $"Link successfully executed, script {link.ScriptEntityId} called",
+                    $"Link executed ({link.UsageCount}/{link.MaxUses}), script {link.ScriptEntityId} called",
                     ipAddress, userAgent, true);
 
                 return new LinkExecutionResult
@@ -249,6 +305,14 @@ public class LinkService : ILinkService
         link.Status = LinkStatus.Revoked;
         await _context.SaveChangesAsync();
 
+        // Delete the webhook automation
+        if (!string.IsNullOrEmpty(link.WebhookId))
+        {
+            await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
+            await AddAuditEntryAsync(link.Id, "WebhookDeleted",
+                "Webhook automation deleted (link revoked)");
+        }
+
         await AddAuditEntryAsync(link.Id, "Revoked", "Link was revoked");
 
         return true;
@@ -265,6 +329,15 @@ public class LinkService : ILinkService
         foreach (var link in expiredLinks)
         {
             link.Status = LinkStatus.Expired;
+
+            // Delete the webhook automation
+            if (!string.IsNullOrEmpty(link.WebhookId))
+            {
+                await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
+                await AddAuditEntryAsync(link.Id, "WebhookDeleted",
+                    "Webhook automation deleted (link expired)");
+            }
+
             await AddAuditEntryAsync(link.Id, "Expired", "Link validity period ended");
         }
 

@@ -20,6 +20,12 @@ panel_icon: mdi:link-variant
 panel_title: "Temporary Links"
 panel_admin: true
 
+# External port for link access (user can configure via UI)
+ports:
+  8099/tcp: null
+ports_description:
+  8099/tcp: "External access for temporary links"
+
 homeassistant_api: true
 hassio_api: true
 hassio_role: default
@@ -28,6 +34,7 @@ map:
   - data:rw
 
 options:
+  external_url: ""
   twilio_account_sid: ""
   twilio_auth_token: ""
   twilio_phone_number: ""
@@ -35,6 +42,7 @@ options:
   log_level: "Information"
 
 schema:
+  external_url: url
   twilio_account_sid: str
   twilio_auth_token: password
   twilio_phone_number: str

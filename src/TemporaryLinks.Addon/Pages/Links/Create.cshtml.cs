@@ -53,6 +53,11 @@ public class CreateModel : PageModel
 
         [Display(Name = "Send SMS Immediately")]
         public bool SendSmsImmediately { get; set; } = true;
+
+        [Required]
+        [Range(1, 100)]
+        [Display(Name = "Maximum Uses")]
+        public int MaxUses { get; set; } = 1;
     }
 
     public async Task OnGetAsync()
@@ -93,7 +98,8 @@ public class CreateModel : PageModel
             scriptData: Input.ScriptData,
             createdBy: "WebUI",
             baseUrl: baseUrl,
-            sendSmsImmediately: Input.SendSmsImmediately);
+            sendSmsImmediately: Input.SendSmsImmediately,
+            maxUses: Input.MaxUses);
 
         return RedirectToPage("Details", new { id = link.Id });
     }
