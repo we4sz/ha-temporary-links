@@ -1,0 +1,115 @@
+@page "{id:int}"
+@model TemporaryLinks.Addon.Pages.Links.DetailsModel
+@{
+    ViewData["Title"] = "Link Details";
+}
+
+<h1>Link Details</h1>
+
+@if (Model.Link == null)
+{
+    <div class="alert alert-danger">Link not found.</div>
+}
+else
+{
+    <div class="card">
+        <h2>@Model.Link.Name</h2>
+        <p><span class="status status-@Model.Link.Status.ToString().ToLower()">@Model.Link.Status</span></p>
+
+        <table>
+            <tr>
+                <th>Script</th>
+                <td><code>@Model.Link.ScriptEntityId</code></td>
+            </tr>
+            @if (!string.IsNullOrEmpty(Model.Link.ScriptData))
+            {
+                <tr>
+                    <th>Script Data</th>
+                    <td><code>@Model.Link.ScriptData</code></td>
+                </tr>
+            }
+            <tr>
+                <th>Valid From</th>
+                <td>@Model.Link.ValidFrom.ToLocalTime().ToString("f")</td>
+            </tr>
+            <tr>
+                <th>Valid Until</th>
+                <td>@Model.Link.ValidUntil.ToLocalTime().ToString("f")</td>
+            </tr>
+            <tr>
+                <th>Created</th>
+                <td>@Model.Link.CreatedAt.ToLocalTime().ToString("f") by @Model.Link.CreatedBy</td>
+            </tr>
+            @if (!string.IsNullOrEmpty(Model.Link.RecipientPhoneNumber))
+            {
+                <tr>
+                    <th>Phone Number</th>
+                    <td>@Model.Link.RecipientPhoneNumber</td>
+                </tr>
+                <tr>
+                    <th>SMS Status</th>
+                    <td>@(Model.Link.SmsSent ? "Sent" : "Not sent")</td>
+                </tr>
+            }
+            @if (Model.Link.UsedAt.HasValue)
+            {
+                <tr>
+                    <th>Used At</th>
+                    <td>@Model.Link.UsedAt.Value.ToLocalTime().ToString("f")</td>
+                </tr>
+                <tr>
+                    <th>Used By IP</th>
+                    <td>@Model.Link.UsedByIpAddress</td>
+                </tr>
+            }
+        </table>
+
+        <div class="mt-2">
+            <h3>Link URL</h3>
+            <div class="link-url">@Model.LinkUrl</div>
+            <p class="mt-1 text-muted">Share this URL with the recipient (or send via SMS above)</p>
+        </div>
+
+        <div class="mt-2">
+            @if (Model.Link.Status == LinkStatus.Active || Model.Link.Status == LinkStatus.Pending)
+            {
+                <a asp-page="Delete" asp-route-id="@Model.Link.Id" class="btn btn-danger">Revoke Link</a>
+            }
+            <a asp-page="Index" class="btn">Back to List</a>
+        </div>
+    </div>
+
+    <div class="card mt-2">
+        <h3>Audit Log</h3>
+        @if (Model.Link.AuditEntries.Any())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Description</th>
+                        <th>IP</th>
+                        <th>Success</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var audit in Model.Link.AuditEntries.OrderByDescending(a => a.Timestamp))
+                    {
+                        <tr>
+                            <td>@audit.Timestamp.ToLocalTime().ToString("g")</td>
+                            <td>@audit.EventType</td>
+                            <td>@audit.Description</td>
+                            <td>@audit.IpAddress</td>
+                            <td>@(audit.Success ? "Yes" : "No")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted">No audit entries.</p>
+        }
+    </div>
+}

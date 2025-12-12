@@ -1,0 +1,27 @@
+@model LinkExecutionResult
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Error</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="result-page result-error">
+        <div class="card">
+            <div class="result-icon">&#10060;</div>
+            <h1>Error</h1>
+            <p>An error occurred while processing your request.</p>
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <p class="text-muted mt-2">@Model.ErrorMessage</p>
+            }
+            <p class="mt-2">Please contact support if this problem persists.</p>
+        </div>
+    </div>
+</body>
+</html>

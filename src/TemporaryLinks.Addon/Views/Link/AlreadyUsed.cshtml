@@ -1,0 +1,26 @@
+@model LinkExecutionResult
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Already Used</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="result-page result-warning">
+        <div class="card">
+            <div class="result-icon">&#9888;</div>
+            <h1>Link Already Used</h1>
+            <p>This link has already been used and cannot be used again.</p>
+            @if (Model.Link?.UsedAt != null)
+            {
+                <p class="text-muted mt-2">Used at: @Model.Link.UsedAt.Value.ToLocalTime().ToString("f")</p>
+            }
+        </div>
+    </div>
+</body>
+</html>

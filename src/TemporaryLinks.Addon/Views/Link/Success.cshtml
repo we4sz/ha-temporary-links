@@ -1,0 +1,26 @@
+@model LinkExecutionResult
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Success</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="result-page result-success">
+        <div class="card">
+            <div class="result-icon">&#10004;</div>
+            <h1>Success!</h1>
+            <p>The action has been executed successfully.</p>
+            @if (Model.Link != null)
+            {
+                <p class="text-muted mt-2">@Model.Link.Name</p>
+            }
+        </div>
+    </div>
+</body>
+</html>

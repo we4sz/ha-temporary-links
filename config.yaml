@@ -1,0 +1,42 @@
+name: "Temporary Links"
+version: "1.0.0"
+slug: "temporary_links"
+description: "Generate one-time-use temporary links that trigger Home Assistant services via SMS"
+url: "https://github.com/bohn/ha-temporary-links"
+arch:
+  - amd64
+  - aarch64
+  - armv7
+  - armhf
+  - i386
+
+startup: application
+boot: auto
+
+ingress: true
+ingress_port: 8099
+ingress_entry: /
+panel_icon: mdi:link-variant
+panel_title: "Temporary Links"
+panel_admin: true
+
+homeassistant_api: true
+hassio_api: true
+hassio_role: default
+
+map:
+  - data:rw
+
+options:
+  twilio_account_sid: ""
+  twilio_auth_token: ""
+  twilio_phone_number: ""
+  default_message_template: "Your temporary access link: {link}\nValid from {start_time} to {end_time}"
+  log_level: "Information"
+
+schema:
+  twilio_account_sid: str
+  twilio_auth_token: password
+  twilio_phone_number: str
+  default_message_template: str
+  log_level: list(Trace|Debug|Information|Warning|Error|Critical)

@@ -1,0 +1,42 @@
+# Build results
+**/bin/
+**/obj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# .NET
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Rider
+.idea/
+
+# User-specific files
+*.rsuser
+*.sln.iml
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db

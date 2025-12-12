@@ -1,0 +1,59 @@
+@page
+@model TemporaryLinks.Addon.Pages.Audit.IndexModel
+@{
+    ViewData["Title"] = "Audit Log";
+}
+
+<h1>Audit Log</h1>
+
+<div class="card">
+    @if (Model.AuditEntries.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Link</th>
+                    <th>Event</th>
+                    <th>Description</th>
+                    <th>IP Address</th>
+                    <th>Success</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var audit in Model.AuditEntries)
+                {
+                    <tr>
+                        <td>@audit.Timestamp.ToLocalTime().ToString("g")</td>
+                        <td>
+                            <a asp-page="/Links/Details" asp-route-id="@audit.TemporaryLinkId">
+                                @audit.TemporaryLink.Name
+                            </a>
+                        </td>
+                        <td>@audit.EventType</td>
+                        <td>@audit.Description</td>
+                        <td>@audit.IpAddress</td>
+                        <td>
+                            @if (audit.Success)
+                            {
+                                <span class="status status-used">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="status status-revoked">No</span>
+                                @if (!string.IsNullOrEmpty(audit.ErrorMessage))
+                                {
+                                    <br /><small class="text-muted">@audit.ErrorMessage</small>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted">No audit entries yet.</p>
+    }
+</div>
