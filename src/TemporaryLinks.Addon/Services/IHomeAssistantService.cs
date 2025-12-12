@@ -18,6 +18,7 @@ public interface IHomeAssistantService
     Task<string?> CreateWebhookAutomationAsync(
         string token,
         string linkName,
+        string actionsJson,
         DateTimeOffset validFrom,
         DateTimeOffset validUntil,
         CancellationToken cancellationToken = default);

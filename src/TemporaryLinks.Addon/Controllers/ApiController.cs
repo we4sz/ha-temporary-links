@@ -37,7 +37,8 @@ public class ApiController : ControllerBase
                 createdBy: "API/Automation",
                 baseUrl: baseUrl,
                 sendSmsImmediately: request.SendSms,
-                maxUses: request.MaxUses);
+                maxUses: request.MaxUses,
+                actions: request.Actions);
 
             var fullUrl = await _linkService.GetLinkUrlAsync(link, baseUrl);
 
@@ -163,6 +164,7 @@ public class CreateLinkRequest
     public object? ScriptData { get; set; }
     public bool SendSms { get; set; } = true;
     public int MaxUses { get; set; } = 1;
+    public string? Actions { get; set; }
 }
 
 public class CreateLinkResponse

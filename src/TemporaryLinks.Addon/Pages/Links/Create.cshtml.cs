@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using TemporaryLinks.Addon.Services;
 
@@ -9,18 +8,14 @@ namespace TemporaryLinks.Addon.Pages.Links;
 public class CreateModel : PageModel
 {
     private readonly ILinkService _linkService;
-    private readonly IHomeAssistantService _haService;
 
-    public CreateModel(ILinkService linkService, IHomeAssistantService haService)
+    public CreateModel(ILinkService linkService)
     {
         _linkService = linkService;
-        _haService = haService;
     }
 
     [BindProperty]
     public CreateLinkInput Input { get; set; } = new();
-
-    public List<SelectListItem> ScriptEntities { get; set; } = [];
 
     public class CreateLinkInput
     {
@@ -29,12 +24,8 @@ public class CreateModel : PageModel
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(256)]
-        [Display(Name = "Script Entity ID")]
-        public string ScriptEntityId { get; set; } = string.Empty;
-
-        [Display(Name = "Script Data (JSON)")]
-        public string? ScriptData { get; set; }
+        [Display(Name = "Actions (JSON)")]
+        public string Actions { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Valid From")]
@@ -60,46 +51,34 @@ public class CreateModel : PageModel
         public int MaxUses { get; set; } = 1;
     }
 
-    public async Task OnGetAsync()
+    public void OnGet()
     {
         var today = DateTime.Today;
         Input.ValidFrom = today.AddHours(9);
         Input.ValidUntil = today.AddHours(17);
-
-        await LoadScriptEntitiesAsync();
-    }
-
-    private async Task LoadScriptEntitiesAsync()
-    {
-        var entities = await _haService.GetEntitiesAsync("script");
-        ScriptEntities = entities
-            .Select(e => new SelectListItem(
-                e.FriendlyName ?? e.EntityId,
-                e.EntityId))
-            .ToList();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
         {
-            await LoadScriptEntitiesAsync();
             return Page();
         }
 
         var baseUrl = GetBaseUrl();
         var link = await _linkService.CreateLinkAsync(
             name: Input.Name,
-            scriptEntityId: Input.ScriptEntityId,
+            scriptEntityId: "script.dummy",  // Dummy value - Actions will override this
             validFrom: new DateTimeOffset(Input.ValidFrom),
             validUntil: new DateTimeOffset(Input.ValidUntil),
             recipientPhoneNumber: Input.RecipientPhoneNumber,
             customMessage: Input.CustomMessage,
-            scriptData: Input.ScriptData,
+            scriptData: null,
             createdBy: "WebUI",
             baseUrl: baseUrl,
             sendSmsImmediately: Input.SendSmsImmediately,
-            maxUses: Input.MaxUses);
+            maxUses: Input.MaxUses,
+            actions: Input.Actions);
 
         return RedirectToPage("Details", new { id = link.Id });
     }

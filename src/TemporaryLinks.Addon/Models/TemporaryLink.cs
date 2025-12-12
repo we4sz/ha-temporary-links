@@ -7,6 +7,7 @@ public class TemporaryLink
     public required string Name { get; set; }
     public required string ScriptEntityId { get; set; }
     public string? ScriptData { get; set; }
+    public string? Actions { get; set; }  // JSON array of automation actions
     public required DateTimeOffset ValidFrom { get; set; }
     public required DateTimeOffset ValidUntil { get; set; }
     public int MaxUses { get; set; } = 1;

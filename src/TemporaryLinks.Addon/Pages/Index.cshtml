@@ -6,6 +6,11 @@
 
 <h1>Dashboard</h1>
 
+<div class="mb-2">
+    <a asp-page="/Links/Create" class="btn btn-primary">Create New Link</a>
+    <a asp-page="/Links/Index" class="btn">View All Links</a>
+</div>
+
 <div class="stats-grid">
     <div class="card stat-card">
         <div class="stat-value">@Model.TotalLinks</div>
@@ -33,10 +38,10 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Script</th>
+                    <th>Actions</th>
                     <th>Valid Until</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -44,7 +49,16 @@
                 {
                     <tr>
                         <td>@link.Name</td>
-                        <td><code>@link.ScriptEntityId</code></td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(link.Actions))
+                            {
+                                <code style="max-width: 300px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@link.Actions</code>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
                         <td>@link.ValidUntil.ToLocalTime().ToString("g")</td>
                         <td><span class="status status-@link.Status.ToString().ToLower()">@link.Status</span></td>
                         <td>

@@ -210,6 +210,7 @@ public class HomeAssistantService : IHomeAssistantService
     public async Task<string?> CreateWebhookAutomationAsync(
         string token,
         string linkName,
+        string actionsJson,
         DateTimeOffset validFrom,
         DateTimeOffset validUntil,
         CancellationToken cancellationToken = default)
@@ -218,6 +219,44 @@ public class HomeAssistantService : IHomeAssistantService
         {
             var webhookId = $"temp_link_{token}";
             var automationId = $"temp_link_{token}";
+
+            // Parse custom actions from JSON
+            object customActions;
+            try
+            {
+                customActions = JsonSerializer.Deserialize<object>(actionsJson, _jsonOptions)
+                    ?? throw new InvalidOperationException("Actions JSON is null");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to parse actions JSON: {ActionsJson}", actionsJson);
+                throw new InvalidOperationException($"Invalid actions JSON: {ex.Message}");
+            }
+
+            // Build actions array: event trigger first (for tracking), then custom actions
+            var actionsArray = new List<object>
+            {
+                // First action: fire event for tracking
+                new
+                {
+                    @event = "temp_link_triggered",
+                    event_data = new
+                    {
+                        token,
+                        link_name = linkName,
+                        webhook_id = webhookId
+                    }
+                }
+            };
+
+            // Add custom actions
+            if (customActions is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var action in jsonElement.EnumerateArray())
+                {
+                    actionsArray.Add(action);
+                }
+            }
 
             // Create automation config
             var automation = new
@@ -235,18 +274,7 @@ public class HomeAssistantService : IHomeAssistantService
                         local_only = false
                     }
                 },
-                action = new[]
-                {
-                    new
-                    {
-                        @event = "temp_link_triggered",
-                        event_data = new
-                        {
-                            token = token,
-                            link_name = linkName
-                        }
-                    }
-                },
+                action = actionsArray,  // Event + custom actions
                 mode = "single"
             };
 

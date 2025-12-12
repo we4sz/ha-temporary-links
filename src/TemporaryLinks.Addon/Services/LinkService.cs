@@ -42,9 +42,23 @@ public class LinkService : ILinkService
         string createdBy,
         string baseUrl,
         bool sendSmsImmediately = true,
-        int maxUses = 1)
+        int maxUses = 1,
+        string? actions = null)
     {
         var token = _tokenGenerator.GenerateSecureToken();
+
+        // Build actions JSON for the automation
+        string actionsJson;
+        if (!string.IsNullOrWhiteSpace(actions))
+        {
+            // Use provided actions (already JSON)
+            actionsJson = actions;
+        }
+        else
+        {
+            // Backward compatibility: build action from scriptEntityId
+            actionsJson = BuildScriptAction(scriptEntityId, scriptData);
+        }
 
         var link = new TemporaryLink
         {
@@ -52,6 +66,7 @@ public class LinkService : ILinkService
             Name = name,
             ScriptEntityId = scriptEntityId,
             ScriptData = scriptData,
+            Actions = actionsJson,
             ValidFrom = validFrom,
             ValidUntil = validUntil,
             MaxUses = maxUses,
@@ -73,7 +88,7 @@ public class LinkService : ILinkService
 
         // Create webhook automation in HA
         var webhookId = await _haService.CreateWebhookAutomationAsync(
-            token, name, validFrom, validUntil);
+            token, name, actionsJson, validFrom, validUntil);
 
         if (webhookId != null)
         {
@@ -230,53 +245,36 @@ public class LinkService : ILinkService
 
         try
         {
-            var success = await _haService.CallScriptAsync(link.ScriptEntityId, link.ScriptData);
+            link.UsageCount++;
+            link.UsedAt = now;
+            link.UsedByIpAddress = ipAddress;
 
-            if (success)
+            // Mark as used and cleanup webhook when max uses is reached
+            if (link.UsageCount >= link.MaxUses)
             {
-                link.UsageCount++;
-                link.UsedAt = now;
-                link.UsedByIpAddress = ipAddress;
+                link.Status = LinkStatus.Used;
 
-                // Mark as used and cleanup webhook when max uses is reached
-                if (link.UsageCount >= link.MaxUses)
+                // Delete the webhook automation (cloudhook is auto-deleted by HA)
+                if (!string.IsNullOrEmpty(link.WebhookId))
                 {
-                    link.Status = LinkStatus.Used;
-
-                    // Delete the webhook automation (cloudhook is auto-deleted by HA)
-                    if (!string.IsNullOrEmpty(link.WebhookId))
-                    {
-                        await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
-                        await AddAuditEntryAsync(link.Id, "WebhookDeleted",
-                            "Webhook automation deleted (max uses reached)");
-                    }
+                    await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
+                    await AddAuditEntryAsync(link.Id, "WebhookDeleted",
+                        "Webhook automation deleted (max uses reached)");
                 }
-
-                await _context.SaveChangesAsync();
-
-                await AddAuditEntryAsync(link.Id, "Executed",
-                    $"Link executed ({link.UsageCount}/{link.MaxUses}), script {link.ScriptEntityId} called",
-                    ipAddress, userAgent, true);
-
-                return new LinkExecutionResult
-                {
-                    Status = LinkExecutionStatus.Success,
-                    Link = link
-                };
             }
-            else
+
+            await _context.SaveChangesAsync();
+
+            await AddAuditEntryAsync(link.Id, "Executed",
+                $"Link executed ({link.UsageCount}/{link.MaxUses}), script {link.ScriptEntityId} called",
+                ipAddress, userAgent, true);
+
+            return new LinkExecutionResult
             {
-                await AddAuditEntryAsync(link.Id, "ExecutionFailure",
-                    "Failed to call Home Assistant script",
-                    ipAddress, userAgent, false, "Script call returned failure");
+                Status = LinkExecutionStatus.Success,
+                Link = link
+            };
 
-                return new LinkExecutionResult
-                {
-                    Status = LinkExecutionStatus.Error,
-                    Link = link,
-                    ErrorMessage = "Failed to execute the action"
-                };
-            }
         }
         catch (Exception ex)
         {
@@ -414,5 +412,20 @@ public class LinkService : ILinkService
             .Replace("{start_time}", link.ValidFrom.ToLocalTime().ToString("g"))
             .Replace("{end_time}", link.ValidUntil.ToLocalTime().ToString("g"))
             .Replace("{name}", link.Name);
+    }
+
+    private string BuildScriptAction(string scriptEntityId, string? scriptData)
+    {
+        // Build a single script call action for backward compatibility
+        var action = new
+        {
+            action = scriptEntityId,
+            data = string.IsNullOrWhiteSpace(scriptData)
+                ? new { }
+                : System.Text.Json.JsonSerializer.Deserialize<object>(scriptData)
+        };
+
+        var actions = new[] { action };
+        return System.Text.Json.JsonSerializer.Serialize(actions);
     }
 }

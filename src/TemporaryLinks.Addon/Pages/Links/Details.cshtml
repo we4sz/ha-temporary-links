@@ -17,15 +17,11 @@ else
         <p><span class="status status-@Model.Link.Status.ToString().ToLower()">@Model.Link.Status</span></p>
 
         <table>
-            <tr>
-                <th>Script</th>
-                <td><code>@Model.Link.ScriptEntityId</code></td>
-            </tr>
-            @if (!string.IsNullOrEmpty(Model.Link.ScriptData))
+            @if (!string.IsNullOrEmpty(Model.Link.Actions))
             {
                 <tr>
-                    <th>Script Data</th>
-                    <td><code>@Model.Link.ScriptData</code></td>
+                    <th>Actions</th>
+                    <td><pre style="margin: 0; max-width: 600px; overflow-x: auto;">@Model.Link.Actions</pre></td>
                 </tr>
             }
             <tr>
