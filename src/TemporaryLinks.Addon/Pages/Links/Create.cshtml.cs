@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using TemporaryLinks.Addon.Services;
 
@@ -8,14 +9,18 @@ namespace TemporaryLinks.Addon.Pages.Links;
 public class CreateModel : PageModel
 {
     private readonly ILinkService _linkService;
+    private readonly IHomeAssistantService _haService;
 
-    public CreateModel(ILinkService linkService)
+    public CreateModel(ILinkService linkService, IHomeAssistantService haService)
     {
         _linkService = linkService;
+        _haService = haService;
     }
 
     [BindProperty]
     public CreateLinkInput Input { get; set; } = new();
+
+    public List<SelectListItem> ScriptEntities { get; set; } = [];
 
     public class CreateLinkInput
     {
@@ -50,17 +55,30 @@ public class CreateModel : PageModel
         public bool SendSmsImmediately { get; set; } = true;
     }
 
-    public void OnGet()
+    public async Task OnGetAsync()
     {
         var today = DateTime.Today;
         Input.ValidFrom = today.AddHours(9);
         Input.ValidUntil = today.AddHours(17);
+
+        await LoadScriptEntitiesAsync();
+    }
+
+    private async Task LoadScriptEntitiesAsync()
+    {
+        var entities = await _haService.GetEntitiesAsync("script");
+        ScriptEntities = entities
+            .Select(e => new SelectListItem(
+                e.FriendlyName ?? e.EntityId,
+                e.EntityId))
+            .ToList();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
         {
+            await LoadScriptEntitiesAsync();
             return Page();
         }
 

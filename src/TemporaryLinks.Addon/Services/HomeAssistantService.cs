@@ -101,4 +101,59 @@ public class HomeAssistantService : IHomeAssistantService
             return false;
         }
     }
+
+    public async Task<IReadOnlyList<EntityInfo>> GetEntitiesAsync(
+        string? domainFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Fetching entities from HA API (filter: {Filter})", domainFilter ?? "none");
+            var response = await _httpClient.GetAsync("states", cancellationToken);
+
+            _logger.LogInformation("HA API response: {StatusCode}", response.StatusCode);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError("Failed to get entities: {StatusCode} - {Body}", response.StatusCode, errorBody);
+                return [];
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogInformation("Got {Length} bytes from HA API", json.Length);
+
+            var states = JsonSerializer.Deserialize<List<HaStateResponse>>(json, _jsonOptions);
+            _logger.LogInformation("Deserialized {Count} states", states?.Count ?? 0);
+
+            if (states == null)
+                return [];
+
+            var entities = states
+                .Where(s => string.IsNullOrEmpty(domainFilter) ||
+                           s.EntityId.StartsWith(domainFilter + ".", StringComparison.OrdinalIgnoreCase))
+                .Select(s => new EntityInfo(
+                    s.EntityId,
+                    s.Attributes?.GetValueOrDefault("friendly_name")?.ToString()))
+                .OrderBy(e => e.EntityId)
+                .ToList();
+
+            _logger.LogInformation("Filtered to {Count} entities", entities.Count);
+            return entities;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception getting entities from HA");
+            return [];
+        }
+    }
+
+    private class HaStateResponse
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("entity_id")]
+        public string EntityId { get; set; } = string.Empty;
+
+        [System.Text.Json.Serialization.JsonPropertyName("attributes")]
+        public Dictionary<string, object>? Attributes { get; set; }
+    }
 }

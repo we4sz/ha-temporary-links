@@ -8,4 +8,10 @@ public interface IHomeAssistantService
         CancellationToken cancellationToken = default);
 
     Task<bool> TestConnectionAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<EntityInfo>> GetEntitiesAsync(
+        string? domainFilter = null,
+        CancellationToken cancellationToken = default);
 }
+
+public record EntityInfo(string EntityId, string? FriendlyName);

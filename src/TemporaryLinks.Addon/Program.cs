@@ -1,9 +1,18 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using TemporaryLinks.Addon.Configuration;
 using TemporaryLinks.Addon.Data;
 using TemporaryLinks.Addon.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure forwarded headers for running behind HA ingress proxy
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Configuration binding
 builder.Services.Configure<AddonConfiguration>(
@@ -40,6 +49,9 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
+// Handle forwarded headers from HA ingress proxy
+app.UseForwardedHeaders();
+
 // Handle ingress path prefix from Home Assistant
 app.Use(async (context, next) =>
 {
@@ -48,6 +60,14 @@ app.Use(async (context, next) =>
     {
         context.Request.PathBase = ingressPath.TrimEnd('/');
     }
+
+    // Normalize double slashes in path (HA ingress sends // for root)
+    var path = context.Request.Path.Value;
+    if (!string.IsNullOrEmpty(path) && path.StartsWith("//"))
+    {
+        context.Request.Path = path.TrimStart('/').Insert(0, "/");
+    }
+
     await next();
 });
 
