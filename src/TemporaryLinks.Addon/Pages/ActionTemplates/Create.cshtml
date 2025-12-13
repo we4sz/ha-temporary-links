@@ -1,0 +1,44 @@
+@page
+@model TemporaryLinks.Addon.Pages.ActionTemplates.CreateModel
+@{
+    ViewData["Title"] = "Create Action Template";
+}
+
+<h1>Create New Action Template</h1>
+
+<div class="card">
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <div class="form-group">
+            <label asp-for="Input.Name"></label>
+            <input asp-for="Input.Name" class="form-control" placeholder="e.g., Unlock Front Door" />
+            <span asp-validation-for="Input.Name" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Input.Actions"></label>
+            <textarea asp-for="Input.Actions" class="form-control" rows="8"
+                placeholder='[{"action": "light.turn_on", "target": {"entity_id": "light.living_room"}}]'></textarea>
+            <span asp-validation-for="Input.Actions" class="text-danger"></span>
+            <small class="text-muted">
+                JSON array of Home Assistant actions.
+                <br/><strong>Examples:</strong>
+                <br/>Turn on light: <code>[{"action": "light.turn_on", "target": {"entity_id": "light.hall"}}]</code>
+                <br/>Unlock door: <code>[{"action": "lock.unlock", "target": {"entity_id": "lock.front_door"}}]</code>
+                <br/>Run script: <code>[{"action": "script.my_script", "data": {"param": "value"}}]</code>
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Input.Description"></label>
+            <textarea asp-for="Input.Description" class="form-control" rows="3"
+                placeholder="e.g., Unlocks the front door and turns on the hallway lights"></textarea>
+            <span asp-validation-for="Input.Description" class="text-danger"></span>
+            <small class="text-muted">Optional - What does this template do?</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Template</button>
+        <a asp-page="Index" class="btn">Cancel</a>
+    </form>
+</div>

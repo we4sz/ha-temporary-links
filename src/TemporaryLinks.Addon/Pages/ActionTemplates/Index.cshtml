@@ -1,0 +1,49 @@
+@page
+@model TemporaryLinks.Addon.Pages.ActionTemplates.IndexModel
+@{
+    ViewData["Title"] = "Action Templates";
+}
+
+<h1>Action Templates</h1>
+
+<div class="mt-2">
+    <a asp-page="Create" class="btn btn-primary">Add New Template</a>
+</div>
+
+@if (Model.Templates.Any())
+{
+    <div class="card mt-2">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Actions</th>
+                    <th>Description</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var template in Model.Templates)
+                {
+                    <tr>
+                        <td>@template.Name</td>
+                        <td>
+                            <code style="max-width: 400px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@template.Actions</code>
+                        </td>
+                        <td style="max-width: 300px;">@(template.Description ?? "-")</td>
+                        <td>
+                            <a asp-page="Edit" asp-route-id="@template.Id" class="btn btn-sm">Edit</a>
+                            <a asp-page="Delete" asp-route-id="@template.Id" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="card mt-2">
+        <p class="text-muted">No action templates found. Add your first template to get started.</p>
+    </div>
+}

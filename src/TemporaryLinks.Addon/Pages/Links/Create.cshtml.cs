@@ -24,9 +24,13 @@ public class CreateModel : PageModel
     public CreateLinkInput Input { get; set; } = new();
 
     public List<SelectListItem> ContactOptions { get; set; } = new();
+    public List<SelectListItem> TemplateOptions { get; set; } = new();
 
     [BindProperty]
     public bool SaveAsContact { get; set; }
+
+    [BindProperty]
+    public bool SaveAsTemplate { get; set; }
 
     public class CreateLinkInput
     {
@@ -82,6 +86,7 @@ public class CreateModel : PageModel
         }
 
         await LoadContactsAsync();
+        await LoadTemplatesAsync();
     }
 
     private async Task LoadContactsAsync()
@@ -102,12 +107,51 @@ public class CreateModel : PageModel
         }));
     }
 
+    private async Task LoadTemplatesAsync()
+    {
+        var templates = await _context.ActionTemplates
+            .OrderBy(t => t.Name)
+            .ToListAsync();
+
+        TemplateOptions = new List<SelectListItem>
+        {
+            new SelectListItem { Value = "", Text = "-- Select a template or enter manually --" }
+        };
+
+        TemplateOptions.AddRange(templates.Select(t => new SelectListItem
+        {
+            Value = t.Actions,
+            Text = t.Name
+        }));
+    }
+
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
         {
             await LoadContactsAsync();
+            await LoadTemplatesAsync();
             return Page();
+        }
+
+        // Save as template if requested
+        if (SaveAsTemplate && !string.IsNullOrWhiteSpace(Input.Actions))
+        {
+            // Check if template already exists
+            var existingTemplate = await _context.ActionTemplates
+                .FirstOrDefaultAsync(t => t.Actions == Input.Actions);
+
+            if (existingTemplate == null)
+            {
+                var newTemplate = new ActionTemplate
+                {
+                    Name = Input.Name,
+                    Actions = Input.Actions,
+                    Description = $"Added from link: {Input.Name}"
+                };
+                _context.ActionTemplates.Add(newTemplate);
+                await _context.SaveChangesAsync();
+            }
         }
 
         // Save as contact if requested
@@ -148,6 +192,7 @@ public class CreateModel : PageModel
         {
             ModelState.AddModelError(string.Empty, $"Failed to create link: {ex.Message}");
             await LoadContactsAsync();
+            await LoadTemplatesAsync();
             return Page();
         }
     }

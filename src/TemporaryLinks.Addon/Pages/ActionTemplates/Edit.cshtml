@@ -1,0 +1,43 @@
+@page "{id:guid}"
+@model TemporaryLinks.Addon.Pages.ActionTemplates.EditModel
+@{
+    ViewData["Title"] = "Edit Action Template";
+}
+
+<h1>Edit Action Template</h1>
+
+@if (Model.Template == null)
+{
+    <div class="alert alert-danger">Template not found.</div>
+}
+else
+{
+    <div class="card">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Input.Name"></label>
+                <input asp-for="Input.Name" class="form-control" />
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Input.Actions"></label>
+                <textarea asp-for="Input.Actions" class="form-control" rows="8"></textarea>
+                <span asp-validation-for="Input.Actions" class="text-danger"></span>
+                <small class="text-muted">JSON array of Home Assistant actions</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Input.Description"></label>
+                <textarea asp-for="Input.Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Input.Description" class="text-danger"></span>
+                <small class="text-muted">Optional - What does this template do?</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-page="Index" class="btn">Cancel</a>
+        </form>
+    </div>
+}

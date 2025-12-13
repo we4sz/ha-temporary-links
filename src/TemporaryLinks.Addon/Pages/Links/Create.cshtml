@@ -17,8 +17,22 @@
         </div>
 
         <div class="form-group">
+            <label>Select Action Template</label>
+            <select id="templateSelect" class="form-control">
+                @foreach (var option in Model.TemplateOptions)
+                {
+                    <option value="@option.Value">@option.Text</option>
+                }
+            </select>
+            <small class="text-muted">
+                Select a saved template or enter manually below.
+                <a asp-page="/ActionTemplates/Create">Add new template</a>
+            </small>
+        </div>
+
+        <div class="form-group">
             <label asp-for="Input.Actions"></label>
-            <textarea asp-for="Input.Actions" class="form-control" rows="8" placeholder='[{"action": "light.turn_on", "target": {"entity_id": "light.living_room"}}]'></textarea>
+            <textarea asp-for="Input.Actions" id="actionsTextarea" class="form-control" rows="8" placeholder='[{"action": "light.turn_on", "target": {"entity_id": "light.living_room"}}]'></textarea>
             <span asp-validation-for="Input.Actions" class="text-danger"></span>
             <small class="text-muted">
                 JSON array of Home Assistant actions to execute when the link is clicked.
@@ -29,6 +43,38 @@
                 <br/>Multiple: <code>[{"action": "light.turn_on", ...}, {"action": "notify.mobile_app", ...}]</code>
             </small>
         </div>
+
+        <div class="form-group" id="saveTemplateSection" style="display: none;">
+            <label>
+                <input asp-for="SaveAsTemplate" type="checkbox" />
+                Save this action sequence as a template for future use
+            </label>
+        </div>
+
+        <script>
+            document.getElementById('templateSelect').addEventListener('change', function() {
+                var actionsInput = document.getElementById('actionsTextarea');
+                actionsInput.value = this.value;
+                toggleSaveTemplateSection();
+            });
+
+            document.getElementById('actionsTextarea').addEventListener('input', function() {
+                toggleSaveTemplateSection();
+            });
+
+            function toggleSaveTemplateSection() {
+                var actionsInput = document.getElementById('actionsTextarea');
+                var templateSelect = document.getElementById('templateSelect');
+                var saveSection = document.getElementById('saveTemplateSection');
+
+                // Show "save as template" if actions are entered manually (not from dropdown)
+                if (actionsInput.value && actionsInput.value !== templateSelect.value) {
+                    saveSection.style.display = 'block';
+                } else {
+                    saveSection.style.display = 'none';
+                }
+            }
+        </script>
 
         <div class="form-group">
             <label asp-for="Input.ValidFrom"></label>
@@ -59,7 +105,7 @@
             </select>
             <small class="text-muted">
                 Select a saved contact or enter manually below.
-                <a asp-page="/Contacts/Create" target="_blank">Add new contact</a>
+                <a asp-page="/Contacts/Create">Add new contact</a>
             </small>
         </div>
 

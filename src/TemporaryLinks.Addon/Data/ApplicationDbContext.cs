@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<LinkUsageAudit> LinkUsageAudits => Set<LinkUsageAudit>();
     public DbSet<LinkSmsAudit> LinkSmsAudits => Set<LinkSmsAudit>();
     public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<ActionTemplate> ActionTemplates => Set<ActionTemplate>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -77,6 +78,16 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.PhoneNumber).HasMaxLength(20).IsRequired();
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.Info).HasMaxLength(1000);
+        });
+
+        modelBuilder.Entity<ActionTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Name);
+
+            entity.Property(e => e.Name).HasMaxLength(256).IsRequired();
+            entity.Property(e => e.Actions).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(1000);
         });
     }
 }
