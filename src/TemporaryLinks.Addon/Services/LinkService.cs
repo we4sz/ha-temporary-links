@@ -203,17 +203,11 @@ public class LinkService : ILinkService
         };
     }
 
-    public async Task<TemporaryLink?> GetLinkByTokenAsync(string token)
-    {
-        return await _context.TemporaryLinks
-            .Include(l => l.AuditEntries)
-            .FirstOrDefaultAsync(l => l.Token == token);
-    }
-
     public async Task<TemporaryLink?> GetLinkByIdAsync(Guid id)
     {
         return await _context.TemporaryLinks
             .Include(l => l.AuditEntries)
+            .Include(l => l.SmsEntries)
             .FirstOrDefaultAsync(l => l.Id == id);
     }
 

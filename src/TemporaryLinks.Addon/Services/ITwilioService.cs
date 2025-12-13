@@ -7,6 +7,8 @@ public interface ITwilioService
         string message,
         CancellationToken cancellationToken = default);
 
+    Task<bool> ValidateConfigurationAsync();
+
     bool IsConfigured { get; }
 }
 

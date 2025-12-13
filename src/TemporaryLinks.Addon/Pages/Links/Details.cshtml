@@ -1,10 +1,20 @@
-@page "{id:int}"
+@page "{id:guid}"
 @model TemporaryLinks.Addon.Pages.Links.DetailsModel
 @{
     ViewData["Title"] = "Link Details";
 }
 
 <h1>Link Details</h1>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
 
 @if (Model.Link == null)
 {
@@ -48,20 +58,61 @@ else
             </tr>
         </table>
 
-        <div class="mt-2">
-            <h3>Link URL</h3>
-            <div class="link-url">@Model.LinkUrl</div>
-            <p class="mt-1 text-muted">Share this URL with the recipient (or send via SMS above)</p>
-        </div>
+        @if (Model.Link.Status == LinkStatus.Active)
+        {
+            <div class="mt-2">
+                <h3>Link URL</h3>
+                <div class="link-url">@Model.LinkUrl</div>
+                <p class="mt-1 text-muted">Share this URL with the recipient (or send via SMS below)</p>
+            </div>
 
-        <div class="mt-2">
-            @if (Model.Link.Status == LinkStatus.Active)
-            {
+            <div class="mt-2">
+                @if (Model.IsTwilioConfigured)
+                {
+                    <form method="post" asp-page-handler="SendSms" asp-route-id="@Model.Link.Id"
+                          style="display: inline;">
+                        <button type="submit" class="btn btn-primary">Send SMS</button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-warning" style="margin-top: 1rem;">
+                        <strong>SMS functionality is disabled.</strong> Please configure Twilio settings (Account SID,
+                        Auth Token, and Phone Number) in the addon configuration to enable SMS sending.
+                    </div>
+                }
                 <a asp-page="Delete" asp-route-id="@Model.Link.Id" class="btn btn-danger">Revoke Link</a>
-            }
-            <a asp-page="Index" class="btn">Back to List</a>
-        </div>
+
+                <a asp-page="Index" class="btn">Back to List</a>
+            </div>
+        }
     </div>
+
+    @if (Model.Link.SmsEntries.Any())
+    {
+        <div class="card mt-2">
+            <h3>SMS History</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Content</th>
+                    <th>Twilio SID</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var sms in Model.Link.SmsEntries.OrderByDescending(s => s.Timestamp))
+                {
+                    <tr>
+                        <td>@sms.Timestamp.ToLocalTime().ToString("g")</td>
+                        <td style="max-width: 400px; word-wrap: break-word;">@sms.Content</td>
+                        <td style="font-family: monospace; font-size: 0.9em;">@sms.TwilioMessageSid</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
 
     <div class="card mt-2">
         <h3>Audit Log</h3>

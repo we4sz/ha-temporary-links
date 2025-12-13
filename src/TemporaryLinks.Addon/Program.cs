@@ -1,10 +1,18 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TemporaryLinks.Addon.Configuration;
 using TemporaryLinks.Addon.Data;
 using TemporaryLinks.Addon.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure logging with timestamps
+builder.Logging.ClearProviders();
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
+});
 
 // Load Home Assistant addon options from /data/options.json
 var optionsPath = "/data/options.json";
@@ -26,14 +34,14 @@ builder.Services.Configure<AddonConfiguration>(options =>
     builder.Configuration.GetSection(AddonConfiguration.SectionName).Bind(options);
 
     // Override with addon options from root level (from /data/options.json)
-    // Map ha_url -> HaUrl
+    // Map ha_url -> HaUrl (REQUIRED)
     var haUrl = builder.Configuration["ha_url"];
     if (!string.IsNullOrWhiteSpace(haUrl))
     {
         options.HaUrl = haUrl;
     }
 
-    // Map ha_token -> HaToken
+    // Map ha_token -> HaToken (REQUIRED)
     var haToken = builder.Configuration["ha_token"];
     if (!string.IsNullOrWhiteSpace(haToken))
     {
@@ -95,11 +103,43 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Ensure database is created and migrated
+// Validate required configuration and setup
 using (var scope = app.Services.CreateScope())
 {
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    // Validate required Home Assistant configuration
+    var config = scope.ServiceProvider.GetRequiredService<IOptions<AddonConfiguration>>().Value;
+    if (string.IsNullOrWhiteSpace(config.HaUrl))
+    {
+        logger.LogError("Home Assistant URL (ha_url) is required but not configured. Please set ha_url in addon configuration.");
+        Environment.Exit(1);
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(config.HaToken))
+    {
+        logger.LogError("Home Assistant Token (ha_token) is required but not configured. Please set ha_token in addon configuration.");
+        Environment.Exit(1);
+        return;
+    }
+
+    logger.LogInformation("Home Assistant configuration validated. URL: {HaUrl}", config.HaUrl);
+
+    // Ensure database is created and migrated
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
+
+    // Validate Twilio configuration if it's configured
+    var twilioService = scope.ServiceProvider.GetRequiredService<ITwilioService>();
+    if (twilioService.IsConfigured)
+    {
+        var isValid = await twilioService.ValidateConfigurationAsync();
+        if (!isValid)
+        {
+            logger.LogWarning("Twilio configuration validation failed. SMS functionality may not work properly.");
+        }
+    }
 }
 
 // Handle forwarded headers from HA ingress proxy

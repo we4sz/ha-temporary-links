@@ -34,6 +34,42 @@ public class TwilioService : ITwilioService
 
     public bool IsConfigured => _isConfigured;
 
+    public async Task<bool> ValidateConfigurationAsync()
+    {
+        if (!_isConfigured)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Validate by fetching account information from Twilio
+            var account = await Twilio.Rest.Api.V2010.AccountResource.FetchAsync(_config.AccountSid);
+
+            if (account == null || account.Status != Twilio.Rest.Api.V2010.AccountResource.StatusEnum.Active)
+            {
+                _logger.LogError("Twilio account is not active");
+                return false;
+            }
+
+            // Validate phone number format
+            if (string.IsNullOrWhiteSpace(_config.PhoneNumber) || !_config.PhoneNumber.StartsWith("+"))
+            {
+                _logger.LogError("Twilio phone number is not in valid E.164 format (must start with +)");
+                return false;
+            }
+
+            _logger.LogInformation("Twilio configuration validated successfully. Account: {AccountSid}, Status: {Status}",
+                account.Sid, account.Status);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to validate Twilio configuration");
+            return false;
+        }
+    }
+
     public async Task<TwilioSendResult> SendSmsAsync(
         string toPhoneNumber,
         string message,

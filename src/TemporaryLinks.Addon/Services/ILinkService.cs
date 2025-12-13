@@ -16,7 +16,6 @@ public interface ILinkService
 
 
     Task SendSmsAsync(TemporaryLink link);
-    Task<TemporaryLink?> GetLinkByTokenAsync(string token);
     Task<TemporaryLink?> GetLinkByIdAsync(Guid id);
     Task<IList<TemporaryLink>> GetLinksAsync(string? statusFilter = null);
     Task<LinkExecutionResult> ExecuteLinkAsync(string token, string? ipAddress, string? userAgent);

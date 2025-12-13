@@ -16,9 +16,9 @@
             <div class="result-icon">&#9888;</div>
             <h1>Link Already Used</h1>
             <p>This link has already been used and cannot be used again.</p>
-            @if (Model.Link?.UsedAt != null)
+            @if (Model.Link != null)
             {
-                <p class="text-muted mt-2">Used at: @Model.Link.UsedAt.Value.ToLocalTime().ToString("f")</p>
+                <p class="text-muted mt-2">Usage: @Model.Link.UsageCount / @Model.Link.MaxUses</p>
             }
         </div>
     </div>

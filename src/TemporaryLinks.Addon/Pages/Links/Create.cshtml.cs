@@ -62,18 +62,26 @@ public class CreateModel : PageModel
         {
             return Page();
         }
-        
-        var link = await _linkService.CreateLinkAsync(
-            name: Input.Name,
-            validFrom: new DateTimeOffset(Input.ValidFrom),
-            validUntil: new DateTimeOffset(Input.ValidUntil),
-            recipientPhoneNumber: Input.RecipientPhoneNumber,
-            customMessage: Input.CustomMessage,
-            createdBy: "WebUI",
-            maxUses: Input.MaxUses,
-            actions: Input.Actions);
 
-        return RedirectToPage("Details", new { id = link.Id });
+        try
+        {
+            var link = await _linkService.CreateLinkAsync(
+                name: Input.Name,
+                validFrom: new DateTimeOffset(Input.ValidFrom),
+                validUntil: new DateTimeOffset(Input.ValidUntil),
+                recipientPhoneNumber: Input.RecipientPhoneNumber,
+                customMessage: Input.CustomMessage,
+                createdBy: "WebUI",
+                maxUses: Input.MaxUses,
+                actions: Input.Actions);
+
+            return RedirectToPage("Details", new { id = link.Id });
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(string.Empty, $"Failed to create link: {ex.Message}");
+            return Page();
+        }
     }
 
     private string GetBaseUrl()
