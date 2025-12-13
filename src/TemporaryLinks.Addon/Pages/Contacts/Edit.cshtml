@@ -1,0 +1,50 @@
+@page "{id:guid}"
+@model TemporaryLinks.Addon.Pages.Contacts.EditModel
+@{
+    ViewData["Title"] = "Edit Contact";
+}
+
+<h1>Edit Contact</h1>
+
+@if (Model.Contact == null)
+{
+    <div class="alert alert-danger">Contact not found.</div>
+}
+else
+{
+    <div class="card">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Input.Name"></label>
+                <input asp-for="Input.Name" class="form-control" />
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Input.PhoneNumber"></label>
+                <input asp-for="Input.PhoneNumber" class="form-control" />
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                <small class="text-muted">Phone number in E.164 format</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Input.Email"></label>
+                <input asp-for="Input.Email" type="email" class="form-control" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                <small class="text-muted">Optional</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Input.Info"></label>
+                <textarea asp-for="Input.Info" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Input.Info" class="text-danger"></span>
+                <small class="text-muted">Optional - Why do we have this contact?</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-page="Index" class="btn">Cancel</a>
+        </form>
+    </div>
+}

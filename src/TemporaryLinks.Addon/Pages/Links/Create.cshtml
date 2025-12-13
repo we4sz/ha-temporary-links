@@ -50,11 +50,57 @@
         </div>
 
         <div class="form-group">
-            <label asp-for="Input.RecipientPhoneNumber"></label>
-            <input asp-for="Input.RecipientPhoneNumber" class="form-control" placeholder="+1234567890" />
-            <span asp-validation-for="Input.RecipientPhoneNumber" class="text-danger"></span>
-            <small class="text-muted">Phone number in E.164 format (leave empty to skip SMS)</small>
+            <label>Select Contact</label>
+            <select id="contactSelect" class="form-control">
+                @foreach (var option in Model.ContactOptions)
+                {
+                    <option value="@option.Value">@option.Text</option>
+                }
+            </select>
+            <small class="text-muted">
+                Select a saved contact or enter manually below.
+                <a asp-page="/Contacts/Create" target="_blank">Add new contact</a>
+            </small>
         </div>
+
+        <div class="form-group">
+            <label asp-for="Input.RecipientPhoneNumber"></label>
+            <input asp-for="Input.RecipientPhoneNumber" id="phoneNumber" class="form-control" placeholder="+1234567890" />
+            <span asp-validation-for="Input.RecipientPhoneNumber" class="text-danger"></span>
+            <small class="text-muted">Phone number in E.164 format</small>
+        </div>
+
+        <div class="form-group" id="saveContactSection" style="display: none;">
+            <label>
+                <input asp-for="SaveAsContact" type="checkbox" />
+                Save this number as a contact for future use
+            </label>
+        </div>
+
+        <script>
+            document.getElementById('contactSelect').addEventListener('change', function() {
+                var phoneInput = document.getElementById('phoneNumber');
+                phoneInput.value = this.value;
+                toggleSaveContactSection();
+            });
+
+            document.getElementById('phoneNumber').addEventListener('input', function() {
+                toggleSaveContactSection();
+            });
+
+            function toggleSaveContactSection() {
+                var phoneInput = document.getElementById('phoneNumber');
+                var contactSelect = document.getElementById('contactSelect');
+                var saveSection = document.getElementById('saveContactSection');
+
+                // Show "save as contact" if phone is entered manually (not from dropdown)
+                if (phoneInput.value && phoneInput.value !== contactSelect.value) {
+                    saveSection.style.display = 'block';
+                } else {
+                    saveSection.style.display = 'none';
+                }
+            }
+        </script>
 
         <div class="form-group">
             <label asp-for="Input.CustomMessage"></label>

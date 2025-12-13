@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using TemporaryLinks.Addon.Data;
+using TemporaryLinks.Addon.Models;
 using TemporaryLinks.Addon.Services;
 
 namespace TemporaryLinks.Addon.Pages.Links;
@@ -8,14 +12,21 @@ namespace TemporaryLinks.Addon.Pages.Links;
 public class CreateModel : PageModel
 {
     private readonly ILinkService _linkService;
+    private readonly ApplicationDbContext _context;
 
-    public CreateModel(ILinkService linkService)
+    public CreateModel(ILinkService linkService, ApplicationDbContext context)
     {
         _linkService = linkService;
+        _context = context;
     }
 
     [BindProperty]
     public CreateLinkInput Input { get; set; } = new();
+
+    public List<SelectListItem> ContactOptions { get; set; } = new();
+
+    [BindProperty]
+    public bool SaveAsContact { get; set; }
 
     public class CreateLinkInput
     {
@@ -49,18 +60,59 @@ public class CreateModel : PageModel
         public int MaxUses { get; set; } = 1;
     }
 
-    public void OnGet()
+    public async Task OnGetAsync()
     {
         var today = DateTime.Today;
         Input.ValidFrom = today.AddHours(9);
         Input.ValidUntil = today.AddHours(17);
+
+        await LoadContactsAsync();
+    }
+
+    private async Task LoadContactsAsync()
+    {
+        var contacts = await _context.Contacts
+            .OrderBy(c => c.Name)
+            .ToListAsync();
+
+        ContactOptions = new List<SelectListItem>
+        {
+            new SelectListItem { Value = "", Text = "-- Select a contact or enter manually --" }
+        };
+
+        ContactOptions.AddRange(contacts.Select(c => new SelectListItem
+        {
+            Value = c.PhoneNumber,
+            Text = $"{c.Name} ({c.PhoneNumber})"
+        }));
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
         {
+            await LoadContactsAsync();
             return Page();
+        }
+
+        // Save as contact if requested
+        if (SaveAsContact && !string.IsNullOrWhiteSpace(Input.RecipientPhoneNumber))
+        {
+            // Check if contact already exists
+            var existingContact = await _context.Contacts
+                .FirstOrDefaultAsync(c => c.PhoneNumber == Input.RecipientPhoneNumber);
+
+            if (existingContact == null)
+            {
+                var newContact = new Contact
+                {
+                    Name = Input.Name,
+                    PhoneNumber = Input.RecipientPhoneNumber,
+                    Info = $"Added from link: {Input.Name}"
+                };
+                _context.Contacts.Add(newContact);
+                await _context.SaveChangesAsync();
+            }
         }
 
         try
@@ -80,6 +132,7 @@ public class CreateModel : PageModel
         catch (Exception ex)
         {
             ModelState.AddModelError(string.Empty, $"Failed to create link: {ex.Message}");
+            await LoadContactsAsync();
             return Page();
         }
     }

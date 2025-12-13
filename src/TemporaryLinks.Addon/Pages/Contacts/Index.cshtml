@@ -1,0 +1,49 @@
+@page
+@model TemporaryLinks.Addon.Pages.Contacts.IndexModel
+@{
+    ViewData["Title"] = "Contacts";
+}
+
+<h1>Contacts</h1>
+
+<div class="mt-2">
+    <a asp-page="Create" class="btn btn-primary">Add New Contact</a>
+</div>
+
+@if (Model.Contacts.Any())
+{
+    <div class="card mt-2">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                    <th>Info</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var contact in Model.Contacts)
+                {
+                    <tr>
+                        <td>@contact.Name</td>
+                        <td>@contact.PhoneNumber</td>
+                        <td>@(contact.Email ?? "-")</td>
+                        <td style="max-width: 300px;">@(contact.Info ?? "-")</td>
+                        <td>
+                            <a asp-page="Edit" asp-route-id="@contact.Id" class="btn btn-sm">Edit</a>
+                            <a asp-page="Delete" asp-route-id="@contact.Id" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="card mt-2">
+        <p class="text-muted">No contacts found. Add your first contact to get started.</p>
+    </div>
+}

@@ -1,0 +1,51 @@
+@page "{id:guid}"
+@model TemporaryLinks.Addon.Pages.Contacts.DeleteModel
+@{
+    ViewData["Title"] = "Delete Contact";
+}
+
+<h1>Delete Contact</h1>
+
+@if (Model.Contact == null)
+{
+    <div class="alert alert-danger">Contact not found.</div>
+}
+else
+{
+    <div class="card">
+        <div class="alert alert-warning">
+            Are you sure you want to delete this contact? This action cannot be undone.
+        </div>
+
+        <h2>@Model.Contact.Name</h2>
+        <table>
+            <tr>
+                <th>Phone Number</th>
+                <td>@Model.Contact.PhoneNumber</td>
+            </tr>
+            @if (!string.IsNullOrEmpty(Model.Contact.Email))
+            {
+                <tr>
+                    <th>Email</th>
+                    <td>@Model.Contact.Email</td>
+                </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.Contact.Info))
+            {
+                <tr>
+                    <th>Info</th>
+                    <td>@Model.Contact.Info</td>
+                </tr>
+            }
+            <tr>
+                <th>Created</th>
+                <td>@Model.Contact.CreatedAt.ToLocalTime().ToString("f")</td>
+            </tr>
+        </table>
+
+        <form method="post" class="mt-2">
+            <button type="submit" class="btn btn-danger">Yes, Delete Contact</button>
+            <a asp-page="Index" class="btn">Cancel</a>
+        </form>
+    </div>
+}
