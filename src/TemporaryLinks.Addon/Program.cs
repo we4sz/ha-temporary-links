@@ -136,11 +136,19 @@ using (var scope = app.Services.CreateScope())
     var twilioService = scope.ServiceProvider.GetRequiredService<ITwilioService>();
     if (twilioService.IsConfigured)
     {
+        logger.LogInformation("Twilio is configured. Validating credentials...");
         var isValid = await twilioService.ValidateConfigurationAsync();
         if (!isValid)
         {
-            logger.LogWarning("Twilio configuration validation failed. SMS functionality may not work properly.");
+            logger.LogError("Twilio configuration validation failed. Please check your Twilio Account SID, Auth Token, and Phone Number.");
+            Environment.Exit(1);
+            return;
         }
+        logger.LogInformation("Twilio configuration validated successfully");
+    }
+    else
+    {
+        logger.LogInformation("Twilio is not configured. SMS functionality will be disabled.");
     }
 }
 
