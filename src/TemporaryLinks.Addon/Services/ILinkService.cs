@@ -14,6 +14,13 @@ public interface ILinkService
         string actions,
         int maxUses = 1);
 
+    Task<TemporaryLink> UpdateLinkAsync(
+        Guid id,
+        DateTimeOffset validFrom,
+        DateTimeOffset validUntil,
+        string recipientPhoneNumber,
+        string? customMessage,
+        int maxUses);
 
     Task SendSmsAsync(TemporaryLink link);
     Task<TemporaryLink?> GetLinkByIdAsync(Guid id);

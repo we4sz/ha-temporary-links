@@ -76,6 +76,46 @@ public class LinkService : ILinkService
         return link;
     }
 
+    public async Task<TemporaryLink> UpdateLinkAsync(
+        Guid id,
+        DateTimeOffset validFrom,
+        DateTimeOffset validUntil,
+        string recipientPhoneNumber,
+        string? customMessage,
+        int maxUses)
+    {
+        var link = await _context.TemporaryLinks.FindAsync(id);
+
+        if (link == null)
+        {
+            throw new InvalidOperationException($"Link with ID {id} not found");
+        }
+
+        if (link.Status != LinkStatus.Active)
+        {
+            throw new InvalidOperationException("Only active links can be edited");
+        }
+
+        // Don't allow reducing max uses below current usage count
+        if (maxUses < link.UsageCount)
+        {
+            throw new InvalidOperationException($"Max uses cannot be less than current usage count ({link.UsageCount})");
+        }
+
+        link.ValidFrom = validFrom;
+        link.ValidUntil = validUntil;
+        link.RecipientPhoneNumber = recipientPhoneNumber;
+        link.CustomMessage = customMessage;
+        link.MaxUses = maxUses;
+
+        await _context.SaveChangesAsync();
+
+        await AddAuditEntryAsync(link.Id, "Updated",
+            $"Link updated: ValidFrom={validFrom:g}, ValidUntil={validUntil:g}, MaxUses={maxUses}, Phone={recipientPhoneNumber}");
+
+        return link;
+    }
+
     public async Task SendSmsAsync(TemporaryLink link)
     {
         var message = FormatMessage(link);
