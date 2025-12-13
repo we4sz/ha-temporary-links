@@ -25,7 +25,7 @@ public class CreateModel : PageModel
 
         [Required]
         [Display(Name = "Actions (JSON)")]
-        public string Actions { get; set; } = string.Empty;
+        public string Actions { get; set; }= string.Empty;
 
         [Required]
         [Display(Name = "Valid From")]
@@ -33,20 +33,18 @@ public class CreateModel : PageModel
 
         [Required]
         [Display(Name = "Valid Until")]
-        public DateTime ValidUntil { get; set; } = DateTime.Now.AddHours(8);
+        public DateTime ValidUntil { get; set; } = DateTime.Now.AddHours(24);
 
         [Phone]
+        [Required]
         [Display(Name = "Recipient Phone Number")]
-        public string? RecipientPhoneNumber { get; set; }
+        public string RecipientPhoneNumber { get; set; }= string.Empty;
 
         [Display(Name = "Custom Message")]
         public string? CustomMessage { get; set; }
 
-        [Display(Name = "Send SMS Immediately")]
-        public bool SendSmsImmediately { get; set; } = true;
-
         [Required]
-        [Range(1, 100)]
+        [Range(1, int.MaxValue)]
         [Display(Name = "Maximum Uses")]
         public int MaxUses { get; set; } = 1;
     }
@@ -64,19 +62,14 @@ public class CreateModel : PageModel
         {
             return Page();
         }
-
-        var baseUrl = GetBaseUrl();
+        
         var link = await _linkService.CreateLinkAsync(
             name: Input.Name,
-            scriptEntityId: "script.dummy",  // Dummy value - Actions will override this
             validFrom: new DateTimeOffset(Input.ValidFrom),
             validUntil: new DateTimeOffset(Input.ValidUntil),
             recipientPhoneNumber: Input.RecipientPhoneNumber,
             customMessage: Input.CustomMessage,
-            scriptData: null,
             createdBy: "WebUI",
-            baseUrl: baseUrl,
-            sendSmsImmediately: Input.SendSmsImmediately,
             maxUses: Input.MaxUses,
             actions: Input.Actions);
 

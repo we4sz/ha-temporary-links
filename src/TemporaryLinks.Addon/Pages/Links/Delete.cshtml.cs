@@ -16,13 +16,13 @@ public class DeleteModel : PageModel
 
     public TemporaryLink? Link { get; set; }
 
-    public async Task<IActionResult> OnGetAsync(int id)
+    public async Task<IActionResult> OnGetAsync(Guid id)
     {
         Link = await _linkService.GetLinkByIdAsync(id);
         return Page();
     }
 
-    public async Task<IActionResult> OnPostAsync(int id)
+    public async Task<IActionResult> OnPostAsync(Guid id)
     {
         Link = await _linkService.GetLinkByIdAsync(id);
         if (Link == null)

@@ -21,7 +21,9 @@ else
             {
                 <tr>
                     <th>Actions</th>
-                    <td><pre style="margin: 0; max-width: 600px; overflow-x: auto;">@Model.Link.Actions</pre></td>
+                    <td>
+                        <pre style="margin: 0; max-width: 600px; overflow-x: auto;">@Model.Link.Actions</pre>
+                    </td>
                 </tr>
             }
             <tr>
@@ -40,28 +42,10 @@ else
                 <th>Created</th>
                 <td>@Model.Link.CreatedAt.ToLocalTime().ToString("f") by @Model.Link.CreatedBy</td>
             </tr>
-            @if (!string.IsNullOrEmpty(Model.Link.RecipientPhoneNumber))
-            {
-                <tr>
-                    <th>Phone Number</th>
-                    <td>@Model.Link.RecipientPhoneNumber</td>
-                </tr>
-                <tr>
-                    <th>SMS Status</th>
-                    <td>@(Model.Link.SmsSent ? "Sent" : "Not sent")</td>
-                </tr>
-            }
-            @if (Model.Link.UsedAt.HasValue)
-            {
-                <tr>
-                    <th>Used At</th>
-                    <td>@Model.Link.UsedAt.Value.ToLocalTime().ToString("f")</td>
-                </tr>
-                <tr>
-                    <th>Used By IP</th>
-                    <td>@Model.Link.UsedByIpAddress</td>
-                </tr>
-            }
+            <tr>
+                <th>Phone Number</th>
+                <td>@Model.Link.RecipientPhoneNumber</td>
+            </tr>
         </table>
 
         <div class="mt-2">
@@ -71,7 +55,7 @@ else
         </div>
 
         <div class="mt-2">
-            @if (Model.Link.Status == LinkStatus.Active || Model.Link.Status == LinkStatus.Pending)
+            @if (Model.Link.Status == LinkStatus.Active)
             {
                 <a asp-page="Delete" asp-route-id="@Model.Link.Id" class="btn btn-danger">Revoke Link</a>
             }
@@ -85,25 +69,25 @@ else
         {
             <table>
                 <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Event</th>
-                        <th>Description</th>
-                        <th>IP</th>
-                        <th>Success</th>
-                    </tr>
+                <tr>
+                    <th>Time</th>
+                    <th>Event</th>
+                    <th>Description</th>
+                    <th>IP</th>
+                    <th>Success</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var audit in Model.Link.AuditEntries.OrderByDescending(a => a.Timestamp))
-                    {
-                        <tr>
-                            <td>@audit.Timestamp.ToLocalTime().ToString("g")</td>
-                            <td>@audit.EventType</td>
-                            <td>@audit.Description</td>
-                            <td>@audit.IpAddress</td>
-                            <td>@(audit.Success ? "Yes" : "No")</td>
-                        </tr>
-                    }
+                @foreach (var audit in Model.Link.AuditEntries.OrderByDescending(a => a.Timestamp))
+                {
+                    <tr>
+                        <td>@audit.Timestamp.ToLocalTime().ToString("g")</td>
+                        <td>@audit.EventType</td>
+                        <td>@audit.Description</td>
+                        <td>@audit.IpAddress</td>
+                        <td>@(audit.Success ? "Yes" : "No")</td>
+                    </tr>
+                }
                 </tbody>
             </table>
         }

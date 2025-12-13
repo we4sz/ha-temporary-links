@@ -55,10 +55,9 @@
                         <td>@link.ValidFrom.ToLocalTime().ToString("g")</td>
                         <td>@link.ValidUntil.ToLocalTime().ToString("g")</td>
                         <td><span class="status status-@link.Status.ToString().ToLower()">@link.Status</span></td>
-                        <td>@(link.SmsSent ? "Sent" : "-")</td>
                         <td>
                             <a asp-page="Details" asp-route-id="@link.Id" class="btn btn-primary btn-sm">View</a>
-                            @if (link.Status == LinkStatus.Active || link.Status == LinkStatus.Pending)
+                            @if (link.Status == LinkStatus.Active)
                             {
                                 <a asp-page="Delete" asp-route-id="@link.Id" class="btn btn-danger btn-sm">Revoke</a>
                             }
