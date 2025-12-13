@@ -42,6 +42,14 @@ nav {
     font-weight: bold;
 }
 
+.nav-brand a,
+.nav-brand a:visited,
+.nav-brand a:hover,
+.nav-brand a:active {
+    color: inherit;
+    text-decoration: none;
+}
+
 .nav-links a {
     color: var(--white);
     text-decoration: none;
