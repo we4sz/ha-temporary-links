@@ -18,7 +18,6 @@ ingress_port: 8099
 ingress_entry: /
 panel_icon: mdi:link-variant
 panel_title: "Temporary Links"
-panel_admin: true
 
 
 map:
