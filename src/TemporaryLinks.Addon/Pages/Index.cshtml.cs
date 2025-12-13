@@ -18,7 +18,7 @@ public class IndexModel : PageModel
     public int ActiveLinks { get; set; }
     public int UsedLinks { get; set; }
     public int ExpiredLinks { get; set; }
-    public IList<TemporaryLink> RecentLinks { get; set; } = [];
+    public IList<TemporaryLink> ActiveLinksList { get; set; } = [];
     public IList<LinkUsageAudit> RecentActivity { get; set; } = [];
 
     public async Task OnGetAsync()
@@ -28,9 +28,9 @@ public class IndexModel : PageModel
         UsedLinks = await _context.TemporaryLinks.CountAsync(l => l.Status == LinkStatus.Used);
         ExpiredLinks = await _context.TemporaryLinks.CountAsync(l => l.Status == LinkStatus.Expired);
 
-        RecentLinks = await _context.TemporaryLinks
+        ActiveLinksList = await _context.TemporaryLinks
+            .Where(l => l.Status == LinkStatus.Active)
             .OrderByDescending(l => l.CreatedAt)
-            .Take(5)
             .ToListAsync();
 
         RecentActivity = await _context.LinkUsageAudits

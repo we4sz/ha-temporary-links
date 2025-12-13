@@ -32,8 +32,8 @@
                     <th>Actions</th>
                     <th>Valid From</th>
                     <th>Valid Until</th>
+                    <th>Usage</th>
                     <th>Status</th>
-                    <th>SMS</th>
                     <th></th>
                 </tr>
             </thead>
@@ -54,9 +54,11 @@
                         </td>
                         <td>@link.ValidFrom.ToLocalTime().ToString("g")</td>
                         <td>@link.ValidUntil.ToLocalTime().ToString("g")</td>
+                        <td>@link.UsageCount / @link.MaxUses</td>
                         <td><span class="status status-@link.Status.ToString().ToLower()">@link.Status</span></td>
                         <td>
                             <a asp-page="Details" asp-route-id="@link.Id" class="btn btn-primary btn-sm">View</a>
+                            <a asp-page="Create" asp-route-duplicateFrom="@link.Id" class="btn btn-sm">Duplicate</a>
                             @if (link.Status == LinkStatus.Active)
                             {
                                 <a asp-page="Delete" asp-route-id="@link.Id" class="btn btn-danger btn-sm">Revoke</a>

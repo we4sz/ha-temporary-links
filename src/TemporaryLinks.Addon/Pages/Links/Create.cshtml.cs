@@ -60,11 +60,26 @@ public class CreateModel : PageModel
         public int MaxUses { get; set; } = 1;
     }
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(Guid? duplicateFrom = null)
     {
         var today = DateTime.Today;
         Input.ValidFrom = today.AddHours(9);
         Input.ValidUntil = today.AddHours(17);
+
+        // If duplicating from an existing link, pre-fill the form
+        if (duplicateFrom.HasValue)
+        {
+            var existingLink = await _context.TemporaryLinks.FindAsync(duplicateFrom.Value);
+            if (existingLink != null)
+            {
+                Input.Name = existingLink.Name;
+                Input.Actions = existingLink.Actions;
+                Input.RecipientPhoneNumber = existingLink.RecipientPhoneNumber;
+                Input.CustomMessage = existingLink.CustomMessage;
+                Input.MaxUses = existingLink.MaxUses;
+                // Keep the default times (today 9am-5pm) for new link
+            }
+        }
 
         await LoadContactsAsync();
     }

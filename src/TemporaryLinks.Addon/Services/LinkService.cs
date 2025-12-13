@@ -203,12 +203,12 @@ public class LinkService : ILinkService
             };
         }
 
+        link.UsageCount++;
+        await _context.SaveChangesAsync();
+        
         await AddAuditEntryAsync(link.Id, "Executed",
             $"Link executed ({link.UsageCount}/{link.MaxUses})",
             ipAddress, userAgent, true);
-
-        link.UsageCount++;
-        await _context.SaveChangesAsync();
 
         // Mark as used and cleanup webhook when max uses is reached
         if (link.UsageCount >= link.MaxUses)

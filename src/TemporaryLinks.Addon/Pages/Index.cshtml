@@ -31,8 +31,8 @@
 </div>
 
 <div class="card">
-    <h2>Recent Links</h2>
-    @if (Model.RecentLinks.Any())
+    <h2>Active Links</h2>
+    @if (Model.ActiveLinksList.Any())
     {
         <table>
             <thead>
@@ -40,12 +40,12 @@
                     <th>Name</th>
                     <th>Actions</th>
                     <th>Valid Until</th>
-                    <th>Status</th>
+                    <th>Usage</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var link in Model.RecentLinks)
+                @foreach (var link in Model.ActiveLinksList)
                 {
                     <tr>
                         <td>@link.Name</td>
@@ -60,9 +60,10 @@
                             }
                         </td>
                         <td>@link.ValidUntil.ToLocalTime().ToString("g")</td>
-                        <td><span class="status status-@link.Status.ToString().ToLower()">@link.Status</span></td>
+                        <td>@link.UsageCount / @link.MaxUses</td>
                         <td>
                             <a asp-page="/Links/Details" asp-route-id="@link.Id" class="btn btn-primary btn-sm">View</a>
+                            <a asp-page="/Links/Create" asp-route-duplicateFrom="@link.Id" class="btn btn-sm">Duplicate</a>
                         </td>
                     </tr>
                 }
@@ -71,7 +72,7 @@
     }
     else
     {
-        <p class="text-muted">No links created yet. <a asp-page="/Links/Create">Create your first link</a></p>
+        <p class="text-muted">No active links. <a asp-page="/Links/Create">Create a new link</a> or <a asp-page="/Links/Index">view all links</a></p>
     }
 </div>
 

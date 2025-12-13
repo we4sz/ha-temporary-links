@@ -83,12 +83,17 @@ else
                 }
                 <a asp-page="Edit" asp-route-id="@Model.Link.Id" class="btn btn-primary">Edit Link</a>
                 <a asp-page="Delete" asp-route-id="@Model.Link.Id" class="btn btn-danger">Revoke Link</a>
+                <a asp-page="Create" asp-route-duplicateFrom="@Model.Link.Id" class="btn">Duplicate Link</a>
                 <a asp-page="Index" class="btn">Back to List</a>
             </div>
         }
         else
         {
+            <div class="alert alert-warning" style="margin-top: 1rem;">
+                This link is <strong>@Model.Link.Status</strong> and cannot be used. You can duplicate it to create a new link with the same settings.
+            </div>
             <div class="mt-2">
+                <a asp-page="Create" asp-route-duplicateFrom="@Model.Link.Id" class="btn btn-primary">Duplicate Link</a>
                 <a asp-page="Index" class="btn">Back to List</a>
             </div>
         }
