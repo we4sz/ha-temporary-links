@@ -8,10 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Load Home Assistant addon options from /data/options.json
 var optionsPath = "/data/options.json";
-if (File.Exists(optionsPath))
-{
-    builder.Configuration.AddJsonFile(optionsPath, optional: true, reloadOnChange: true);
-}
+
+builder.Configuration.AddJsonFile(optionsPath, optional: false, reloadOnChange: true);
 
 // Configure forwarded headers for running behind HA ingress proxy
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -77,8 +75,7 @@ builder.Services.Configure<TwilioConfiguration>(options =>
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Data Source=/data/temporarylinks.db"));
+    options.UseSqlite("Data Source=/data/temporarylinks.db"));
 
 // HTTP client for Home Assistant
 builder.Services.AddHttpClient<IHomeAssistantService, HomeAssistantService>();

@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<TemporaryLink> TemporaryLinks => Set<TemporaryLink>();
     public DbSet<LinkUsageAudit> LinkUsageAudits => Set<LinkUsageAudit>();
+    public DbSet<LinkSmsAudit> LinkSmsAudits => Set<LinkSmsAudit>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -36,7 +37,6 @@ public class ApplicationDbContext : DbContext
 
             entity.Property(e => e.Token).HasMaxLength(64).IsRequired();
             entity.Property(e => e.Name).HasMaxLength(256).IsRequired();
-            entity.Property(e => e.ScriptEntityId).HasMaxLength(256).IsRequired();
             entity.Property(e => e.RecipientPhoneNumber).HasMaxLength(20);
             entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Status).HasConversion<int>();
@@ -50,6 +50,18 @@ public class ApplicationDbContext : DbContext
 
             entity.HasOne(e => e.TemporaryLink)
                 .WithMany(e => e.AuditEntries)
+                .HasForeignKey(e => e.TemporaryLinkId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<LinkSmsAudit>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TemporaryLinkId);
+            entity.HasIndex(e => e.Timestamp);
+
+            entity.HasOne(e => e.TemporaryLink)
+                .WithMany(e => e.SmsEntries)
                 .HasForeignKey(e => e.TemporaryLinkId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

@@ -6,27 +6,19 @@ using TemporaryLinks.Addon.Configuration;
 
 namespace TemporaryLinks.Addon.Services;
 
-public class HaEventListenerService : BackgroundService
+public class HaEventListenerService(
+    IServiceProvider serviceProvider,
+    ILogger<HaEventListenerService> logger,
+    IOptions<AddonConfiguration> config)
+    : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<HaEventListenerService> _logger;
-    private readonly AddonConfiguration _config;
+    private readonly AddonConfiguration _config = config.Value;
     private ClientWebSocket? _webSocket;
-    private long _messageId = 1;
-
-    public HaEventListenerService(
-        IServiceProvider serviceProvider,
-        ILogger<HaEventListenerService> logger,
-        IOptions<AddonConfiguration> config)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-        _config = config.Value;
-    }
+    private int _messageId = 1;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Starting Home Assistant event listener");
+        logger.LogInformation("Starting Home Assistant event listener");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -36,38 +28,24 @@ public class HaEventListenerService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in event listener, will retry in 10 seconds");
+                logger.LogError(ex, "Error in event listener, will retry in 10 seconds");
                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
             }
         }
 
-        _logger.LogInformation("Home Assistant event listener stopped");
+        logger.LogInformation("Home Assistant event listener stopped");
     }
 
     private async Task ConnectAndListenAsync(CancellationToken stoppingToken)
-    {
-        string wsUri;
-
-        // Check if direct HA URL is configured
-        if (!string.IsNullOrWhiteSpace(_config.HaUrl))
-        {
-            // Use direct HA WebSocket connection
-            var haUrl = _config.HaUrl.Replace("http://", "ws://").Replace("https://", "wss://").TrimEnd('/');
-            wsUri = $"{haUrl}/api/websocket";
-            _logger.LogInformation("Using direct HA WebSocket at {Uri}", wsUri);
-        }
-        else
-        {
-            // Fall back to supervisor WebSocket endpoint
-            wsUri = "ws://supervisor/core/websocket";
-            _logger.LogInformation("Using supervisor WebSocket at {Uri}", wsUri);
-        }
+    {   
+        var haUrl = _config.HaUrl.Replace("http://", "ws://").Replace("https://", "wss://").TrimEnd('/');
+        var wsUri = $"{haUrl}/api/websocket";
 
         _webSocket = new ClientWebSocket();
 
-        _logger.LogInformation("Connecting to HA WebSocket at {Uri}", wsUri);
+        logger.LogInformation("Connecting to HA WebSocket at {Uri}", wsUri);
         await _webSocket.ConnectAsync(new Uri(wsUri), stoppingToken);
-        _logger.LogInformation("Connected to HA WebSocket");
+        logger.LogInformation("Connected to HA WebSocket");
 
         var buffer = new byte[4096];
         var messageBuilder = new StringBuilder();
@@ -78,7 +56,7 @@ public class HaEventListenerService : BackgroundService
 
             if (result.MessageType == WebSocketMessageType.Close)
             {
-                _logger.LogWarning("WebSocket closed by server");
+                logger.LogWarning("WebSocket closed by server");
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by server", stoppingToken);
                 break;
             }
@@ -107,17 +85,17 @@ public class HaEventListenerService : BackgroundService
 
             if (type == "auth_required")
             {
-                _logger.LogInformation("Authentication required");
+                logger.LogInformation("Authentication required");
                 await AuthenticateAsync(stoppingToken);
             }
             else if (type == "auth_ok")
             {
-                _logger.LogInformation("Authentication successful");
+                logger.LogInformation("Authentication successful");
                 await SubscribeToEventsAsync(stoppingToken);
             }
             else if (type == "auth_invalid")
             {
-                _logger.LogError("Authentication failed");
+                logger.LogError("Authentication failed");
                 throw new InvalidOperationException("WebSocket authentication failed");
             }
             else if (type == "event")
@@ -127,48 +105,35 @@ public class HaEventListenerService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handling WebSocket message: {Message}", message);
+            logger.LogError(ex, "Error handling WebSocket message: {Message}", message);
         }
     }
 
     private async Task AuthenticateAsync(CancellationToken stoppingToken)
     {
-        string token;
-
-        // Use ha_token if configured (direct HA access), otherwise use supervisor token
-        if (!string.IsNullOrWhiteSpace(_config.HaToken))
-        {
-            token = _config.HaToken;
-            _logger.LogInformation("Authenticating with configured HA token");
-        }
-        else
-        {
-            token = Environment.GetEnvironmentVariable("SUPERVISOR_TOKEN")
-                ?? _config.Token
-                ?? throw new InvalidOperationException("SUPERVISOR_TOKEN not available and no HA token configured");
-            _logger.LogInformation("Authenticating with supervisor token");
-        }
-
         var authMessage = new
         {
             type = "auth",
-            access_token = token
+            access_token = _config.HaToken
         };
 
         await SendMessageAsync(authMessage, stoppingToken);
     }
+    
+    
+    private int GetNextMessageId() => Interlocked.Increment(ref _messageId);
 
     private async Task SubscribeToEventsAsync(CancellationToken stoppingToken)
     {
         var subscribeMessage = new
         {
-            id = _messageId++,
+            id = GetNextMessageId(),
             type = "subscribe_events",
             event_type = "temp_link_triggered"
         };
 
         await SendMessageAsync(subscribeMessage, stoppingToken);
-        _logger.LogInformation("Subscribed to temp_link_triggered events");
+        logger.LogInformation("Subscribed to temp_link_triggered events");
     }
 
     private async Task HandleEventAsync(JsonElement eventMessage, CancellationToken stoppingToken)
@@ -192,18 +157,18 @@ public class HaEventListenerService : BackgroundService
             if (string.IsNullOrEmpty(token))
                 return;
 
-            _logger.LogInformation("Received temp_link_triggered event for token {Token}", token);
+            logger.LogInformation("Received temp_link_triggered event for token {Token}", token);
 
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = serviceProvider.CreateScope();
             var linkService = scope.ServiceProvider.GetRequiredService<ILinkService>();
 
             var result = await linkService.ExecuteLinkAsync(token, "webhook", "Home Assistant Webhook");
 
-            _logger.LogInformation("Link execution result: {Status}", result.Status);
+            logger.LogInformation("Link execution result: {Status}", result.Status);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handling temp_link_triggered event");
+            logger.LogError(ex, "Error handling temp_link_triggered event");
         }
     }
 

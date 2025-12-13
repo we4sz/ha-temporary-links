@@ -24,32 +24,12 @@ public class HomeAssistantService : IHomeAssistantService
         _logger = logger;
         _config = config.Value;
 
-        // Check if direct HA URL and token are configured
-        if (!string.IsNullOrWhiteSpace(config.Value.HaUrl) &&
-            !string.IsNullOrWhiteSpace(config.Value.HaToken))
-        {
-            // Use direct HA API access (bypasses supervisor)
-            var haUrl = config.Value.HaUrl.TrimEnd('/');
-            _httpClient.BaseAddress = new Uri($"{haUrl}/api/");
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", config.Value.HaToken);
+        var haUrl = config.Value.HaUrl.TrimEnd('/');
+        _httpClient.BaseAddress = new Uri($"{haUrl}/api/");
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", config.Value.HaToken);
 
-            _logger.LogInformation("Using direct HA API access at {BaseUrl}", _httpClient.BaseAddress);
-        }
-        else
-        {
-            // Fall back to supervisor proxy
-            _httpClient.BaseAddress = new Uri(config.Value.BaseUri);
-
-            var token = Environment.GetEnvironmentVariable("SUPERVISOR_TOKEN")
-                ?? config.Value.Token
-                ?? throw new InvalidOperationException("SUPERVISOR_TOKEN not available and no HA token configured");
-
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            _logger.LogInformation("Using supervisor proxy at {BaseUrl}", _httpClient.BaseAddress);
-        }
+        _logger.LogInformation("Using direct HA API access at {BaseUrl}", _httpClient.BaseAddress);
 
         _httpClient.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
@@ -61,153 +41,7 @@ public class HomeAssistantService : IHomeAssistantService
         };
     }
 
-    public async Task<bool> CallScriptAsync(
-        string scriptEntityId,
-        string? dataJson = null,
-        CancellationToken cancellationToken = default)
-    {
-        var parts = scriptEntityId.Split('.', 2);
-        if (parts.Length != 2)
-        {
-            _logger.LogError("Invalid script entity ID format: {EntityId}", scriptEntityId);
-            return false;
-        }
-
-        var domain = parts[0];
-        var service = parts[1];
-        var endpoint = $"services/{domain}/{service}";
-
-        try
-        {
-            _logger.LogInformation("Calling HA service: {Domain}.{Service}", domain, service);
-
-            object? requestBody = null;
-            if (!string.IsNullOrWhiteSpace(dataJson))
-            {
-                requestBody = JsonSerializer.Deserialize<object>(dataJson, _jsonOptions);
-            }
-
-            var content = requestBody != null
-                ? new StringContent(JsonSerializer.Serialize(requestBody, _jsonOptions), Encoding.UTF8, "application/json")
-                : null;
-
-            var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("Successfully called {Domain}.{Service}", domain, service);
-                return true;
-            }
-
-            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("HA API call failed: {StatusCode} - {Body}",
-                response.StatusCode, errorBody);
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Exception calling HA service {Domain}.{Service}", domain, service);
-            return false;
-        }
-    }
-
-    public async Task<bool> TestConnectionAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var response = await _httpClient.GetAsync("", cancellationToken);
-            return response.IsSuccessStatusCode;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to connect to Home Assistant API");
-            return false;
-        }
-    }
-
-    public async Task<IReadOnlyList<EntityInfo>> GetEntitiesAsync(
-        string? domainFilter = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            _logger.LogInformation("Fetching entities from HA API (filter: {Filter})", domainFilter ?? "none");
-            var response = await _httpClient.GetAsync("states", cancellationToken);
-
-            _logger.LogInformation("HA API response: {StatusCode}", response.StatusCode);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError("Failed to get entities: {StatusCode} - {Body}", response.StatusCode, errorBody);
-                return [];
-            }
-
-            var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogInformation("Got {Length} bytes from HA API", json.Length);
-
-            var states = JsonSerializer.Deserialize<List<HaStateResponse>>(json, _jsonOptions);
-            _logger.LogInformation("Deserialized {Count} states", states?.Count ?? 0);
-
-            if (states == null)
-                return [];
-
-            var entities = states
-                .Where(s => string.IsNullOrEmpty(domainFilter) ||
-                           s.EntityId.StartsWith(domainFilter + ".", StringComparison.OrdinalIgnoreCase))
-                .Select(s => new EntityInfo(
-                    s.EntityId,
-                    s.Attributes?.GetValueOrDefault("friendly_name")?.ToString()))
-                .OrderBy(e => e.EntityId)
-                .ToList();
-
-            _logger.LogInformation("Filtered to {Count} entities", entities.Count);
-            return entities;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Exception getting entities from HA");
-            return [];
-        }
-    }
-
-    public async Task<HaConfig?> GetConfigAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            _logger.LogInformation("Fetching HA configuration");
-            var response = await _httpClient.GetAsync("config", cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError("Failed to get HA config: {StatusCode} - {Body}", response.StatusCode, errorBody);
-                return null;
-            }
-
-            var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogInformation("Configjson: {json}", json);
-            var configResponse = JsonSerializer.Deserialize<HaConfigResponse>(json, _jsonOptions);
-
-            if (configResponse == null)
-            {
-                _logger.LogWarning("HA config response was null after deserialization");
-                return null;
-            }
-
-            var config = new HaConfig(configResponse.ExternalUrl, configResponse.InternalUrl);
-            _logger.LogInformation("HA Config {configResponse}", configResponse);
-
-            return config;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Exception getting HA config");
-            return null;
-        }
-    }
-
-    public async Task<string?> CreateWebhookAutomationAsync(
+    public async Task<string> CreateWebhookAutomationAsync(
         string token,
         string linkName,
         string actionsJson,
@@ -215,177 +49,125 @@ public class HomeAssistantService : IHomeAssistantService
         DateTimeOffset validUntil,
         CancellationToken cancellationToken = default)
     {
+        var webhookId = $"temp_link_{token}";
+        var automationId = $"temp_link_{token}";
+
+        // Parse custom actions from JSON
+        object customActions;
         try
         {
-            var webhookId = $"temp_link_{token}";
-            var automationId = $"temp_link_{token}";
-
-            // Parse custom actions from JSON
-            object customActions;
-            try
-            {
-                customActions = JsonSerializer.Deserialize<object>(actionsJson, _jsonOptions)
-                    ?? throw new InvalidOperationException("Actions JSON is null");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to parse actions JSON: {ActionsJson}", actionsJson);
-                throw new InvalidOperationException($"Invalid actions JSON: {ex.Message}");
-            }
-
-            // Build actions array: event trigger first (for tracking), then custom actions
-            var actionsArray = new List<object>
-            {
-                // First action: fire event for tracking
-                new
-                {
-                    @event = "temp_link_triggered",
-                    event_data = new
-                    {
-                        token,
-                        link_name = linkName,
-                        webhook_id = webhookId
-                    }
-                }
-            };
-
-            // Add custom actions
-            if (customActions is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
-            {
-                foreach (var action in jsonElement.EnumerateArray())
-                {
-                    actionsArray.Add(action);
-                }
-            }
-
-            // Create automation config
-            var automation = new
-            {
-                id = automationId,  // Include the ID in the payload
-                alias = $"Temp Link: {linkName}",
-                description = $"Webhook handler for temporary link: {linkName}. Valid from {validFrom:u} to {validUntil:u}",
-                trigger = new[]
-                {
-                    new
-                    {
-                        platform = "webhook",
-                        webhook_id = webhookId,
-                        allowed_methods = new[] { "GET", "POST" },
-                        local_only = false
-                    }
-                },
-                action = actionsArray,  // Event + custom actions
-                mode = "single"
-            };
-
-            var content = new StringContent(
-                JsonSerializer.Serialize(automation, _jsonOptions),
-                Encoding.UTF8,
-                "application/json");
-
-            var response = await _httpClient.PostAsync(
-                $"config/automation/config/{automationId}",
-                content,
-                cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("Created webhook automation {AutomationId} for token {Token}",
-                    automationId, token);
-                return automationId;
-            }
-
-            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("Failed to create webhook automation: {StatusCode} - {Body}",
-                response.StatusCode, errorBody);
-            return null;
+            customActions = JsonSerializer.Deserialize<object>(actionsJson, _jsonOptions)
+                            ?? throw new InvalidOperationException("Actions JSON is null");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception creating webhook automation for token {Token}", token);
-            return null;
+            _logger.LogError(ex, "Failed to parse actions JSON: {ActionsJson}", actionsJson);
+            throw new InvalidOperationException($"Invalid actions JSON: {ex.Message}");
         }
+
+        // Build actions array: event trigger first (for tracking), then custom actions
+        var actionsArray = new List<object>
+        {
+            // First action: fire event for tracking
+            new
+            {
+                @event = "temp_link_triggered",
+                event_data = new
+                {
+                    token,
+                    link_name = linkName,
+                    webhook_id = webhookId
+                }
+            }
+        };
+
+        // Add custom actions
+        if (customActions is System.Text.Json.JsonElement jsonElement &&
+            jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+        {
+            foreach (var action in jsonElement.EnumerateArray())
+            {
+                actionsArray.Add(action);
+            }
+        }
+
+        // Create automation config
+        var automation = new
+        {
+            id = automationId, // Include the ID in the payload
+            alias = $"Temp Link: {linkName}",
+            description = $"Webhook handler for temporary link: {linkName}. Valid from {validFrom:u} to {validUntil:u}",
+            trigger = new[]
+            {
+                new
+                {
+                    platform = "webhook",
+                    webhook_id = webhookId,
+                    allowed_methods = new[] { "GET" },
+                    local_only = false
+                }
+            },
+            action = actionsArray, // Event + custom actions
+            mode = "single"
+        };
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(automation, _jsonOptions),
+            Encoding.UTF8,
+            "application/json");
+
+        var response = await _httpClient.PostAsync(
+            $"config/automation/config/{automationId}",
+            content,
+            cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            _logger.LogInformation("Created webhook automation {AutomationId} for token {Token}",
+                automationId, token);
+            return automationId;
+        }
+
+        var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        throw new InvalidOperationException(
+            $"Failed to create webhook automation: {response.StatusCode} - {errorBody}");
     }
 
-    public async Task<bool> DeleteWebhookAutomationAsync(
+    public async Task DeleteWebhookAutomationAsync(
         string automationId,
         CancellationToken cancellationToken = default)
     {
-        try
+        _logger.LogInformation("Attempting to delete webhook automation {AutomationId}", automationId);
+
+        var response = await _httpClient.DeleteAsync(
+            $"config/automation/config/{automationId}",
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
         {
-            _logger.LogInformation("Attempting to delete webhook automation {AutomationId}", automationId);
-
-            // Try DELETE first (works with direct HA API access)
-            var response = await _httpClient.DeleteAsync(
-                $"config/automation/config/{automationId}",
-                cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("Successfully deleted webhook automation {AutomationId}", automationId);
-                return true;
-            }
-
-            // 404 is ok - automation already deleted
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                _logger.LogInformation("Webhook automation {AutomationId} not found (already deleted)", automationId);
-                return true;
-            }
-
-            // If DELETE failed (e.g., 405 Method Not Allowed on supervisor proxy)
-            // Fall back to disabling the automation
-            _logger.LogWarning("DELETE failed with {StatusCode}, falling back to disable", response.StatusCode);
-
-            var turnOffSuccess = await CallScriptAsync(
-                "automation.turn_off",
-                $"{{\"entity_id\": \"automation.{automationId}\"}}",
-                cancellationToken);
-
-            if (turnOffSuccess)
-            {
-                _logger.LogInformation("Successfully disabled webhook automation {AutomationId}", automationId);
-                return true;
-            }
-
-            _logger.LogError("Failed to delete or disable webhook automation {AutomationId}", automationId);
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Exception deleting webhook automation {AutomationId}", automationId);
-            return false;
+            throw new InvalidOperationException($"Failed to delete webhook automation: {response.StatusCode}");
         }
     }
 
-    public async Task<CloudhookResult?> CreateCloudhookAsync(
+    public async Task<CloudhookResult> CreateCloudhookAsync(
         string webhookId,
         CancellationToken cancellationToken = default)
     {
-        try
+        _logger.LogInformation("Creating cloudhook for webhook {WebhookId}", webhookId);
+
+        var result = await SendWebSocketCommandAsync<CloudhookResponse>(
+            "cloud/cloudhook/create",
+            new { webhook_id = webhookId },
+            cancellationToken);
+
+        if (result != null)
         {
-            _logger.LogInformation("Creating cloudhook for webhook {WebhookId}", webhookId);
-
-            var result = await SendWebSocketCommandAsync<CloudhookResponse>(
-                "cloud/cloudhook/create",
-                new { webhook_id = webhookId },
-                cancellationToken);
-
-            if (result != null)
-            {
-                _logger.LogInformation("Created cloudhook {CloudhookId} with URL {CloudhookUrl}",
-                    result.CloudhookId, result.CloudhookUrl);
-                return new CloudhookResult(result.WebhookId, result.CloudhookId, result.CloudhookUrl);
-            }
-
-            _logger.LogWarning("Failed to create cloudhook for webhook {WebhookId}", webhookId);
-            return null;
+            _logger.LogInformation("Created cloudhook {CloudhookId} with URL {CloudhookUrl}",
+                result.CloudhookId, result.CloudhookUrl);
+            return new CloudhookResult(result.WebhookId, result.CloudhookId, result.CloudhookUrl);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Exception creating cloudhook for webhook {WebhookId}", webhookId);
-            return null;
-        }
+
+        throw new InvalidOperationException($"Failed to create cloudhook for webhook {webhookId}");
     }
 
     private async Task<T?> SendWebSocketCommandAsync<T>(
@@ -397,23 +179,9 @@ public class HomeAssistantService : IHomeAssistantService
 
         try
         {
-            // Determine WebSocket URL
-            string wsUri;
-            string token;
+            var haUrl = _config.HaUrl.Replace("http://", "ws://").Replace("https://", "wss://").TrimEnd('/');
+            var wsUri = $"{haUrl}/api/websocket";
 
-            if (!string.IsNullOrWhiteSpace(_config.HaUrl))
-            {
-                var haUrl = _config.HaUrl.Replace("http://", "ws://").Replace("https://", "wss://").TrimEnd('/');
-                wsUri = $"{haUrl}/api/websocket";
-                token = _config.HaToken ?? throw new InvalidOperationException("HA token not configured");
-            }
-            else
-            {
-                wsUri = "ws://supervisor/core/websocket";
-                token = Environment.GetEnvironmentVariable("SUPERVISOR_TOKEN")
-                    ?? _config.Token
-                    ?? throw new InvalidOperationException("No authentication token available");
-            }
 
             _logger.LogInformation("Connecting to WebSocket at {Uri} for command", wsUri);
             await ws.ConnectAsync(new Uri(wsUri), cancellationToken);
@@ -425,7 +193,7 @@ public class HomeAssistantService : IHomeAssistantService
             await ReceiveMessageAsync(ws, buffer, messageBuilder, cancellationToken);
 
             // Send auth
-            await SendWsMessageAsync(ws, new { type = "auth", access_token = token }, cancellationToken);
+            await SendWsMessageAsync(ws, new { type = "auth", access_token = _config.HaToken }, cancellationToken);
 
             // Read auth response
             var authResponse = await ReceiveMessageAsync(ws, buffer, messageBuilder, cancellationToken);
@@ -526,77 +294,5 @@ public class HomeAssistantService : IHomeAssistantService
 
         [System.Text.Json.Serialization.JsonPropertyName("cloudhook_url")]
         public string CloudhookUrl { get; set; } = string.Empty;
-    }
-
-    private class HaStateResponse
-    {
-        [System.Text.Json.Serialization.JsonPropertyName("entity_id")]
-        public string EntityId { get; set; } = string.Empty;
-
-        [System.Text.Json.Serialization.JsonPropertyName("attributes")]
-        public Dictionary<string, object>? Attributes { get; set; }
-    }
-
-    private class HaConfigResponse
-    {
-        [System.Text.Json.Serialization.JsonPropertyName("latitude")]
-        public double? Latitude { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("longitude")]
-        public double? Longitude { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("elevation")]
-        public int? Elevation { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("unit_system")]
-        public object? UnitSystem { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("location_name")]
-        public string? LocationName { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("time_zone")]
-        public string? TimeZone { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("components")]
-        public List<string>? Components { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("config_dir")]
-        public string? ConfigDir { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("whitelist_external_dirs")]
-        public List<string>? WhitelistExternalDirs { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("allowlist_external_dirs")]
-        public List<string>? AllowlistExternalDirs { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("allowlist_external_urls")]
-        public List<string>? AllowlistExternalUrls { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("version")]
-        public string? Version { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("config_source")]
-        public string? ConfigSource { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("safe_mode")]
-        public bool? SafeMode { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("state")]
-        public string? State { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("external_url")]
-        public string? ExternalUrl { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("internal_url")]
-        public string? InternalUrl { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("currency")]
-        public string? Currency { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("country")]
-        public string? Country { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("language")]
-        public string? Language { get; set; }
     }
 }

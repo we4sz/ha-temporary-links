@@ -6,21 +6,18 @@ public interface ILinkService
 {
     Task<TemporaryLink> CreateLinkAsync(
         string name,
-        string scriptEntityId,
         DateTimeOffset validFrom,
         DateTimeOffset validUntil,
-        string? recipientPhoneNumber,
+        string recipientPhoneNumber,
         string? customMessage,
-        string? scriptData,
         string createdBy,
-        string baseUrl,
-        bool sendSmsImmediately = true,
-        int maxUses = 1,
-        string? actions = null);
+        string actions,
+        int maxUses = 1);
 
-    Task<string> GetLinkUrlAsync(TemporaryLink link, string fallbackBaseUrl);
+
+    Task SendSmsAsync(TemporaryLink link);
     Task<TemporaryLink?> GetLinkByTokenAsync(string token);
-    Task<TemporaryLink?> GetLinkByIdAsync(int id);
+    Task<TemporaryLink?> GetLinkByIdAsync(Guid id);
     Task<IList<TemporaryLink>> GetLinksAsync(string? statusFilter = null);
     Task<LinkExecutionResult> ExecuteLinkAsync(string token, string? ipAddress, string? userAgent);
     Task<bool> RevokeLinkAsync(string token);
