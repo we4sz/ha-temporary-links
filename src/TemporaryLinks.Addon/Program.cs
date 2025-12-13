@@ -126,9 +126,11 @@ using (var scope = app.Services.CreateScope())
 
     logger.LogInformation("Home Assistant configuration validated. URL: {HaUrl}", config.HaUrl);
 
-    // Ensure database is created and migrated
+    // Apply database migrations
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.EnsureCreated();
+    logger.LogInformation("Applying database migrations...");
+    db.Database.Migrate();
+    logger.LogInformation("Database migrations applied successfully");
 
     // Validate Twilio configuration if it's configured
     var twilioService = scope.ServiceProvider.GetRequiredService<ITwilioService>();
@@ -168,6 +170,5 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.MapRazorPages();
-app.MapControllers();
 
 app.Run();
