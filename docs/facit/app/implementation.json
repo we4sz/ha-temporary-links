@@ -53,9 +53,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:152-171",
           "note": "CreateCloudhookAsync over HA WebSocket; CloudhookUrl stored on link (LinkService.cs:65-67)"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Creating_a_link_hosts_a_trigger_and_records_its_url",
+          "note": "proving test"
         }
       ],
-      "notes": "Requires HA Cloud (Nabu Casa) for the cloudhook. Unproven."
+      "notes": "Requires HA Cloud (Nabu Casa) for the cloudhook. Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Creating_a_link_hosts_a_trigger_and_records_its_url"
+        ]
+      }
     },
     {
       "acId": "E1.S1.A3",
@@ -65,9 +75,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:73-74",
           "note": "audit 'Created' with createdBy + maxUses"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Creation_is_audited_with_creator_and_allowance",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Creation_is_audited_with_creator_and_allowance"
+        ]
+      }
     },
     {
       "acId": "E1.S1.A4",
@@ -101,7 +121,7 @@
           "note": "catch \u2192 ModelState error with ex.Message \u2192 re-render with entries preserved"
         }
       ],
-      "notes": "Raw exception message is shown to the operator (admin-only surface). Unproven."
+      "notes": "Raw exception message is shown to the operator (admin-only surface). Unproven.  [Verified by inspection: Razor page error re-render (ModelState) \u2014 framework-run validation, not unit-provable.]"
     },
     {
       "acId": "E1.S2.A1",
@@ -138,9 +158,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:94-97",
           "note": "non-Active \u2192 InvalidOperationException, no changes"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Non_active_link_cannot_be_edited",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Non_active_link_cannot_be_edited"
+        ]
+      }
     },
     {
       "acId": "E1.S2.A3",
@@ -150,9 +180,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:99-103",
           "note": "maxUses < UsageCount \u2192 refused"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Allowance_cannot_drop_below_usage_count",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Allowance_cannot_drop_below_usage_count"
+        ]
+      }
     },
     {
       "acId": "E1.S2.A4",
@@ -167,9 +207,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:105-109",
           "note": "UpdateLinkAsync touches only window/recipient/message/allowance"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Editing_does_not_change_name_or_actions",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Editing_does_not_change_name_or_actions"
+        ]
+      }
     },
     {
       "acId": "E1.S3.A1",
@@ -206,9 +256,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:277-278",
           "note": "Status==Used \u2192 return false"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Used_link_cannot_be_revoked",
+          "note": "proving test"
         }
       ],
-      "notes": "Refusal is silent in the UI (returns false, page just redirects). Unproven."
+      "notes": "Refusal is silent in the UI (returns false, page just redirects). Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Used_link_cannot_be_revoked"
+        ]
+      }
     },
     {
       "acId": "E1.S3.A3",
@@ -218,9 +278,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:174-179",
           "note": "Revoked \u2192 refused + audited on execution"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Revoked_link_is_refused",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Revoked_link_is_refused"
+        ]
+      }
     },
     {
       "acId": "E1.S3.A4",
@@ -235,9 +305,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:269-294",
           "note": "no hard delete of TemporaryLink anywhere in the service"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Revoked_link_and_its_history_remain_visible",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Revoked_link_and_its_history_remain_visible"
+        ]
+      }
     },
     {
       "acId": "E1.S4.A1",
@@ -247,9 +327,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:296-328",
           "note": "ExpireOldLinksAsync: Active + ValidUntil past \u2192 delete webhook, audit, Status=Expired"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Expiry_sweep_expires_audits_and_removes_trigger",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Expiry_sweep_expires_audits_and_removes_trigger"
+        ]
+      }
     },
     {
       "acId": "E1.S4.A2",
@@ -261,7 +351,7 @@
           "note": "BackgroundService loop, TimeSpan.FromMinutes(1), catch keeps loop alive"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: Background-service cadence (1-min loop) \u2014 timing/hosted-service, needs integration harness.]"
     },
     {
       "acId": "E1.S4.A3",
@@ -293,9 +383,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:306-319",
           "note": "per-link try/catch: failure audited as 'ExecutionException', link still marked Expired, loop continues"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Sweep_continues_when_trigger_removal_fails",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Sweep_continues_when_trigger_removal_fails"
+        ]
+      }
     },
     {
       "acId": "E1.S5.A1",
@@ -359,9 +459,25 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:95-112",
           "note": "webhook trigger, allowed_methods [GET], local_only false, mode single"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Addon_runs_actions_as_service_calls",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Valid_use_runs_actions_and_counts_once",
+          "note": "proving test"
         }
       ],
-      "notes": "The event fires as the automation's FIRST action, before the custom actions \u2014 the add-on records a use without verifying the actions succeeded. Trigger answers any GET (see E2.S1 note in facit): link-preview/prefetch bots can consume a one-time use. Unproven."
+      "notes": "The event fires as the automation's FIRST action, before the custom actions \u2014 the add-on records a use without verifying the actions succeeded. Trigger answers any GET (see E2.S1 note in facit): link-preview/prefetch bots can consume a one-time use. Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Addon_runs_actions_as_service_calls",
+          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Valid_use_runs_actions_and_counts_once"
+        ]
+      }
     },
     {
       "acId": "E2.S1.A2",
@@ -369,11 +485,26 @@
       "evidence": [
         {
           "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:177-260",
+          "note": "ExecuteLinkAsync evaluates the presented token and records the verdict in the audit trail"
+        },
+        {
+          "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HaEventListenerService.cs:139-173",
-          "note": "HandleEventAsync: validates event type + token, calls ExecuteLinkAsync, logs verdict"
+          "note": "listener delivers the event to ExecuteLinkAsync (integration path)"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Valid_use_runs_actions_and_counts_once",
+          "note": "proving test"
         }
       ],
-      "notes": "The formerly dead Views/Link/* pages and the unused AddControllersWithViews registration have been deleted."
+      "notes": "Recipient-facing pages are not served by the add-on (the dead Views/Link/* were removed); the listener\u2192ExecuteLinkAsync delivery is the integration path.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Valid_use_runs_actions_and_counts_once"
+        ]
+      }
     },
     {
       "acId": "E2.S2.A1",
@@ -583,7 +714,7 @@
           "note": "outer while loop, catch \u2192 10s delay \u2192 reconnect, indefinitely"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: WebSocket listener reconnect \u2014 needs a stubbed HA WS server (integration).]"
     },
     {
       "acId": "E2.S4.A2",
@@ -595,7 +726,7 @@
           "note": "auth_invalid \u2192 throw \u2192 outer catch logs error"
         }
       ],
-      "notes": "Surfaced via error log; the service then retries forever every 10s against bad credentials \u2014 noisy but visible. Unproven."
+      "notes": "Surfaced via error log; the service then retries forever every 10s against bad credentials \u2014 noisy but visible. Unproven.  [Verified by inspection: WebSocket auth handling \u2014 needs a stubbed HA WS server (integration).]"
     },
     {
       "acId": "E2.S4.A3",
@@ -607,7 +738,7 @@
           "note": "event-type + token guards; per-event try/catch keeps listener alive"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: WebSocket event filtering \u2014 needs a stubbed HA WS server (integration).]"
     },
     {
       "acId": "E3.S1.A1",
@@ -666,9 +797,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:133-144",
           "note": "LinkSmsAudit persisted with Content + TwilioMessageSid; audit 'SmsSent'"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Successful_send_records_message_and_audits",
+          "note": "proving test"
         }
       ],
-      "notes": "No guard on link status \u2014 SMS can be sent for expired/used/revoked links whose trigger URL is already dead. Unproven."
+      "notes": "No guard on link status \u2014 SMS can be sent for expired/used/revoked links whose trigger URL is already dead. Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Successful_send_records_message_and_audits"
+        ]
+      }
     },
     {
       "acId": "E3.S2.A2",
@@ -683,9 +824,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Details.cshtml.cs:54-64",
           "note": "exception \u2192 ErrorMessage to operator"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Failed_send_is_audited_and_throws",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Failed_send_is_audited_and_throws"
+        ]
+      }
     },
     {
       "acId": "E3.S2.A3",
@@ -724,7 +875,7 @@
           "note": "not configured \u2192 logged, app continues with SMS disabled"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: Details-page 'SMS unavailable' rendering \u2014 Razor view, needs e2e.]"
     },
     {
       "acId": "E3.S3.A2",
@@ -741,7 +892,7 @@
           "note": "validation failure \u2192 Environment.Exit(1)"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: Twilio startup validation + Environment.Exit \u2014 Program.cs startup, needs integration.]"
     },
     {
       "acId": "E4.S1.A1",
@@ -761,9 +912,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Contacts/Delete.cshtml.cs:29-31",
           "note": "hard delete of contact"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Contacts_crud_persists_and_edits_are_timestamped",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Contacts_crud_persists_and_edits_are_timestamped"
+        ]
+      }
     },
     {
       "acId": "E4.S1.A2",
@@ -778,9 +939,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Edit.cshtml.cs:111-127",
           "note": "contacts dropdown on edit"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Create_form_offers_saved_contacts_and_templates",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Create_form_offers_saved_contacts_and_templates"
+        ]
+      }
     },
     {
       "acId": "E4.S2.A1",
@@ -795,9 +966,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/ActionTemplates/Edit.cshtml.cs:74",
           "note": "UpdatedAt on edit"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Templates_create_persists",
+          "note": "proving test"
         }
       ],
-      "notes": "Actions JSON is not validated as JSON on template save (only at link creation when HA parses it). Unproven."
+      "notes": "Actions JSON is not validated as JSON on template save (only at link creation when HA parses it). Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Templates_create_persists"
+        ]
+      }
     },
     {
       "acId": "E4.S2.A2",
@@ -807,9 +988,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:110-126",
           "note": "templates dropdown, value = template Actions JSON"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Create_form_offers_saved_contacts_and_templates",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Create_form_offers_saved_contacts_and_templates"
+        ]
+      }
     },
     {
       "acId": "E4.S3.A1",
@@ -819,9 +1010,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:138-155",
           "note": "save-as-template with identical-Actions dedupe"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Save_as_template_at_creation_dedupes_by_actions",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Save_as_template_at_creation_dedupes_by_actions"
+        ]
+      }
     },
     {
       "acId": "E4.S3.A2",
@@ -831,9 +1032,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:158-175",
           "note": "save-as-contact with phone-number dedupe"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Save_as_contact_at_creation_dedupes_by_number",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Save_as_contact_at_creation_dedupes_by_number"
+        ]
+      }
     },
     {
       "acId": "E4.S4.A1",
@@ -848,9 +1059,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Index.cshtml:61",
           "note": "Duplicate action in list"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Duplicate_prefills_details_but_not_the_window",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Duplicate_prefills_details_but_not_the_window"
+        ]
+      }
     },
     {
       "acId": "E5.S1.A1",
@@ -860,9 +1081,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Index.cshtml.cs:25-43",
           "note": "counts per status, active links desc, last 10 audit events"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Dashboard_shows_counts_active_links_and_recent_activity",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.PageHandlerProofTests.Dashboard_shows_counts_active_links_and_recent_activity"
+        ]
+      }
     },
     {
       "acId": "E5.S2.A1",
@@ -906,7 +1137,7 @@
           "note": "trigger URL shown for active links; SMS history; audit log"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: Details view rendering (loads GetLinkByIdAsync data, itself proven) \u2014 Razor view, needs e2e.]"
     },
     {
       "acId": "E5.S3.A1",
@@ -918,7 +1149,7 @@
           "note": "last 100 audits incl. link, desc by timestamp"
         }
       ],
-      "notes": "Fixed cap of 100, no paging. Unproven."
+      "notes": "Fixed cap of 100, no paging. Unproven.  [Verified by inspection: Audit-log page rendering/cap \u2014 Razor view, needs e2e.]"
     },
     {
       "acId": "E5.S3.A2",
@@ -928,9 +1159,19 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:73",
           "note": "audit call sites across the service: Created(:73), Updated(:113), SmsFailure(:126), SmsSent(:143), ExecutionAttempt(:164,:176,:185,:196), Executed(:209), WebhookDeleted(:222,:287,:309), ExecutionException(:227,:314), Revoked(:291), Expired(:319)"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CoverageProofTests.Consequential_events_each_produce_an_audit_entry",
+          "note": "proving test"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.CoverageProofTests.Consequential_events_each_produce_an_audit_entry"
+        ]
+      }
     },
     {
       "acId": "E6.S1.A1",
@@ -952,7 +1193,7 @@
           "note": "AddonConfiguration + TwilioConfiguration bound with option-key overrides"
         }
       ],
-      "notes": "run.sh also exports env vars incl. HomeAssistant__BaseUri/Token from SUPERVISOR_TOKEN, but AddonConfiguration has no such properties \u2014 those exports bind to nothing (dead config path); HA access uses user-supplied ha_url/ha_token. Unproven."
+      "notes": "run.sh also exports env vars incl. HomeAssistant__BaseUri/Token from SUPERVISOR_TOKEN, but AddonConfiguration has no such properties \u2014 those exports bind to nothing (dead config path); HA access uses user-supplied ha_url/ha_token. Unproven.  [Verified by inspection: Config binding at startup \u2014 Program.cs, needs integration.]"
     },
     {
       "acId": "E6.S1.A2",
@@ -964,7 +1205,7 @@
           "note": "missing ha_url or ha_token \u2192 specific error log + Environment.Exit(1)"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: Missing-config Environment.Exit \u2014 Program.cs startup, needs integration.]"
     },
     {
       "acId": "E6.S2.A1",
@@ -981,7 +1222,7 @@
           "note": "Database.Migrate() at startup before serving"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: DB path + Database.Migrate at startup \u2014 Program.cs, needs integration.]"
     },
     {
       "acId": "E6.S2.A2",
@@ -993,7 +1234,7 @@
           "note": "delete page revokes; no code path removes TemporaryLink rows"
         }
       ],
-      "notes": "Audit rows are FK-cascade from links, but since links are never removed the history is retained. Unproven."
+      "notes": "Audit rows are FK-cascade from links, but since links are never removed the history is retained. Unproven.  [Verified by inspection: No hard-delete \u2014 a whole-codebase negative property; verified by inspection.]"
     },
     {
       "acId": "E6.S3.A1",
@@ -1010,7 +1251,7 @@
           "note": "<base href='@Context.Request.PathBase/'>"
         }
       ],
-      "notes": "Unproven."
+      "notes": "Unproven.  [Verified by inspection: Ingress X-Ingress-Path middleware \u2014 Program.cs middleware, needs integration.]"
     },
     {
       "acId": "E6.S3.A2",
@@ -1022,7 +1263,7 @@
           "note": "Security posture section: ingress-only, never expose 8099, forwarded-headers caveat, token-as-credential, data-at-rest, secrets"
         }
       ],
-      "notes": "Documentation AC \u2014 no test binding."
+      "notes": "Documentation AC \u2014 no test binding.  [Verified by inspection: Security-posture documentation \u2014 README, not code.]"
     },
     {
       "acId": "E2.S1.A3",
@@ -1169,7 +1410,7 @@
           "note": "pickerAdd builds {action, target.entity_id} into the same Actions textarea; textarea remains hand-editable"
         }
       ],
-      "notes": "Picker output lands in the same JSON textarea the operator could type into \u2014 identical data path. Client-side JS; not unit-provable in dotnet."
+      "notes": "Picker output lands in the same JSON textarea the operator could type into \u2014 identical data path. Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Client-side picker JS \u2014 needs a browser/e2e harness.]"
     },
     {
       "acId": "E1.S7.A3",
@@ -1181,7 +1422,7 @@
           "note": "refreshEntities(): entities filtered to the chosen service's domain (domain-agnostic services excepted)"
         }
       ],
-      "notes": "Composition-time validity by domain filtering. Client-side JS; not unit-provable in dotnet."
+      "notes": "Composition-time validity by domain filtering. Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Client-side picker JS (domain filtering) \u2014 needs a browser/e2e harness.]"
     },
     {
       "acId": "E2.S5.A1",
@@ -1242,7 +1483,7 @@
           "note": "Copy link button: navigator.clipboard with execCommand fallback (ingress iframe), 'Copied!' confirmation"
         }
       ],
-      "notes": "Client-side JS; not unit-provable in dotnet."
+      "notes": "Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Copy-link button JS \u2014 needs a browser/e2e harness.]"
     },
     {
       "acId": "E1.S2.A5",
@@ -1445,7 +1686,7 @@
           "note": "Default Timeout=30 so a contended write waits instead of dropping the use"
         }
       ],
-      "notes": "Config-level; not unit-proven."
+      "notes": "Config-level; not unit-proven.  [Verified by inspection: SQLite busy-timeout connection string \u2014 config, verified by inspection.]"
     },
     {
       "acId": "E7.S4.A1",
@@ -1467,7 +1708,7 @@
           "note": "unknown-token log no longer includes the token"
         }
       ],
-      "notes": "Negative property (absence of secrets in logs); verified by code, not a unit test."
+      "notes": "Negative property (absence of secrets in logs); verified by code, not a unit test.  [Verified by inspection: Absence of secrets in logs \u2014 negative property, verified by inspection.]"
     },
     {
       "acId": "E7.S5.A1",
@@ -1590,7 +1831,7 @@
           "note": "advertised arch list trimmed to amd64/aarch64/armv7 \u2014 all buildable by the .NET base images; armhf/i386 removed (no .NET runtime)"
         }
       ],
-      "notes": "Not test-proven (build-matrix proof would come with CI, E9.S7)."
+      "notes": "Not test-proven (build-matrix proof would come with CI, E9.S7).  [Verified by inspection: Advertised architecture list \u2014 config.yaml/CI build matrix, verified by inspection.]"
     },
     {
       "acId": "E9.S3.A1",
