@@ -13,7 +13,7 @@ public class TemporaryLink
     public required string WebhookId { get; set; }
     public required string CloudhookId { get; set; }
     public required string CloudhookUrl { get; set; }
-    public required string RecipientPhoneNumber { get; set; }
+    public string? RecipientPhoneNumber { get; set; }
     public string? CustomMessage { get; set; }
     public required LinkStatus Status { get; set; } 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;

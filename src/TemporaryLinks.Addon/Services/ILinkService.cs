@@ -8,7 +8,7 @@ public interface ILinkService
         string name,
         DateTimeOffset validFrom,
         DateTimeOffset validUntil,
-        string recipientPhoneNumber,
+        string? recipientPhoneNumber,
         string? customMessage,
         string createdBy,
         string actions,
@@ -18,7 +18,7 @@ public interface ILinkService
         Guid id,
         DateTimeOffset validFrom,
         DateTimeOffset validUntil,
-        string recipientPhoneNumber,
+        string? recipientPhoneNumber,
         string? customMessage,
         int maxUses);
 
@@ -28,6 +28,10 @@ public interface ILinkService
     Task<LinkExecutionResult> ExecuteLinkAsync(string token, string? ipAddress, string? userAgent);
     Task<bool> RevokeLinkAsync(string token);
     Task ExpireOldLinksAsync();
+
+    /// <summary>The URL to hand to the recipient: the bot-immune confirm page when a
+    /// public URL is configured, otherwise the raw cloudhook URL.</summary>
+    string GetShareUrl(TemporaryLink link);
 }
 
 public class LinkExecutionResult

@@ -15,7 +15,7 @@ namespace TemporaryLinks.Addon.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
 
             modelBuilder.Entity("TemporaryLinks.Addon.Models.ActionTemplate", b =>
                 {
@@ -199,7 +199,6 @@ namespace TemporaryLinks.Addon.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RecipientPhoneNumber")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 

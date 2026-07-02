@@ -91,7 +91,12 @@ public class HomeAssistantService : IHomeAssistantService
             }
         }
 
-        // Create automation config
+        // Create automation config. The condition makes the HOME enforce the validity
+        // window: outside it the automation refuses to run, whatever hits the webhook.
+        var windowGuard =
+            $"{{{{ as_datetime('{validFrom.UtcDateTime:yyyy-MM-dd'T'HH:mm:ss}+00:00') <= now() " +
+            $"and now() <= as_datetime('{validUntil.UtcDateTime:yyyy-MM-dd'T'HH:mm:ss}+00:00') }}}}";
+
         var automation = new
         {
             id = automationId, // Include the ID in the payload
@@ -103,8 +108,21 @@ public class HomeAssistantService : IHomeAssistantService
                 {
                     platform = "webhook",
                     webhook_id = webhookId,
-                    allowed_methods = new[] { "GET" },
+                    // With a confirm page in play (shared or self-hosted), only the page's
+                    // explicit form POST fires the trigger — preview bots only ever GET.
+                    allowed_methods = string.IsNullOrWhiteSpace(_config.SharePageUrl) &&
+                                      string.IsNullOrWhiteSpace(_config.PublicUrl)
+                        ? new[] { "GET" }
+                        : new[] { "POST" },
                     local_only = false
+                }
+            },
+            condition = new[]
+            {
+                new
+                {
+                    condition = "template",
+                    value_template = windowGuard
                 }
             },
             action = actionsArray, // Event + custom actions
@@ -131,6 +149,60 @@ public class HomeAssistantService : IHomeAssistantService
         var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
         throw new InvalidOperationException(
             $"Failed to create webhook automation: {response.StatusCode} - {errorBody}");
+    }
+
+    public async Task<IReadOnlyList<HaServiceInfo>> GetServicesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("services", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+
+        var result = new List<HaServiceInfo>();
+        foreach (var domainEl in doc.RootElement.EnumerateArray())
+        {
+            var domain = domainEl.GetProperty("domain").GetString();
+            if (domain == null || !domainEl.TryGetProperty("services", out var services))
+                continue;
+            foreach (var svc in services.EnumerateObject())
+            {
+                string? name = null;
+                if (svc.Value.ValueKind == JsonValueKind.Object &&
+                    svc.Value.TryGetProperty("name", out var nameEl))
+                {
+                    name = nameEl.GetString();
+                }
+                result.Add(new HaServiceInfo(domain, svc.Name, name));
+            }
+        }
+        return result;
+    }
+
+    public async Task<IReadOnlyList<HaEntityInfo>> GetEntitiesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("states", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+
+        var result = new List<HaEntityInfo>();
+        foreach (var stateEl in doc.RootElement.EnumerateArray())
+        {
+            var entityId = stateEl.GetProperty("entity_id").GetString();
+            if (entityId == null)
+                continue;
+            string? friendly = null;
+            if (stateEl.TryGetProperty("attributes", out var attrs) &&
+                attrs.ValueKind == JsonValueKind.Object &&
+                attrs.TryGetProperty("friendly_name", out var fn))
+            {
+                friendly = fn.GetString();
+            }
+            result.Add(new HaEntityInfo(entityId, friendly));
+        }
+        return result;
     }
 
     public async Task DeleteWebhookAutomationAsync(
@@ -168,6 +240,32 @@ public class HomeAssistantService : IHomeAssistantService
         }
 
         throw new InvalidOperationException($"Failed to create cloudhook for webhook {webhookId}");
+    }
+
+    public async Task<string?> GetRemoteUiUrlAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var status = await SendWebSocketCommandAsync<CloudStatusResponse>(
+                "cloud/status", new { }, cancellationToken);
+
+            if (status?.RemoteDomain is { Length: > 0 } domain && status.RemoteEnabled != false)
+            {
+                var url = $"https://{domain}";
+                _logger.LogInformation("Discovered public remote UI URL: {Url}", url);
+                return url;
+            }
+
+            _logger.LogInformation(
+                "No usable remote UI (remote_enabled={Enabled}, remote_domain={Domain})",
+                status?.RemoteEnabled, status?.RemoteDomain);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation(ex, "Cloud status unavailable — no public URL discovered");
+            return null;
+        }
     }
 
     private async Task<T?> SendWebSocketCommandAsync<T>(
@@ -282,6 +380,15 @@ public class HomeAssistantService : IHomeAssistantService
                 return messageBuilder.ToString();
             }
         }
+    }
+
+    private class CloudStatusResponse
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("remote_domain")]
+        public string? RemoteDomain { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("remote_enabled")]
+        public bool? RemoteEnabled { get; set; }
     }
 
     private class CloudhookResponse

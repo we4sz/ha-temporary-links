@@ -54,6 +54,20 @@ builder.Services.Configure<AddonConfiguration>(options =>
     {
         options.DefaultMessageTemplate = defaultMessageTemplate;
     }
+
+    // Map public_url -> PublicUrl (enables the bot-immune share page)
+    var publicUrl = builder.Configuration["public_url"];
+    if (!string.IsNullOrWhiteSpace(publicUrl))
+    {
+        options.PublicUrl = publicUrl;
+    }
+
+    // Map share_page_url -> SharePageUrl (shared hosted confirm page; wins over self-hosting)
+    var sharePageUrl = builder.Configuration["share_page_url"];
+    if (!string.IsNullOrWhiteSpace(sharePageUrl))
+    {
+        options.SharePageUrl = sharePageUrl;
+    }
 });
 
 builder.Services.Configure<TwilioConfiguration>(options =>
@@ -97,9 +111,8 @@ builder.Services.AddScoped<ILinkService, LinkService>();
 builder.Services.AddHostedService<LinkExpirationService>();
 builder.Services.AddHostedService<HaEventListenerService>();
 
-// Razor Pages and Controllers
+// Razor Pages
 builder.Services.AddRazorPages();
-builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
@@ -125,6 +138,26 @@ using (var scope = app.Services.CreateScope())
     }
 
     logger.LogInformation("Home Assistant configuration validated. URL: {HaUrl}", config.HaUrl);
+
+    // Confirm-page hosting for bot-immune links. A shared hosted page (share_page_url)
+    // needs nothing from this home; otherwise self-host via public_url (configured or
+    // auto-discovered from HA Cloud) + a page written to HA's /local.
+    if (!string.IsNullOrWhiteSpace(config.SharePageUrl))
+    {
+        logger.LogInformation("Using shared confirm page: {Url}", config.SharePageUrl);
+    }
+    else
+    {
+        var haService = scope.ServiceProvider.GetRequiredService<IHomeAssistantService>();
+        var publicUrl = await PublicUrlResolver.ResolveAsync(config, haService, logger);
+        if (publicUrl != null && SharePage.TryWrite(logger) == null)
+        {
+            logger.LogWarning(
+                "A public URL is available but no Home Assistant config mount exists to host " +
+                "the confirm page — ensure 'homeassistant_config:rw' is in the add-on's map. " +
+                "Shared links will point to a missing page until then.");
+        }
+    }
 
     // Apply database migrations
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -1,0 +1,71 @@
+# `facit` CLI
+
+Manages a structured facit tree — compiles every `facit.json` under a root directory into
+**one** view keyed by globally-qualified node ids, and locks/diffs the whole tree so you
+re-prove only what changed.
+
+The default root is `docs/facit/` (the platform facit). Use `--root` to point the CLI at
+any other facit tree, including its own spec (`tools/facit/spec/`).
+
+```
+python3 tools/facit/facit.py [--root <dir>] <command>
+```
+
+## Global option
+
+| option | description |
+|---|---|
+| `--root <dir>` | Facit root directory. Default: `docs/facit` (resolved from the repo root). Relative paths are resolved from the repo root. The lock file is `<root>/facit.lock.json`. The JSON Schema is always loaded from `docs/facit/schema/` regardless of `--root`. |
+
+## Commands
+
+| command | what it does |
+|---|---|
+| `compile [--out F]` | discover + schema-validate every facit, check integrity, report counts + `facitHash`. `--out` writes the compiled view. |
+| `validate` | compile as a pass/fail gate (exit 1 on any error). Use in CI. |
+| `lock` | snapshot the compiled whole → `<root>/facit.lock.json` (per-node content-hash + proven status + tests). One lock over all facits. Proven status carries forward only for unchanged nodes. |
+| `diff` | compare the live compiled facit to the lock → added / changed / removed nodes. |
+| `status` | coverage summary (nodes, locked, proven, changed-since-lock). |
+| `gap [F]` | with no arg: list every acceptance-criterion id (so a gap can be built on the compiled whole). With a `gap.json`/`implementation.json`: validate its `acId`s resolve + report uncovered ACs. |
+
+## Examples
+
+```sh
+# Platform facit (default)
+python3 tools/facit/facit.py compile
+python3 tools/facit/facit.py validate
+
+# CLI's own facit (dogfood — E1.S4.A3)
+python3 tools/facit/facit.py --root tools/facit/spec compile
+python3 tools/facit/facit.py --root tools/facit/spec validate
+python3 tools/facit/facit.py --root tools/facit/spec lock
+python3 tools/facit/facit.py --root tools/facit/spec diff
+
+# Absolute path
+python3 tools/facit/facit.py --root /path/to/my-project/facit compile
+```
+
+## Node ids
+
+Local to each facit: `E{n}.S{k}.A{m}` (immutable, parent-bound). Globally qualified as
+`<scopeRef>::<id>`:
+
+- `engine::E1.S1.A1`
+- `utility:crawl::E1.S2.A3`
+- `domain:apimapping::E1.S1`
+- `domain:apimapping/target:openapi-spec::E1.S1.A1`
+
+One lock file covers every node, but a change to one component only changes that component's
+node hashes — so improving `crawl` re-opens only `crawl`'s nodes in the diff.
+
+## The loop
+
+Build the implementation up to the facit → when a node is proven (its AC has a passing test),
+its lock entry becomes `proven` → `diff` thereafter shows only what changed since the lock, so
+re-verification is incremental, not whole-tree.
+
+## Provenance
+
+Vendored from [openapimapper](../../../openapimapper/tools/facit/) (2026-07-02) with one
+addition: the `app` scope level (schema enum + `scope_ref`) for single-scope facit trees
+like this repo's — one application, one `facit.json`, `extends: null`.

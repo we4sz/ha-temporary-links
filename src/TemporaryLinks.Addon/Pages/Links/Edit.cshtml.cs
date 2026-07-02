@@ -37,9 +37,8 @@ public class EditModel : PageModel
         public DateTime ValidUntil { get; set; }
 
         [Phone]
-        [Required]
-        [Display(Name = "Recipient Phone Number")]
-        public string RecipientPhoneNumber { get; set; } = string.Empty;
+        [Display(Name = "Recipient Phone Number (optional)")]
+        public string? RecipientPhoneNumber { get; set; }
 
         [Display(Name = "Custom Message")]
         public string? CustomMessage { get; set; }

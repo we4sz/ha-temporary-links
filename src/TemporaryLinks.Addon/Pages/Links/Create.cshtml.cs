@@ -13,11 +13,19 @@ public class CreateModel : PageModel
 {
     private readonly ILinkService _linkService;
     private readonly ApplicationDbContext _context;
+    private readonly IHomeAssistantService _haService;
+    private readonly ILogger<CreateModel> _logger;
 
-    public CreateModel(ILinkService linkService, ApplicationDbContext context)
+    public CreateModel(
+        ILinkService linkService,
+        ApplicationDbContext context,
+        IHomeAssistantService haService,
+        ILogger<CreateModel> logger)
     {
         _linkService = linkService;
         _context = context;
+        _haService = haService;
+        _logger = logger;
     }
 
     [BindProperty]
@@ -25,6 +33,10 @@ public class CreateModel : PageModel
 
     public List<SelectListItem> ContactOptions { get; set; } = new();
     public List<SelectListItem> TemplateOptions { get; set; } = new();
+
+    public bool PickerAvailable { get; set; }
+    public string ServicesJson { get; set; } = "[]";
+    public string EntitiesJson { get; set; } = "[]";
 
     [BindProperty]
     public bool SaveAsContact { get; set; }
@@ -51,9 +63,8 @@ public class CreateModel : PageModel
         public DateTime ValidUntil { get; set; } = DateTime.Now.AddHours(24);
 
         [Phone]
-        [Required]
-        [Display(Name = "Recipient Phone Number")]
-        public string RecipientPhoneNumber { get; set; }= string.Empty;
+        [Display(Name = "Recipient Phone Number (optional)")]
+        public string? RecipientPhoneNumber { get; set; }
 
         [Display(Name = "Custom Message")]
         public string? CustomMessage { get; set; }
@@ -87,6 +98,27 @@ public class CreateModel : PageModel
 
         await LoadContactsAsync();
         await LoadTemplatesAsync();
+        await LoadRegistriesAsync();
+    }
+
+    private async Task LoadRegistriesAsync()
+    {
+        try
+        {
+            var services = await _haService.GetServicesAsync();
+            var entities = await _haService.GetEntitiesAsync();
+            ServicesJson = System.Text.Json.JsonSerializer.Serialize(
+                services.Select(s => new { domain = s.Domain, service = s.Service, name = s.Name }));
+            EntitiesJson = System.Text.Json.JsonSerializer.Serialize(
+                entities.Select(e => new { entityId = e.EntityId, friendlyName = e.FriendlyName }));
+            PickerAvailable = services.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            // The picker is a convenience — creation must keep working without it.
+            _logger.LogWarning(ex, "Could not load HA registries for the action picker");
+            PickerAvailable = false;
+        }
     }
 
     private async Task LoadContactsAsync()
@@ -131,6 +163,7 @@ public class CreateModel : PageModel
         {
             await LoadContactsAsync();
             await LoadTemplatesAsync();
+            await LoadRegistriesAsync();
             return Page();
         }
 
@@ -193,6 +226,7 @@ public class CreateModel : PageModel
             ModelState.AddModelError(string.Empty, $"Failed to create link: {ex.Message}");
             await LoadContactsAsync();
             await LoadTemplatesAsync();
+            await LoadRegistriesAsync();
             return Page();
         }
     }

@@ -30,6 +30,32 @@
             </small>
         </div>
 
+        @if (Model.PickerAvailable)
+        {
+            <div class="form-group" id="actionPicker">
+                <label>Add an action by picking</label>
+                <div>
+                    <select id="pickerService" class="form-control" style="width: auto; display: inline-block;">
+                        <option value="">-- action --</option>
+                    </select>
+                    <select id="pickerEntity" class="form-control" style="width: auto; display: inline-block;">
+                        <option value="">-- entity --</option>
+                    </select>
+                    <button type="button" class="btn" id="pickerAdd">Add action</button>
+                </div>
+                <small class="text-muted">
+                    Pick what to do and which device/entity — the JSON below is generated for you.
+                    You can still edit it by hand.
+                </small>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                Could not load actions and entities from Home Assistant — enter actions as JSON below.
+            </div>
+        }
+
         <div class="form-group">
             <label asp-for="Input.Actions"></label>
             <textarea asp-for="Input.Actions" id="actionsTextarea" class="form-control" rows="8" placeholder='[{"action": "light.turn_on", "target": {"entity_id": "light.living_room"}}]'></textarea>
@@ -50,6 +76,66 @@
                 Save this action sequence as a template for future use
             </label>
         </div>
+
+        @if (Model.PickerAvailable)
+        {
+            <script>
+                (function () {
+                    // Live registries fetched from Home Assistant (E1.S7).
+                    var services = @Html.Raw(Model.ServicesJson);
+                    var entities = @Html.Raw(Model.EntitiesJson);
+                    var svcSelect = document.getElementById('pickerService');
+                    var entSelect = document.getElementById('pickerEntity');
+
+                    services.forEach(function (s) {
+                        var opt = document.createElement('option');
+                        opt.value = s.domain + '.' + s.service;
+                        opt.textContent = s.domain + '.' + s.service + (s.name ? ' — ' + s.name : '');
+                        svcSelect.appendChild(opt);
+                    });
+
+                    // Only offer entities the chosen action can target: same domain,
+                    // or any entity for domain-agnostic services (homeassistant.*, script, scene, automation).
+                    function refreshEntities() {
+                        var domain = (svcSelect.value || '').split('.')[0];
+                        var agnostic = ['homeassistant', 'script', 'scene', 'automation'];
+                        entSelect.innerHTML = '<option value="">-- entity --</option>';
+                        entities.forEach(function (e) {
+                            var entityDomain = e.entityId.split('.')[0];
+                            if (!domain || entityDomain === domain ||
+                                (agnostic.indexOf(domain) >= 0 && domain !== '')) {
+                                var opt = document.createElement('option');
+                                opt.value = e.entityId;
+                                opt.textContent = e.friendlyName
+                                    ? e.friendlyName + ' (' + e.entityId + ')'
+                                    : e.entityId;
+                                entSelect.appendChild(opt);
+                            }
+                        });
+                    }
+                    svcSelect.addEventListener('change', refreshEntities);
+                    refreshEntities();
+
+                    document.getElementById('pickerAdd').addEventListener('click', function () {
+                        if (!svcSelect.value) { return; }
+                        var action = { action: svcSelect.value };
+                        if (entSelect.value) {
+                            action.target = { entity_id: entSelect.value };
+                        }
+                        var ta = document.getElementById('actionsTextarea');
+                        var current = [];
+                        if (ta.value.trim()) {
+                            try { current = JSON.parse(ta.value); }
+                            catch { current = []; }
+                            if (!Array.isArray(current)) { current = [current]; }
+                        }
+                        current.push(action);
+                        ta.value = JSON.stringify(current, null, 2);
+                        toggleSaveTemplateSection();
+                    });
+                })();
+            </script>
+        }
 
         <script>
             document.getElementById('templateSelect').addEventListener('change', function() {

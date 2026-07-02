@@ -13,9 +13,8 @@
 <div class="card">
     <form method="get" class="mb-2">
         <label>Filter by status:</label>
-        <select name="status" class="form-control" style="width: auto; display: inline-block;" onchange="this.form.submit()">
+        <select name="StatusFilter" class="form-control" style="width: auto; display: inline-block;" onchange="this.form.submit()">
             <option value="">All</option>
-            <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
             <option value="Active" selected="@(Model.StatusFilter == "Active")">Active</option>
             <option value="Used" selected="@(Model.StatusFilter == "Used")">Used</option>
             <option value="Expired" selected="@(Model.StatusFilter == "Expired")">Expired</option>

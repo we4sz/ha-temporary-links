@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openapimapper.dev/facit/lock.schema.json",
+  "title": "Facit Lock",
+  "description": "A baseline snapshot taken when the implementation matches the facit 100%. Records, per facit node id, the content-hash that was proven and the tests that prove it. Future iteration diffs the live facit against this lock: only nodes whose hash changed (or are new/removed) need re-proving — everything else stays proven-since-lock. This is the spec-lock and the E13 criterion-coverage instrument.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "lockedAt", "facitHash", "nodes"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "lockedAt": { "type": "string", "description": "ISO timestamp of the lock." },
+    "facitHash": { "type": "string", "description": "Canonical hash of the whole facit at lock time." },
+    "nodes": {
+      "type": "object",
+      "description": "Map of facit node id (story or AC) -> its proven state at lock time.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["hash", "status"],
+        "properties": {
+          "hash": { "type": "string", "description": "Content-hash of the node's canonical text at lock time. A change here means the node changed since the lock." },
+          "status": { "type": "string", "enum": ["proven", "unproven"] },
+          "tests": { "type": "array", "items": { "type": "string" }, "description": "Test ids proving this node at lock time." }
+        }
+      }
+    }
+  }
+}

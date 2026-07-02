@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openapimapper.dev/facit/gap.schema.json",
+  "title": "Gap",
+  "description": "The gap between the facit (stories=truth) and the implementation map (how it's built today). Derived = facit vs implementation. This is the build backlog: each item names the AC it serves and what must change. Keyed by AC id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "facitVersion", "items"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "facitVersion": { "type": "string", "description": "facitHash the gap was computed against." },
+    "generatedAt": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer" },
+        "sound": { "type": "integer" },
+        "partial": { "type": "integer" },
+        "missing": { "type": "integer" },
+        "contradicted": { "type": "integer" }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["acId", "gapType", "severity"],
+        "properties": {
+          "acId": { "type": "string", "pattern": "^E[0-9]+\\.S[0-9]+\\.A[0-9]+$" },
+          "gapType": { "type": "string", "enum": ["sound", "partial", "missing", "contradicted"], "description": "sound = implementation satisfies the AC; contradicted = code does the opposite of the AC." },
+          "severity": { "type": "string", "enum": ["blocker", "major", "minor", "none"] },
+          "whatsMissing": { "type": "string", "description": "What the implementation lacks vs the AC." },
+          "action": { "type": "string", "description": "What to build/change (willing to rewrite) to close it." }
+        }
+      }
+    }
+  }
+}

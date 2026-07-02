@@ -36,7 +36,7 @@ public class LinkService : ILinkService
         string name,
         DateTimeOffset validFrom,
         DateTimeOffset validUntil,
-        string recipientPhoneNumber,
+        string? recipientPhoneNumber,
         string? customMessage,
         string createdBy,
         string actions,
@@ -47,7 +47,25 @@ public class LinkService : ILinkService
         string webhookId = await _haService.CreateWebhookAutomationAsync(
             token, name, actions, validFrom, validUntil);
 
-        var cloudhook = await _haService.CreateCloudhookAsync(webhookId);
+        CloudhookResult cloudhook;
+        try
+        {
+            cloudhook = await _haService.CreateCloudhookAsync(webhookId);
+        }
+        catch
+        {
+            // Compensate: never leave a live automation in HA with no owning link.
+            try
+            {
+                await _haService.DeleteWebhookAutomationAsync(webhookId);
+            }
+            catch (Exception cleanupEx)
+            {
+                _logger.LogError(cleanupEx,
+                    "Failed to clean up automation {WebhookId} after cloudhook failure", webhookId);
+            }
+            throw;
+        }
 
         var link = new TemporaryLink
         {
@@ -80,7 +98,7 @@ public class LinkService : ILinkService
         Guid id,
         DateTimeOffset validFrom,
         DateTimeOffset validUntil,
-        string recipientPhoneNumber,
+        string? recipientPhoneNumber,
         string? customMessage,
         int maxUses)
     {
@@ -102,6 +120,11 @@ public class LinkService : ILinkService
             throw new InvalidOperationException($"Max uses cannot be less than current usage count ({link.UsageCount})");
         }
 
+        // Re-arm the home-side window guard BEFORE saving: the automation's condition
+        // must reflect the new window, or HA would keep enforcing the old one.
+        await _haService.CreateWebhookAutomationAsync(
+            link.Token, link.Name, link.Actions, validFrom, validUntil);
+
         link.ValidFrom = validFrom;
         link.ValidUntil = validUntil;
         link.RecipientPhoneNumber = recipientPhoneNumber;
@@ -118,6 +141,12 @@ public class LinkService : ILinkService
 
     public async Task SendSmsAsync(TemporaryLink link)
     {
+        if (string.IsNullOrWhiteSpace(link.RecipientPhoneNumber))
+        {
+            throw new InvalidOperationException(
+                "This link has no recipient phone number — add one (Edit) to enable SMS.");
+        }
+
         var message = FormatMessage(link);
         var result = await _twilioService.SendSmsAsync(link.RecipientPhoneNumber, message);
 
@@ -135,6 +164,7 @@ public class LinkService : ILinkService
             TemporaryLinkId = link.Id,
             Content = message,
             TwilioMessageSid = result.MessageSid,
+            SmsSent = true,
         };
 
         _context.LinkSmsAudits.Add(audit);
@@ -180,10 +210,29 @@ public class LinkService : ILinkService
 
         if (link.Status == LinkStatus.Expired || now > link.ValidUntil)
         {
+            var wasActive = link.Status != LinkStatus.Expired;
             link.Status = LinkStatus.Expired;
             await _context.SaveChangesAsync();
             await AddAuditEntryAsync(link.Id, "ExecutionAttempt",
                 "Attempted to use expired link", ipAddress, userAgent, false);
+
+            // Lazy expiry must clean up like the sweep does — the sweep only scans
+            // Active links, so an automation not deleted here would leak forever.
+            if (wasActive && !string.IsNullOrEmpty(link.WebhookId))
+            {
+                try
+                {
+                    await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
+                    await AddAuditEntryAsync(link.Id, "WebhookDeleted",
+                        "Webhook automation deleted (link expired at execution time)");
+                }
+                catch (Exception ex)
+                {
+                    await AddAuditEntryAsync(link.Id, "ExecutionException",
+                        $"Webhook automation delete failed (link expired at execution time) {ex.Message}");
+                }
+            }
+
             return new LinkExecutionResult
             {
                 Status = LinkExecutionStatus.Expired,
@@ -280,12 +329,21 @@ public class LinkService : ILinkService
         link.Status = LinkStatus.Revoked;
         await _context.SaveChangesAsync();
 
-        // Delete the webhook automation (cloudhook is auto-deleted by HA)
+        // Delete the webhook automation (cloudhook is auto-deleted by HA). A home-side
+        // failure must not undo the revocation — the status is already saved.
         if (!string.IsNullOrEmpty(link.WebhookId))
         {
-            await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
-            await AddAuditEntryAsync(link.Id, "WebhookDeleted",
-                "Webhook automation deleted (link revoked)");
+            try
+            {
+                await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
+                await AddAuditEntryAsync(link.Id, "WebhookDeleted",
+                    "Webhook automation deleted (link revoked)");
+            }
+            catch (Exception ex)
+            {
+                await AddAuditEntryAsync(link.Id, "ExecutionException",
+                    $"Webhook automation delete failed (link revoked) {ex.Message}");
+            }
         }
 
         await AddAuditEntryAsync(link.Id, "Revoked", "Link was revoked");
@@ -351,12 +409,29 @@ public class LinkService : ILinkService
         await _context.SaveChangesAsync();
     }
 
+    public string GetShareUrl(TemporaryLink link)
+    {
+        // The trigger URL rides ONLY in the fragment — never sent to the page's host.
+        if (!string.IsNullOrWhiteSpace(_config.SharePageUrl))
+        {
+            return $"{_config.SharePageUrl.TrimEnd('/')}#{Uri.EscapeDataString(link.CloudhookUrl)}";
+        }
+
+        if (string.IsNullOrWhiteSpace(_config.PublicUrl))
+        {
+            return link.CloudhookUrl;
+        }
+
+        return $"{_config.PublicUrl.TrimEnd('/')}/local/{SharePage.RelativePath}" +
+               $"#{Uri.EscapeDataString(link.CloudhookUrl)}";
+    }
+
     private string FormatMessage(TemporaryLink link)
     {
         var template = link.CustomMessage ?? _config.DefaultMessageTemplate;
 
         return template
-            .Replace("{link}", link.CloudhookUrl)
+            .Replace("{link}", GetShareUrl(link))
             .Replace("{start_time}", link.ValidFrom.ToLocalTime().ToString("g"))
             .Replace("{end_time}", link.ValidUntil.ToLocalTime().ToString("g"))
             .Replace("{name}", link.Name);

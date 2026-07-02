@@ -54,7 +54,7 @@ else
             </tr>
             <tr>
                 <th>Phone Number</th>
-                <td>@Model.Link.RecipientPhoneNumber</td>
+                <td>@(string.IsNullOrEmpty(Model.Link.RecipientPhoneNumber) ? "—" : Model.Link.RecipientPhoneNumber)</td>
             </tr>
         </table>
 
@@ -62,17 +62,45 @@ else
         {
             <div class="mt-2">
                 <h3>Link URL</h3>
-                <div class="link-url">@Model.LinkUrl</div>
+                <div class="link-url" id="linkUrl">@Model.LinkUrl</div>
+                <button type="button" class="btn btn-primary mt-1" id="copyLinkBtn">Copy link</button>
+                <span id="copyConfirm" style="display: none; margin-left: 0.5rem; color: green;">Copied!</span>
                 <p class="mt-1 text-muted">Share this URL with the recipient (or send via SMS below)</p>
             </div>
+            <script>
+                document.getElementById('copyLinkBtn').addEventListener('click', async function () {
+                    var url = document.getElementById('linkUrl').textContent.trim();
+                    try {
+                        await navigator.clipboard.writeText(url);
+                    } catch {
+                        // Clipboard API can be unavailable inside the ingress iframe — fall back.
+                        var ta = document.createElement('textarea');
+                        ta.value = url;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                    }
+                    var confirmEl = document.getElementById('copyConfirm');
+                    confirmEl.style.display = 'inline';
+                    setTimeout(function () { confirmEl.style.display = 'none'; }, 2000);
+                });
+            </script>
 
             <div class="mt-2">
-                @if (Model.IsTwilioConfigured)
+                @if (Model.IsTwilioConfigured && !string.IsNullOrEmpty(Model.Link.RecipientPhoneNumber))
                 {
                     <form method="post" asp-page-handler="SendSms" asp-route-id="@Model.Link.Id"
                           style="display: inline;">
                         <button type="submit" class="btn btn-primary">Send SMS</button>
                     </form>
+                }
+                else if (Model.IsTwilioConfigured)
+                {
+                    <div class="alert alert-warning" style="margin-top: 1rem;">
+                        <strong>No recipient on this link.</strong> Add a phone number (Edit Link) to enable SMS,
+                        or copy the URL above and share it any way you like.
+                    </div>
                 }
                 else
                 {

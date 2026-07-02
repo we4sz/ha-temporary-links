@@ -1,0 +1,957 @@
+{
+  "schemaVersion": 1,
+  "scope": {
+    "level": "app"
+  },
+  "extends": null,
+  "preamble": "Temporary Links is a Home Assistant add-on with which an operator hands a person outside the household a **temporary link**: a shareable, time-boxed, usage-limited authorization to trigger a predefined set of home actions (open a gate, unlock a door, start a scene). The operator composes the link in the add-on's dashboard (reached through the home's authenticated panel), chooses the actions, a validity window, a usage allowance, and a recipient, and delivers the link by SMS. The recipient opens the link's public trigger URL; the home runs the actions; the add-on accounts for the use and retires the link when its allowance is spent, its window ends, or the operator revokes it. Every consequential event lands in an audit trail. The add-on is the bookkeeper and gatekeeper of this lifecycle: the home hosts the trigger and runs the actions; the add-on decides whether a presented link is still good, records what happened, and cleans the trigger out of the home when the link dies.\n\nThis file is the specification of that product \u2014 the facit against which the implementation is judged and from which it could, in principle, be regenerated. It is written as user stories with acceptance criteria, grouped into epics, in conceptual vocabulary only: it names no type, class, file, or method.",
+  "howToRead": "Roles: the **operator** (the home's administrator, working in the dashboard), the **recipient** (the person given a link, outside the household), and **the add-on** (for autonomous behaviour such as expiry sweeps). Stories are 'As a [role], I want [capability], so that [benefit]' with numbered Given/When/Then acceptance criteria. Each AC is concrete and falsifiable \u2014 it must map directly to a test. Where today's code differs from an AC, that difference belongs in the gap, never softened here.",
+  "glossary": [
+    {
+      "id": "G.temporary-link",
+      "term": "temporary link",
+      "definition": "A shareable, time-boxed, usage-limited authorization to trigger a predefined set of home actions. Owns a token, a validity window, a usage allowance, a recipient, an optional custom message, a status, and its audit history."
+    },
+    {
+      "id": "G.token",
+      "term": "token",
+      "definition": "The link's high-entropy secret identifier: 32 characters, URL-safe alphabet, generated from a cryptographically secure random source, unique across all links."
+    },
+    {
+      "id": "G.home",
+      "term": "home",
+      "definition": "The home automation system (Home Assistant) the add-on serves: it hosts each link's trigger, runs the link's actions, and provides the authenticated panel through which the operator reaches the dashboard."
+    },
+    {
+      "id": "G.trigger-url",
+      "term": "trigger URL",
+      "definition": "The public, internet-reachable URL (a cloud-relayed webhook) a recipient opens to use a link. Hosted by the home's cloud relay; fetching it fires the link's trigger in the home."
+    },
+    {
+      "id": "G.actions",
+      "term": "actions",
+      "definition": "The set of home service calls a link performs when triggered, expressed as structured data. Chosen by the operator at creation, optionally from an action template."
+    },
+    {
+      "id": "G.validity-window",
+      "term": "validity window",
+      "definition": "The from/until interval outside of which a link refuses to execute: before it, the link is not yet valid; after it, the link is expired."
+    },
+    {
+      "id": "G.usage-allowance",
+      "term": "usage allowance",
+      "definition": "The maximum number of successful uses a link permits (at least one), together with the count of uses recorded so far."
+    },
+    {
+      "id": "G.link-status",
+      "term": "link status",
+      "definition": "The link's lifecycle state: active (usable), used (allowance spent), expired (window ended), revoked (withdrawn by the operator). Used, expired, and revoked are terminal."
+    },
+    {
+      "id": "G.delivery",
+      "term": "delivery",
+      "definition": "Sending a link to its recipient by SMS through the configured messaging provider, using a message composed from a template."
+    },
+    {
+      "id": "G.message-template",
+      "term": "message template",
+      "definition": "The text a delivery is composed from \u2014 the link's custom message if present, otherwise the configured default \u2014 with placeholders for the trigger URL, the window's start and end, and the link's name."
+    },
+    {
+      "id": "G.contact",
+      "term": "contact",
+      "definition": "A reusable recipient: a name and phone number (optionally email and notes) the operator keeps to avoid retyping recipients."
+    },
+    {
+      "id": "G.action-template",
+      "term": "action template",
+      "definition": "A named, reusable set of actions the operator keeps to avoid recomposing common action sets."
+    },
+    {
+      "id": "G.audit-trail",
+      "term": "audit trail",
+      "definition": "The append-only record of consequential events in a link's life \u2014 creation, amendment, delivery outcomes, every execution attempt and its verdict, trigger cleanup, revocation, expiry \u2014 each with a timestamp, a description, and success or failure."
+    },
+    {
+      "id": "G.dashboard",
+      "term": "dashboard",
+      "definition": "The add-on's operator-facing web UI: overview, link management, contacts, action templates, and the audit log. Reached only through the home's authenticated panel; the add-on itself imposes no separate login."
+    },
+    {
+      "id": "G.sweep",
+      "term": "expiry sweep",
+      "definition": "The add-on's periodic autonomous pass that finds active links whose validity window has ended, marks them expired, and removes their triggers from the home."
+    }
+  ],
+  "epics": [
+    {
+      "id": "E1",
+      "title": "The link and its lifecycle",
+      "framing": "A temporary link is the product's one noun. It is born active with a fresh token and a hosted trigger, may be amended while active, and dies exactly one of three deaths: used up, expired, or revoked. Death is terminal, and a dead link's trigger does not linger in the home.",
+      "stories": [
+        {
+          "id": "E1.S1",
+          "role": "the operator",
+          "want": "to create a temporary link by naming it, choosing its actions, its validity window, its usage allowance, and its recipient",
+          "soThat": "I can hand out narrowly-scoped, self-expiring access to my home without sharing credentials.",
+          "acceptanceCriteria": [
+            {
+              "id": "E1.S1.A1",
+              "text": "Given valid details (a name, actions, a validity window, an allowance of at least one use, and optionally a recipient phone number), when the operator creates the link, then a link exists with status active, a zero usage count, and a fresh unique token."
+            },
+            {
+              "id": "E1.S1.A2",
+              "text": "Given a link is being created, when creation completes, then the home hosts a trigger for the link and the link records the public trigger URL that fires it."
+            },
+            {
+              "id": "E1.S1.A3",
+              "text": "Given a link is created, when the audit trail is consulted, then it records the creation, who created it, and the granted allowance."
+            },
+            {
+              "id": "E1.S1.A4",
+              "text": "Given the home cannot host the trigger, when creation fails, then no link is persisted and no orphaned trigger or half-registered artifact remains in the home."
+            },
+            {
+              "id": "E1.S1.A5",
+              "text": "Given creation fails for any reason, when the operator is back on the creation form, then the failure is explained and the operator's entries are preserved for correction."
+            }
+          ]
+        },
+        {
+          "id": "E1.S2",
+          "role": "the operator",
+          "want": "to amend an active link's validity window, recipient, custom message, and allowance",
+          "soThat": "I can extend or retarget access I have already handed out without minting a new link.",
+          "acceptanceCriteria": [
+            {
+              "id": "E1.S2.A1",
+              "text": "Given an active link, when the operator amends its window, recipient, custom message, or allowance, then the link reflects the amendment and the amendment is audited with the new values."
+            },
+            {
+              "id": "E1.S2.A2",
+              "text": "Given a link that is not active (used, expired, or revoked), when an amendment is attempted, then it is refused and the link is unchanged."
+            },
+            {
+              "id": "E1.S2.A3",
+              "text": "Given a link with recorded uses, when an amendment would set the allowance below the recorded usage count, then it is refused and the link is unchanged."
+            },
+            {
+              "id": "E1.S2.A4",
+              "text": "Given a link, when it is amended, then its name, actions, token, and trigger URL are not amendable \u2014 access-defining identity is fixed at creation."
+            },
+            {
+              "id": "E1.S2.A5",
+              "text": "Given an active link, when its validity window is amended, then the home-side trigger guard is re-armed to the new window before the amendment is saved \u2014 the old window no longer governs what the home will run."
+            }
+          ]
+        },
+        {
+          "id": "E1.S3",
+          "role": "the operator",
+          "want": "to revoke a link at any moment before it is used up",
+          "soThat": "I can withdraw access instantly when circumstances change.",
+          "acceptanceCriteria": [
+            {
+              "id": "E1.S3.A1",
+              "text": "Given a link that is not used up, when the operator revokes it, then its status becomes revoked, the revocation is audited, and its trigger is removed from the home."
+            },
+            {
+              "id": "E1.S3.A2",
+              "text": "Given a fully used link, when revocation is attempted, then it is refused \u2014 there is nothing left to withdraw."
+            },
+            {
+              "id": "E1.S3.A3",
+              "text": "Given a revoked link, when it is presented for execution, then it is refused (see E2.S2) and never runs actions again."
+            },
+            {
+              "id": "E1.S3.A4",
+              "text": "Given a link is revoked, when the link list or its details are consulted, then the link's record and audit history remain visible \u2014 revocation withdraws access, it never erases history."
+            }
+          ]
+        },
+        {
+          "id": "E1.S4",
+          "role": "the add-on",
+          "want": "to autonomously expire active links whose validity window has ended",
+          "soThat": "access dies on schedule even if nobody ever clicks the link again.",
+          "acceptanceCriteria": [
+            {
+              "id": "E1.S4.A1",
+              "text": "Given an active link whose window end has passed, when the expiry sweep runs, then the link's status becomes expired, the expiry is audited, and its trigger is removed from the home."
+            },
+            {
+              "id": "E1.S4.A2",
+              "text": "Given the expiry sweep, when it runs, then it runs repeatedly on a cadence of about a minute, and a failure in one pass does not stop future passes."
+            },
+            {
+              "id": "E1.S4.A3",
+              "text": "Given an overdue active link the sweep has not yet reached, when the link is presented for execution, then expiry is enforced at that moment: the link is marked expired and refused (lazy enforcement backs up the sweep)."
+            },
+            {
+              "id": "E1.S4.A4",
+              "text": "Given the home refuses or fails the trigger removal during a sweep, when the sweep handles that link, then the failure is audited, the link is still marked expired, and the sweep continues with the remaining links."
+            }
+          ]
+        },
+        {
+          "id": "E1.S5",
+          "role": "the add-on",
+          "want": "every link's token to be a fresh, high-entropy, URL-safe secret",
+          "soThat": "links cannot be guessed, enumerated, or collided.",
+          "acceptanceCriteria": [
+            {
+              "id": "E1.S5.A1",
+              "text": "Given a token is generated, when it is inspected, then it is exactly 32 characters drawn from a URL-safe alphabet (letters, digits, '-', '_'), with no padding or URL-hostile characters."
+            },
+            {
+              "id": "E1.S5.A2",
+              "text": "Given token generation, when many tokens are generated, then they come from a cryptographically secure random source and do not repeat (uniqueness is also enforced at storage)."
+            }
+          ]
+        },
+        {
+          "id": "E1.S6",
+          "role": "the operator",
+          "want": "to create a link without naming any recipient and share its trigger URL myself",
+          "soThat": "SMS is a convenience, never a requirement \u2014 I can paste the link into any channel I like.",
+          "acceptanceCriteria": [
+            {
+              "id": "E1.S6.A1",
+              "text": "Given link details with no recipient, when the operator creates the link, then creation succeeds and the link behaves identically in every other respect."
+            },
+            {
+              "id": "E1.S6.A2",
+              "text": "Given a link with no recipient, when its details are viewed, then SMS delivery is unavailable with an explanation, while the trigger URL remains shareable by hand."
+            },
+            {
+              "id": "E1.S6.A3",
+              "text": "Given a link with no recipient, when the operator amends it to add a recipient, then SMS delivery becomes available."
+            }
+          ]
+        },
+        {
+          "id": "E1.S7",
+          "role": "the operator",
+          "want": "to compose a link's actions by picking from my home's devices, services, and automations \u2014 the way the home's own automation editor works",
+          "soThat": "I never have to hand-write structured action data to grant access.",
+          "acceptanceCriteria": [
+            {
+              "id": "E1.S7.A1",
+              "text": "Given the creation form, when the operator composes actions, then they can pick from the home's actual services, devices/entities, and automations, fetched live from the home \u2014 not type structured text."
+            },
+            {
+              "id": "E1.S7.A2",
+              "text": "Given actions composed by picking, when the link is created, then they produce exactly the same structured actions data as hand-written actions would; raw editing remains available as an escape hatch."
+            },
+            {
+              "id": "E1.S7.A3",
+              "text": "Given the picker, when the operator selects a target, then only valid combinations are offered \u2014 a pick that the home would reject is prevented at composition time."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E2",
+      "title": "Triggering and execution",
+      "framing": "The recipient's whole experience is opening one URL. Behind it, the home fires the trigger and tells the add-on; the add-on is the gatekeeper that decides \u2014 in a fixed order of scrutiny \u2014 whether that use counts, and the bookkeeper that records the verdict either way.",
+      "stories": [
+        {
+          "id": "E2.S1",
+          "role": "the recipient",
+          "want": "opening the trigger URL to run the link's actions in the home",
+          "soThat": "I get the access I was granted with a single tap, no account or app required.",
+          "acceptanceCriteria": [
+            {
+              "id": "E2.S1.A1",
+              "text": "Given an active link within its window, when its trigger URL is fetched, then the home runs the link's actions and announces the trigger event to the add-on with the link's token."
+            },
+            {
+              "id": "E2.S1.A2",
+              "text": "Given the trigger fires, when the add-on receives the event, then it evaluates the link (E2.S2) and records the verdict in the audit trail; recipient-facing feedback is the home's own response \u2014 the add-on serves no recipient-facing pages."
+            },
+            {
+              "id": "E2.S1.A3",
+              "text": "Given a link outside its grant (before its window start, after its window end, after revocation, or with its allowance spent), when its trigger URL is fetched, then the home does not run the link's actions \u2014 the refusal verdict governs the actions themselves, not just the bookkeeping."
+            }
+          ],
+          "notes": [
+            "The trigger URL is deliberately public and unauthenticated \u2014 the token in the URL is the entire credential. The trigger is reachable from outside the home network and answers plain GET fetches."
+          ]
+        },
+        {
+          "id": "E2.S2",
+          "role": "the add-on",
+          "want": "to judge every presented token in a fixed order of scrutiny: unknown, exhausted, revoked, expired, not-yet-valid, and only then success",
+          "soThat": "a link never executes outside its grant, and every refusal has one unambiguous reason.",
+          "acceptanceCriteria": [
+            {
+              "id": "E2.S2.A1",
+              "text": "Given a token no link owns, when it is presented, then execution is refused as unknown and no link state changes."
+            },
+            {
+              "id": "E2.S2.A2",
+              "text": "Given a link already used up (status used, or recorded uses at or over the allowance), when its token is presented, then execution is refused as already-used and the attempt is audited as a failure."
+            },
+            {
+              "id": "E2.S2.A3",
+              "text": "Given a revoked link, when its token is presented, then execution is refused as revoked and the attempt is audited as a failure."
+            },
+            {
+              "id": "E2.S2.A4",
+              "text": "Given a link past its window end (or already marked expired), when its token is presented, then the link is marked expired, execution is refused as expired, and the attempt is audited as a failure."
+            },
+            {
+              "id": "E2.S2.A5",
+              "text": "Given a link before its window start, when its token is presented, then execution is refused as not-yet-valid, the attempt is audited as a failure, and the link stays active for later use."
+            },
+            {
+              "id": "E2.S2.A6",
+              "text": "Given a link that passes every check, when its token is presented, then the use succeeds: the usage count increments and the use is audited as a success with the running count against the allowance."
+            }
+          ]
+        },
+        {
+          "id": "E2.S3",
+          "role": "the add-on",
+          "want": "a link whose allowance is spent by a successful use to be retired on the spot",
+          "soThat": "a one-time link is truly one-time.",
+          "acceptanceCriteria": [
+            {
+              "id": "E2.S3.A1",
+              "text": "Given a successful use brings the usage count to the allowance, when the use completes, then the link's status becomes used and its trigger is removed from the home, and the cleanup is audited."
+            },
+            {
+              "id": "E2.S3.A2",
+              "text": "Given the trigger removal fails, when the use completes, then the use itself still counts (the count and audit stand) and the failure is audited distinctly."
+            },
+            {
+              "id": "E2.S3.A3",
+              "text": "Given a link with an allowance greater than one, when a use succeeds below the allowance, then the link stays active and its trigger stays hosted."
+            }
+          ]
+        },
+        {
+          "id": "E2.S4",
+          "role": "the add-on",
+          "want": "to hold a resilient listening connection to the home for trigger events",
+          "soThat": "no legitimate use goes unaccounted because the bookkeeper was asleep.",
+          "acceptanceCriteria": [
+            {
+              "id": "E2.S4.A1",
+              "text": "Given the add-on is running, when the connection to the home drops or errors, then the add-on reconnects after a short pause and resumes listening, indefinitely."
+            },
+            {
+              "id": "E2.S4.A2",
+              "text": "Given the home rejects the add-on's credentials, when authentication fails, then the failure is logged and surfaced rather than silently swallowed."
+            },
+            {
+              "id": "E2.S4.A3",
+              "text": "Given an event that is not a link trigger, or a trigger event without a token, when it arrives, then the add-on ignores it without disturbing link state, and an error handling one event does not kill the listener."
+            }
+          ]
+        },
+        {
+          "id": "E2.S5",
+          "role": "the add-on",
+          "want": "a delivered trigger URL to be inert to automated link-preview fetches",
+          "soThat": "a chat app's preview bot (Messenger, iMessage, WhatsApp and kin) can never consume or fire a link before the recipient acts.",
+          "acceptanceCriteria": [
+            {
+              "id": "E2.S5.A1",
+              "text": "Given a messaging app prefetches the trigger URL to render a preview, when the prefetch occurs, then the link's actions do not run and no usage is consumed."
+            },
+            {
+              "id": "E2.S5.A2",
+              "text": "Given the human recipient deliberately opens the link, when they confirm with one simple gesture, then the actions run and the use is counted \u2014 the gesture is the only extra step and needs no account or app."
+            },
+            {
+              "id": "E2.S5.A3",
+              "text": "Given the home's cloud remote access is enabled, when the add-on starts without a manually configured public URL, then the public URL is discovered from the home automatically \u2014 manual configuration is an override for unusual setups, never a requirement; with neither available, links fall back to the direct form."
+            },
+            {
+              "id": "E2.S5.A4",
+              "text": "Given a shared confirm-page service is configured (one publicly hosted copy of the confirm page that any installation can use), when a link is shared, then the link points to that page with the trigger URL carried only in the location fragment \u2014 the shared host never receives any trigger URL, no per-home hosting or cloud remote access is needed, and the shared page takes precedence over self-hosting."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E3",
+      "title": "Delivery by SMS",
+      "framing": "A link nobody receives is dead weight. Delivery composes a human message around the trigger URL and hands it to the messaging provider, keeping an honest record of what was sent \u2014 and of what failed to send.",
+      "stories": [
+        {
+          "id": "E3.S1",
+          "role": "the operator",
+          "want": "the SMS text composed from a template \u2014 the link's custom message if I wrote one, otherwise the configured default",
+          "soThat": "recipients get a clear, personal message without me typing it each time.",
+          "acceptanceCriteria": [
+            {
+              "id": "E3.S1.A1",
+              "text": "Given a link with a custom message, when the delivery text is composed, then the custom message is used; given none, the configured default template is used."
+            },
+            {
+              "id": "E3.S1.A2",
+              "text": "Given a template containing the placeholders for the trigger URL, the window start, the window end, and the link name, when the text is composed, then each placeholder is replaced with the link's actual values (times rendered in local time, in a short human format)."
+            }
+          ]
+        },
+        {
+          "id": "E3.S2",
+          "role": "the operator",
+          "want": "to send the link to its recipient by SMS from the link's details, and see the outcome",
+          "soThat": "delivery is one click and I never wonder whether it went out.",
+          "acceptanceCriteria": [
+            {
+              "id": "E3.S2.A1",
+              "text": "Given a link and a configured provider, when the operator sends the SMS and the provider accepts it, then the delivery is recorded with the provider's message id and the exact content sent, the success is audited, and the operator sees confirmation."
+            },
+            {
+              "id": "E3.S2.A2",
+              "text": "Given the provider refuses or errors, when the send fails, then the failure is audited with the provider's reason and the operator sees the failure \u2014 a failed send is never presented as sent."
+            },
+            {
+              "id": "E3.S2.A3",
+              "text": "Given a delivery record, when it is consulted, then it reflects whether the provider accepted the message."
+            }
+          ]
+        },
+        {
+          "id": "E3.S3",
+          "role": "the operator",
+          "want": "SMS to be cleanly optional",
+          "soThat": "the add-on is fully usable without a messaging provider \u2014 I can share the URL any way I like.",
+          "acceptanceCriteria": [
+            {
+              "id": "E3.S3.A1",
+              "text": "Given no provider is configured, when the operator views a link's details, then sending is unavailable with an explanation, and every other feature works normally."
+            },
+            {
+              "id": "E3.S3.A2",
+              "text": "Given provider credentials are configured, when the add-on starts, then it verifies the account is live and the sender number is in international form, and refuses to start with broken provider credentials rather than failing on first send."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E4",
+      "title": "Reuse: contacts, action templates, duplication",
+      "framing": "The operator sends the same kinds of access to the same kinds of people. Contacts remember who; action templates remember what; duplication remembers a whole link. None of them are required \u2014 they only save retyping.",
+      "stories": [
+        {
+          "id": "E4.S1",
+          "role": "the operator",
+          "want": "to keep a list of contacts (name, phone, optional email and notes) with full create/edit/delete",
+          "soThat": "recipients I use repeatedly are one pick away.",
+          "acceptanceCriteria": [
+            {
+              "id": "E4.S1.A1",
+              "text": "Given the contacts area, when the operator creates, edits, or deletes a contact, then the change persists; a contact requires a name and a phone number, and edits record when they happened."
+            },
+            {
+              "id": "E4.S1.A2",
+              "text": "Given contacts exist, when the operator composes or amends a link, then the recipient can be picked from the contacts as an alternative to typing a number."
+            }
+          ]
+        },
+        {
+          "id": "E4.S2",
+          "role": "the operator",
+          "want": "to keep named action templates with full create/edit/delete",
+          "soThat": "common action sets (open the gate, unlock the front door) are one pick away.",
+          "acceptanceCriteria": [
+            {
+              "id": "E4.S2.A1",
+              "text": "Given the templates area, when the operator creates, edits, or deletes a template, then the change persists; a template requires a name and actions."
+            },
+            {
+              "id": "E4.S2.A2",
+              "text": "Given templates exist, when the operator composes a link, then the actions can be picked from a template as an alternative to writing them by hand."
+            }
+          ]
+        },
+        {
+          "id": "E4.S3",
+          "role": "the operator",
+          "want": "to save a new link's recipient as a contact and its actions as a template in the same gesture as creating the link",
+          "soThat": "reuse builds itself up from real use instead of demanding upfront curation.",
+          "acceptanceCriteria": [
+            {
+              "id": "E4.S3.A1",
+              "text": "Given the operator opts to save the actions as a template at link creation, when the link is created, then a template is added named after the link \u2014 unless an identical set of actions is already saved, in which case no duplicate is added."
+            },
+            {
+              "id": "E4.S3.A2",
+              "text": "Given the operator opts to save the recipient as a contact at link creation, when the link is created, then a contact is added \u2014 unless a contact with that phone number already exists, in which case no duplicate is added."
+            }
+          ]
+        },
+        {
+          "id": "E4.S4",
+          "role": "the operator",
+          "want": "to duplicate an existing link into a prefilled creation form",
+          "soThat": "re-granting the same access to the same person is seconds, not minutes.",
+          "acceptanceCriteria": [
+            {
+              "id": "E4.S4.A1",
+              "text": "Given any existing link, when the operator duplicates it, then the creation form is prefilled with its name, actions, recipient, custom message, and allowance \u2014 while the validity window is fresh, not copied \u2014 and a new link with a new token is created on submit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "title": "Observability: dashboard, details, audit",
+      "framing": "Handing out access to your home demands an answerable 'what is out there right now, and what happened?'. The dashboard answers the first; the audit trail and per-link details answer the second.",
+      "stories": [
+        {
+          "id": "E5.S1",
+          "role": "the operator",
+          "want": "an overview showing how many links exist in each status, which are active right now, and the latest activity",
+          "soThat": "one glance tells me the current exposure of my home.",
+          "acceptanceCriteria": [
+            {
+              "id": "E5.S1.A1",
+              "text": "Given links exist, when the overview loads, then it shows counts of total, active, used, expired, and revoked links, the active links themselves (newest first), and the most recent audit events."
+            }
+          ]
+        },
+        {
+          "id": "E5.S2",
+          "role": "the operator",
+          "want": "a link list I can filter by status, and a details view per link",
+          "soThat": "I can find any link and see everything about it in one place.",
+          "acceptanceCriteria": [
+            {
+              "id": "E5.S2.A1",
+              "text": "Given the link list, when a status filter is chosen, then only links of that status are listed; with no filter, all links are listed newest first."
+            },
+            {
+              "id": "E5.S2.A2",
+              "text": "Given a link's details, when they load, then they show the link's properties, its shareable trigger URL (for active links), its delivery history with provider message ids, and its full audit history."
+            },
+            {
+              "id": "E5.S2.A3",
+              "text": "Given a link's details showing its trigger URL, when the operator uses the copy control, then the URL lands on the clipboard in one click with visible confirmation \u2014 no manual text selection."
+            }
+          ]
+        },
+        {
+          "id": "E5.S3",
+          "role": "the operator",
+          "want": "an audit log across all links, and every consequential event captured in it",
+          "soThat": "there is one accountable history of who was granted what and what happened.",
+          "acceptanceCriteria": [
+            {
+              "id": "E5.S3.A1",
+              "text": "Given the audit log, when it loads, then it shows the most recent events across all links, newest first, each naming its link, event type, description, timestamp, and success or failure."
+            },
+            {
+              "id": "E5.S3.A2",
+              "text": "Given a link's life, when its events occur, then creation, amendment, every execution attempt with its verdict, every delivery success or failure, trigger cleanup, revocation, and expiry each produce an audit event."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E6",
+      "title": "Operation: configuration, startup, storage, panel",
+      "framing": "The add-on is configured from the home's add-on options, stores its records in the add-on's data volume, and refuses to half-run: missing essentials stop it at startup with a clear reason.",
+      "stories": [
+        {
+          "id": "E6.S1",
+          "role": "the operator",
+          "want": "to configure everything from the add-on's options: home URL and access token, provider credentials and sender number, default message template, and log verbosity",
+          "soThat": "setup is declarative and secrets stay in the home's own configuration store.",
+          "acceptanceCriteria": [
+            {
+              "id": "E6.S1.A1",
+              "text": "Given the add-on options, when the add-on starts, then home URL/token, provider credentials, default template, and log level are read from them, and secret-typed options (tokens, provider auth) are declared as passwords in the options schema."
+            },
+            {
+              "id": "E6.S1.A2",
+              "text": "Given the home URL or the home access token is missing, when the add-on starts, then it logs exactly what is missing and exits rather than running blind."
+            }
+          ]
+        },
+        {
+          "id": "E6.S2",
+          "role": "the add-on",
+          "want": "durable storage in the add-on data volume, migrated automatically at startup",
+          "soThat": "links and their history survive restarts and upgrades with zero operator ceremony.",
+          "acceptanceCriteria": [
+            {
+              "id": "E6.S2.A1",
+              "text": "Given the add-on starts, when storage initializes, then the database lives in the add-on's persistent data directory and any pending schema migrations are applied before the app serves traffic."
+            },
+            {
+              "id": "E6.S2.A2",
+              "text": "Given a link dies (used, expired, or revoked), when storage is consulted, then the link's row and audit history are retained \u2014 nothing about a link is ever hard-deleted."
+            }
+          ]
+        },
+        {
+          "id": "E6.S3",
+          "role": "the operator",
+          "want": "the dashboard served through the home's authenticated panel",
+          "soThat": "access to the dashboard is exactly access to my home's admin UI \u2014 no second login to manage.",
+          "acceptanceCriteria": [
+            {
+              "id": "E6.S3.A1",
+              "text": "Given the dashboard is opened through the home's panel, when pages render and links navigate, then paths respect the panel's ingress path prefix so navigation works inside the panel."
+            },
+            {
+              "id": "E6.S3.A2",
+              "text": "Given the add-on imposes no login of its own, when its security posture is stated, then it is explicit that the dashboard trusts the home's ingress for authentication and must not be exposed on any other route."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E7",
+      "title": "Trustworthy enforcement",
+      "framing": "A temporary link promises time-boxed and usage-limited access. Today the home enforces only the window; the usage limit is counted after the fact by the add-on, so the real action can fire more times than granted. This epic makes the grant a guarantee, not an estimate, and closes the consistency and secret-handling gaps around it.",
+      "stories": [
+        {
+          "id": "E7.S1",
+          "role": "the add-on",
+          "want": "a link's real actions to run at most as many times as its allowance, even under burst, replay, or while I am offline",
+          "soThat": "a one-time link is truly one-time.",
+          "acceptanceCriteria": [
+            {
+              "id": "E7.S1.A1",
+              "text": "Given a link at its allowance, when its trigger is fired again, then the home does not run the link's actions \u2014 enforcement binds the actions, not just the recorded count."
+            },
+            {
+              "id": "E7.S1.A2",
+              "text": "Given two triggers arrive within milliseconds on a single-use link, when both are processed, then the actions run at most once and exactly one use is recorded."
+            },
+            {
+              "id": "E7.S1.A3",
+              "text": "Given the add-on was offline when a link was used, when it comes back, then the use is reconciled (counted and audited) and an exhausted link's trigger is retired \u2014 a use during downtime is never silently forgotten."
+            }
+          ]
+        },
+        {
+          "id": "E7.S2",
+          "role": "the add-on",
+          "want": "to refuse to issue a link that cannot be enforced safely",
+          "soThat": "there is no insecure default.",
+          "acceptanceCriteria": [
+            {
+              "id": "E7.S2.A1",
+              "text": "Given no bot-immune (POST plus confirm-page) path is available, when a link would otherwise be shared as a bare directly-triggerable URL, then the operator is warned that the link is preview-bot-consumable before it is shared."
+            }
+          ]
+        },
+        {
+          "id": "E7.S3",
+          "role": "the add-on",
+          "want": "usage counting to be atomic and consistent",
+          "soThat": "no race between triggers, edits, or the expiry sweep can miscount or clobber a link's state.",
+          "acceptanceCriteria": [
+            {
+              "id": "E7.S3.A1",
+              "text": "Given concurrent operations on one link, when they commit, then the usage count and status are updated atomically with no lost update \u2014 a conflict is detected and re-resolved."
+            },
+            {
+              "id": "E7.S3.A2",
+              "text": "Given the store is briefly contended, when a counting write meets contention, then it retries rather than dropping the use."
+            }
+          ]
+        },
+        {
+          "id": "E7.S4",
+          "role": "the operator",
+          "want": "secrets and capability URLs kept out of the logs",
+          "soThat": "reading the logs never hands someone a working key.",
+          "acceptanceCriteria": [
+            {
+              "id": "E7.S4.A1",
+              "text": "Given any log level, when the add-on logs, then link tokens and trigger URLs are never written in the clear \u2014 omitted or redacted."
+            }
+          ]
+        },
+        {
+          "id": "E7.S5",
+          "role": "the operator",
+          "want": "the shared confirm-page host treated as fully trusted code",
+          "soThat": "I understand and consent to what hosting it can see.",
+          "acceptanceCriteria": [
+            {
+              "id": "E7.S5.A1",
+              "text": "Given a shared confirm-page host is configured, when the operator sets it, then the interface and documentation state plainly that this host runs code with access to every shared link's trigger URL, and recommend a first-party or self-hosted origin."
+            }
+          ]
+        },
+        {
+          "id": "E7.S6",
+          "role": "the operator",
+          "want": "a link's actions constrained to an intended, least-privilege set",
+          "soThat": "a link cannot do more to my home than the access I meant to grant.",
+          "acceptanceCriteria": [
+            {
+              "id": "E7.S6.A1",
+              "text": "Given a link's actions, when it is created, then only actions within an allowed set of the home's capabilities are accepted \u2014 a link cannot smuggle in arbitrary automation behaviour."
+            },
+            {
+              "id": "E7.S6.A2",
+              "text": "Given the add-on talks to the home, when it authenticates, then it uses the least privilege sufficient for its function rather than a full-control credential."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E8",
+      "title": "The recipient's experience and operator awareness",
+      "framing": "The recipient is a non-technical outsider whose entire interaction is one link, and the operator is granting physical access to their home. Both deserve to know what happened.",
+      "stories": [
+        {
+          "id": "E8.S1",
+          "role": "a recipient",
+          "want": "a clear result after I tap my link (opened, expired, already used, or not yet valid)",
+          "soThat": "I know whether I have access and what to do if not.",
+          "acceptanceCriteria": [
+            {
+              "id": "E8.S1.A1",
+              "text": "Given a link is used successfully, when the recipient confirms, then they see a plain success confirmation."
+            },
+            {
+              "id": "E8.S1.A2",
+              "text": "Given a link is refused (expired, used up, revoked, or not yet valid), when the recipient opens it, then they see a specific, non-technical explanation rather than a dead end or a raw error."
+            }
+          ]
+        },
+        {
+          "id": "E8.S2",
+          "role": "an operator",
+          "want": "to be notified in my home when a link is used, refused, or auto-expires",
+          "soThat": "I have real-time awareness of access to my home without watching a dashboard.",
+          "acceptanceCriteria": [
+            {
+              "id": "E8.S2.A1",
+              "text": "Given a link is successfully used, when the use completes, then an operator notification is emitted through the home's own notification mechanism, and can be turned on or off."
+            },
+            {
+              "id": "E8.S2.A2",
+              "text": "Given a link is refused, when the refusal is recorded, then an awareness notification can be emitted for out-of-grant attempts."
+            }
+          ]
+        },
+        {
+          "id": "E8.S3",
+          "role": "a recipient and operator",
+          "want": "link text and recipient-facing pages available in my language",
+          "soThat": "the product works for non-English households.",
+          "acceptanceCriteria": [
+            {
+              "id": "E8.S3.A1",
+              "text": "Given the configured language, when operator-facing interface and recipient-facing pages render, then their fixed text is localisable and not hard-coded to one language."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E9",
+      "title": "Operability and safe delivery",
+      "framing": "The add-on is an appliance a stranger installs and forgets. It must build on the hardware it advertises, survive restarts and flaky networks, fail in ways the operator can act on, and never lose a link's history to an upgrade.",
+      "stories": [
+        {
+          "id": "E9.S1",
+          "role": "an operator",
+          "want": "the dashboard protected even if it is reached outside the home's authenticated panel",
+          "soThat": "a misconfiguration does not expose control of my home.",
+          "acceptanceCriteria": [
+            {
+              "id": "E9.S1.A1",
+              "text": "Given a request that did not arrive through the home's authenticated ingress, when it reaches the dashboard, then it is not served with full control."
+            },
+            {
+              "id": "E9.S1.A2",
+              "text": "Given forwarded request metadata, when the add-on records who acted, then it does not trust spoofable headers for that record."
+            }
+          ]
+        },
+        {
+          "id": "E9.S2",
+          "role": "a maintainer",
+          "want": "the advertised hardware architectures to match what actually builds",
+          "soThat": "installs never fail on unsupported hardware.",
+          "acceptanceCriteria": [
+            {
+              "id": "E9.S2.A1",
+              "text": "Given the set of advertised architectures, when the add-on image is built, then every advertised architecture produces a working image, or is not advertised."
+            }
+          ]
+        },
+        {
+          "id": "E9.S3",
+          "role": "an operator",
+          "want": "the event listener to detect a dead or unauthorised connection and surface it",
+          "soThat": "link usage never silently stops being tracked.",
+          "acceptanceCriteria": [
+            {
+              "id": "E9.S3.A1",
+              "text": "Given a stalled or half-open connection to the home, when no events arrive within a liveness interval, then the add-on forces a reconnect."
+            },
+            {
+              "id": "E9.S3.A2",
+              "text": "Given the home rejects the add-on's credentials, when authentication fails repeatedly, then it is surfaced as a distinct, actionable state and backs off, not an infinite silent retry."
+            }
+          ]
+        },
+        {
+          "id": "E9.S4",
+          "role": "an operator",
+          "want": "a messaging-provider outage to disable only messaging",
+          "soThat": "an unrelated third party cannot take the whole add-on down.",
+          "acceptanceCriteria": [
+            {
+              "id": "E9.S4.A1",
+              "text": "Given the messaging provider is unreachable or invalid at startup, when the add-on starts, then it starts with messaging disabled and a clear warning rather than refusing to run."
+            }
+          ]
+        },
+        {
+          "id": "E9.S5",
+          "role": "a maintainer",
+          "want": "upgrades to protect existing link history",
+          "soThat": "a failed schema migration is recoverable without data loss.",
+          "acceptanceCriteria": [
+            {
+              "id": "E9.S5.A1",
+              "text": "Given a pending schema migration, when the add-on starts, then the data store is backed up first and a migration failure is reported clearly without crash-looping into an unrecoverable state."
+            }
+          ]
+        },
+        {
+          "id": "E9.S6",
+          "role": "an operator",
+          "want": "the home to detect and restart a wedged add-on",
+          "soThat": "a silently-dead process does not masquerade as healthy.",
+          "acceptanceCriteria": [
+            {
+              "id": "E9.S6.A1",
+              "text": "Given the add-on is running, when its health is checked, then health reflects data-store reachability and event-listener liveness, and the home is configured to watch it."
+            }
+          ]
+        },
+        {
+          "id": "E9.S7",
+          "role": "a maintainer",
+          "want": "every change gated by automated checks",
+          "soThat": "regressions and un-buildable architectures never ship.",
+          "acceptanceCriteria": [
+            {
+              "id": "E9.S7.A1",
+              "text": "Given a proposed change, when it is submitted, then the test suite, the facit gate, and a build for each advertised architecture all run automatically."
+            }
+          ]
+        },
+        {
+          "id": "E9.S8",
+          "role": "an operator",
+          "want": "configuration to be simple and singular",
+          "soThat": "setup has no redundant or dead paths.",
+          "acceptanceCriteria": [
+            {
+              "id": "E9.S8.A1",
+              "text": "Given a standard install, when the add-on starts, then it uses the home's built-in supervisor access by default, with a manual URL and token only as an override, via one documented configuration path."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "title": "Scheduling and reuse at scale",
+      "framing": "Real access needs are recurring and plural: the weekday dog-walker, the cleaning crew, the standing button. Today every grant is a single one-shot window to one number.",
+      "stories": [
+        {
+          "id": "E10.S1",
+          "role": "an operator",
+          "want": "to grant access on a recurring schedule (days of week plus a daily time window, with an optional end date)",
+          "soThat": "regular helpers get standing access without me re-issuing links.",
+          "acceptanceCriteria": [
+            {
+              "id": "E10.S1.A1",
+              "text": "Given a recurring schedule, when a trigger arrives, then the link executes only within an active occurrence of the schedule and is refused otherwise."
+            },
+            {
+              "id": "E10.S1.A2",
+              "text": "Given a recurring link, when its allowance is expressed per occurrence, then use is limited within each occurrence rather than as a single lifetime total."
+            }
+          ]
+        },
+        {
+          "id": "E10.S2",
+          "role": "an operator",
+          "want": "to grant one link to several recipients at once",
+          "soThat": "shared-access scenarios do not require hand-managing duplicate links.",
+          "acceptanceCriteria": [
+            {
+              "id": "E10.S2.A1",
+              "text": "Given several recipients, when the operator sends a link, then it is delivered to all of them in one action, with per-recipient delivery recorded."
+            }
+          ]
+        },
+        {
+          "id": "E10.S3",
+          "role": "an operator",
+          "want": "a scannable code for a link",
+          "soThat": "I can grant access in person or on paper without messaging or copy-paste.",
+          "acceptanceCriteria": [
+            {
+              "id": "E10.S3.A1",
+              "text": "Given a link, when the operator views its details, then a scannable code for its share URL is available."
+            }
+          ]
+        },
+        {
+          "id": "E10.S4",
+          "role": "an operator",
+          "want": "to find and review links and history as they accumulate",
+          "soThat": "the dashboard stays usable over months of use.",
+          "acceptanceCriteria": [
+            {
+              "id": "E10.S4.A1",
+              "text": "Given many links, when the operator searches and filters by name, recipient, date, or status and pages through them, then they can locate any past grant."
+            },
+            {
+              "id": "E10.S4.A2",
+              "text": "Given a long audit history, when the operator views it, then older events remain reachable through paging, filtering, or date range, not truncated to the newest few."
+            },
+            {
+              "id": "E10.S4.A3",
+              "text": "Given the operator wants an off-app record, when they export, then link and audit history can be exported."
+            }
+          ]
+        },
+        {
+          "id": "E10.S5",
+          "role": "an operator",
+          "want": "each link attributed to the household member who created it, and times shown with an explicit timezone",
+          "soThat": "who granted this, and when, is unambiguous.",
+          "acceptanceCriteria": [
+            {
+              "id": "E10.S5.A1",
+              "text": "Given a link is created through the authenticated panel, when creation is recorded, then the acting household member is attributed, not a generic label."
+            },
+            {
+              "id": "E10.S5.A2",
+              "text": "Given any time is shown or sent, when it is rendered, then its timezone is explicit and consistent between what the operator sets, what the home enforces, and what the recipient reads."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
