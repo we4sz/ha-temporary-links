@@ -182,14 +182,16 @@ public class LinkService : ILinkService
 
         if (link == null)
         {
-            _logger.LogWarning("Link not found: {Token}", token);
+            _logger.LogWarning("Trigger received for an unknown link token");
             return new LinkExecutionResult { Status = LinkExecutionStatus.NotFound };
         }
 
         var now = DateTimeOffset.UtcNow;
 
-        // Check if max uses reached
-        if (link.Status == LinkStatus.Used || link.UsageCount >= link.MaxUses)
+        // Fast path for an already-retired link (nice audit message). The allowance itself
+        // is not checked here — the atomic claim below is the single source of truth, so a
+        // link that is at its allowance but still marked Active is caught there, not here.
+        if (link.Status == LinkStatus.Used)
         {
             await AddAuditEntryAsync(link.Id, "ExecutionAttempt",
                 $"Attempted to use exhausted link (used {link.UsageCount}/{link.MaxUses})", ipAddress, userAgent,
@@ -252,37 +254,61 @@ public class LinkService : ILinkService
             };
         }
 
+        // Atomically claim one use: the conditional UPDATE only succeeds if the link is
+        // still active with an unspent allowance, so two triggers milliseconds apart can
+        // never both claim the last slot (E7.S1.A2 / E7.S3.A1) — independent of how many
+        // threads process events.
+        var claimed = await _context.TemporaryLinks
+            .Where(l => l.Id == link.Id
+                        && l.Status == LinkStatus.Active
+                        && l.UsageCount < l.MaxUses)
+            .ExecuteUpdateAsync(s => s.SetProperty(l => l.UsageCount, l => l.UsageCount + 1));
+
+        if (claimed == 0)
+        {
+            // Another trigger took the last use first.
+            await AddAuditEntryAsync(link.Id, "ExecutionAttempt",
+                "Attempted to use exhausted link (raced to the last use)", ipAddress, userAgent, false);
+            return new LinkExecutionResult { Status = LinkExecutionStatus.AlreadyUsed, Link = link };
+        }
+
+        // Reflect the winning claim in the tracked entity.
         link.UsageCount++;
-        await _context.SaveChangesAsync();
-        
+
+        // Only now — after the use is claimed — does the add-on run the link's real actions
+        // (E7.S1.A1). If the home refuses them, the use still counts, so a failing action
+        // cannot be retried to bypass the allowance.
+        try
+        {
+            await _haService.ExecuteActionsAsync(link.Actions);
+        }
+        catch (Exception ex)
+        {
+            await AddAuditEntryAsync(link.Id, "ExecutionException",
+                $"Actions failed to run ({link.UsageCount}/{link.MaxUses}): {ex.Message}",
+                ipAddress, userAgent, false);
+            await MarkUsedAndCleanUpIfExhaustedAsync(link);
+            return new LinkExecutionResult
+            {
+                Status = LinkExecutionStatus.Error,
+                Link = link,
+                ErrorMessage = "An error occurred while running the link's actions."
+            };
+        }
+
         await AddAuditEntryAsync(link.Id, "Executed",
             $"Link executed ({link.UsageCount}/{link.MaxUses})",
             ipAddress, userAgent, true);
 
-        // Mark as used and cleanup webhook when max uses is reached
-        if (link.UsageCount >= link.MaxUses)
+        var cleanupFailed = await MarkUsedAndCleanUpIfExhaustedAsync(link);
+        if (cleanupFailed)
         {
-            link.Status = LinkStatus.Used;
-            await _context.SaveChangesAsync();
-
-            try
+            return new LinkExecutionResult
             {
-                await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
-                await AddAuditEntryAsync(link.Id, "WebhookDeleted",
-                    "Webhook automation deleted (max uses reached)");
-            }
-            catch (Exception ex)
-            {
-                await AddAuditEntryAsync(link.Id, "ExecutionException",
-                    $"Webhook automation deleted failed to delet (max uses reached) {ex.Message}");
-
-                return new LinkExecutionResult
-                {
-                    Status = LinkExecutionStatus.Error,
-                    Link = link,
-                    ErrorMessage = "An error occurred while executing the action"
-                };
-            }
+                Status = LinkExecutionStatus.Error,
+                Link = link,
+                ErrorMessage = "An error occurred while executing the action"
+            };
         }
 
         return new LinkExecutionResult
@@ -290,6 +316,38 @@ public class LinkService : ILinkService
             Status = LinkExecutionStatus.Success,
             Link = link
         };
+    }
+
+    /// <summary>When a link's allowance is now spent, mark it Used and remove its home
+    /// trigger. Returns true if the trigger removal failed (audited).</summary>
+    private async Task<bool> MarkUsedAndCleanUpIfExhaustedAsync(TemporaryLink link)
+    {
+        if (link.UsageCount < link.MaxUses)
+        {
+            return false;
+        }
+
+        link.Status = LinkStatus.Used;
+        await _context.SaveChangesAsync();
+
+        if (string.IsNullOrEmpty(link.WebhookId))
+        {
+            return false;
+        }
+
+        try
+        {
+            await _haService.DeleteWebhookAutomationAsync(link.WebhookId);
+            await AddAuditEntryAsync(link.Id, "WebhookDeleted",
+                "Webhook automation deleted (max uses reached)");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            await AddAuditEntryAsync(link.Id, "ExecutionException",
+                $"Webhook automation delete failed (max uses reached) {ex.Message}");
+            return true;
+        }
     }
 
     public async Task<TemporaryLink?> GetLinkByIdAsync(Guid id)

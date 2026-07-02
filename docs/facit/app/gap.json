@@ -4,10 +4,10 @@
   "generatedAt": "2026-07-02T00:00:00Z",
   "summary": {
     "total": 105,
-    "sound": 72,
-    "partial": 3,
-    "missing": 27,
-    "contradicted": 3
+    "sound": 78,
+    "partial": 2,
+    "missing": 25,
+    "contradicted": 0
   },
   "items": [
     {
@@ -369,24 +369,18 @@
     },
     {
       "acId": "E7.S1.A1",
-      "gapType": "contradicted",
-      "severity": "blocker",
-      "whatsMissing": "The home runs the link's real actions on every trigger regardless of allowance; the add-on only counts afterward over a WS round-trip, so burst/replay/offline can run a one-time action many times.",
-      "action": "DECIDED (add-on in request path): the automation fires only the tracking event and runs NO actions; the add-on atomically checks+decrements the count (UPDATE ... WHERE UsageCount<MaxUses) and only then calls the HA service to run the actions; exhausted -> refuse + delete automation. Not yet built."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S1.A2",
-      "gapType": "contradicted",
-      "severity": "blocker",
-      "whatsMissing": "Two POSTs milliseconds apart both fire the action before the count catches up.",
-      "action": "DECIDED (add-on in request path): the automation fires only the tracking event and runs NO actions; the add-on atomically checks+decrements the count (UPDATE ... WHERE UsageCount<MaxUses) and only then calls the HA service to run the actions; exhausted -> refuse + delete automation. Not yet built."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S1.A3",
-      "gapType": "missing",
-      "severity": "blocker",
-      "whatsMissing": "Uses that occur while the add-on is offline are never counted, audited, or cleaned up; the link stays live and reusable.",
-      "action": "DECIDED (add-on in request path): the automation fires only the tracking event and runs NO actions; the add-on atomically checks+decrements the count (UPDATE ... WHERE UsageCount<MaxUses) and only then calls the HA service to run the actions; exhausted -> refuse + delete automation. Not yet built."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S2.A1",
@@ -397,24 +391,18 @@
     },
     {
       "acId": "E7.S3.A1",
-      "gapType": "partial",
-      "severity": "major",
-      "whatsMissing": "No atomic UPDATE/optimistic concurrency; sweep vs execution can clobber Status (lost update).",
-      "action": "Add a concurrency token or conditional UPDATE ... WHERE UsageCount<MaxUses."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S3.A2",
-      "gapType": "missing",
-      "severity": "major",
-      "whatsMissing": "A 'database is locked' error is swallowed in the event handler, dropping the use.",
-      "action": "Configure busy_timeout / retry-on-failure; don't swallow counting failures."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S4.A1",
-      "gapType": "contradicted",
-      "severity": "major",
-      "whatsMissing": "Tokens and cloudhook URLs (the capability itself) are written to logs at Information level.",
-      "action": "Redact/omit tokens and trigger URLs at all log levels."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S5.A1",

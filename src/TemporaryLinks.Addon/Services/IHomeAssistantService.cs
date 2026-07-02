@@ -18,6 +18,13 @@ public interface IHomeAssistantService
         string webhookId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Runs a link's actions (a JSON array of service calls) against the home.
+    /// Called by the add-on only after a use has been atomically claimed, so the allowance
+    /// binds the actions rather than being reconciled after the fact.</summary>
+    Task ExecuteActionsAsync(
+        string actionsJson,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<HaServiceInfo>> GetServicesAsync(
         CancellationToken cancellationToken = default);
 

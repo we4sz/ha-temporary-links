@@ -95,9 +95,11 @@ builder.Services.Configure<TwilioConfiguration>(options =>
     }
 });
 
-// Database
+// Database. Two background writers (the expiry sweep and the event handler) plus request
+// handlers share one SQLite file, so a busy timeout lets a contended write wait for the
+// lock instead of failing with "database is locked" and dropping a use (E7.S3.A2).
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite("Data Source=/data/temporarylinks.db"));
+    options.UseSqlite("Data Source=/data/temporarylinks.db;Default Timeout=30;Pooling=false"));
 
 // HTTP client for Home Assistant
 builder.Services.AddHttpClient<IHomeAssistantService, HomeAssistantService>();

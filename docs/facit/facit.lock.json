@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lockedAt": "2026-07-02T07:53:57Z",
+  "lockedAt": "2026-07-02T13:50:00Z",
   "facitHash": "1d284d60abd51855",
   "nodes": {
     "app::E1.S1": {
@@ -17,7 +17,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -40,7 +40,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -63,7 +63,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -91,7 +91,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -109,7 +109,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -152,7 +152,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -214,7 +214,7 @@
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -227,7 +227,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -240,7 +240,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -258,7 +258,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "b97e21b87af382dc"
+          "hash": "61dfd72ed151e2f7"
         }
       ]
     },
@@ -296,11 +296,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "b97e21b87af382dc"
+          "hash": "61dfd72ed151e2f7"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -318,7 +318,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -331,7 +331,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -344,7 +344,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -357,7 +357,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -370,7 +370,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -383,7 +383,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -401,7 +401,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -414,7 +414,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -427,7 +427,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -465,7 +465,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "b97e21b87af382dc"
+          "hash": "61dfd72ed151e2f7"
         }
       ]
     },
@@ -478,7 +478,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -491,7 +491,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "b97e21b87af382dc"
+          "hash": "61dfd72ed151e2f7"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/PublicUrlResolver.cs",
@@ -508,7 +508,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -526,7 +526,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -539,7 +539,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -567,7 +567,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -665,7 +665,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "dd0501b364c0daf3"
+          "hash": "14a303bbfe34fbfc"
         }
       ]
     },
@@ -746,18 +746,47 @@
     },
     "app::E7.S1.A1": {
       "hash": "c9527a8a122dff5d",
-      "status": "unproven",
-      "tests": []
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Automation_never_embeds_the_links_real_actions",
+        "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Addon_runs_actions_as_service_calls"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
+          "hash": "61dfd72ed151e2f7"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
+          "hash": "14a303bbfe34fbfc"
+        }
+      ]
     },
     "app::E7.S1.A2": {
       "hash": "f28d615c64036842",
-      "status": "unproven",
-      "tests": []
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Repeated_triggers_never_over_consume_a_single_use_link"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
+          "hash": "14a303bbfe34fbfc"
+        }
+      ]
     },
     "app::E7.S1.A3": {
       "hash": "67b626f15db76215",
-      "status": "unproven",
-      "tests": []
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Automation_never_embeds_the_links_real_actions"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
+          "hash": "61dfd72ed151e2f7"
+        }
+      ]
     },
     "app::E7.S2": {
       "hash": "35e1ea941dd18191",
@@ -776,8 +805,16 @@
     },
     "app::E7.S3.A1": {
       "hash": "d062d3d709c1fc79",
-      "status": "unproven",
-      "tests": []
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Atomic_claim_refuses_a_use_when_the_allowance_is_already_taken"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
+          "hash": "14a303bbfe34fbfc"
+        }
+      ]
     },
     "app::E7.S3.A2": {
       "hash": "959f4aafd78f1851",

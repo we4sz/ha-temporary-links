@@ -157,7 +157,7 @@ public class HaEventListenerService(
             if (string.IsNullOrEmpty(token))
                 return;
 
-            logger.LogInformation("Received temp_link_triggered event for token {Token}", token);
+            logger.LogInformation("Received temp_link_triggered event");
 
             using var scope = serviceProvider.CreateScope();
             var linkService = scope.ServiceProvider.GetRequiredService<ILinkService>();

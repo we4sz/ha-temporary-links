@@ -1327,42 +1327,80 @@
     },
     {
       "acId": "E7.S1.A1",
-      "status": "missing",
+      "status": "implemented",
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:69-92",
-          "note": "automation runs actions unconditionally; carries only the window condition, never MaxUses"
-        }
-      ],
-      "notes": "The allowance is enforced by the add-on after the fact, not by the home at trigger time."
-    },
-    {
-      "acId": "E7.S1.A2",
-      "status": "missing",
-      "evidence": [
-        {
-          "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:192-286",
-          "note": "read-check-increment; mode:single blocks only concurrent, not sequential, runs"
-        }
-      ]
-    },
-    {
-      "acId": "E7.S1.A3",
-      "status": "missing",
-      "evidence": [
-        {
-          "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/HaEventListenerService.cs:126-137",
-          "note": "subscribe_events has no replay; a use during downtime is never received"
+          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:68-84",
+          "note": "automation fires ONLY the tracking event \u2014 never the link's custom actions"
         },
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:262-286",
-          "note": "automation deleted only when count reaches MaxUses \u2014 never happens for a missed event"
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:255-300",
+          "note": "add-on runs actions via ExecuteActionsAsync only after atomically claiming a use"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Automation_never_embeds_the_links_real_actions",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Addon_runs_actions_as_service_calls",
+          "note": "proving test"
         }
-      ]
+      ],
+      "notes": "Add-on-in-request-path (decided). Trade-off: links depend on the add-on being up.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Automation_never_embeds_the_links_real_actions",
+          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Addon_runs_actions_as_service_calls"
+        ]
+      }
+    },
+    {
+      "acId": "E7.S1.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:255-268",
+          "note": "atomic conditional UPDATE claims a use WHERE UsageCount<MaxUses"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Repeated_triggers_never_over_consume_a_single_use_link",
+          "note": "proving test"
+        }
+      ],
+      "notes": "",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Repeated_triggers_never_over_consume_a_single_use_link"
+        ]
+      }
+    },
+    {
+      "acId": "E7.S1.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:68-84",
+          "note": "automation runs no actions; while the add-on is offline a trigger does nothing, so there is no unrecorded use to reconcile"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Automation_never_embeds_the_links_real_actions",
+          "note": "proving test (home cannot run actions on its own)"
+        }
+      ],
+      "notes": "Reconciliation is unnecessary under this mechanism: a use cannot occur without the add-on running the actions, so downtime yields no forgotten use.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Automation_never_embeds_the_links_real_actions"
+        ]
+      }
     },
     {
       "acId": "E7.S2.A1",
@@ -1377,57 +1415,59 @@
     },
     {
       "acId": "E7.S3.A1",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:180-256",
-          "note": "no rowversion/concurrency token; correctness relies on the WS loop being single-threaded"
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:255-268",
+          "note": "ExecuteUpdateAsync conditional claim \u2014 no lost update"
         },
         {
-          "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Data/ApplicationDbContext.cs",
-          "note": "no concurrency token on TemporaryLink"
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Atomic_claim_refuses_a_use_when_the_allowance_is_already_taken",
+          "note": "proving test"
         }
       ],
-      "notes": "Accidentally safe today via sequential WS delivery; fragile and undocumented."
+      "notes": "",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Atomic_claim_refuses_a_use_when_the_allowance_is_already_taken"
+        ]
+      }
     },
     {
       "acId": "E7.S3.A2",
-      "status": "missing",
+      "status": "implemented",
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Program.cs:99-100",
-          "note": "SQLite with no busy_timeout/retry; two background writers"
+          "ref": "src/TemporaryLinks.Addon/Program.cs:98-103",
+          "note": "Default Timeout=30 so a contended write waits instead of dropping the use"
         }
-      ]
+      ],
+      "notes": "Config-level; not unit-proven."
     },
     {
       "acId": "E7.S4.A1",
-      "status": "missing",
+      "status": "implemented",
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:144",
-          "note": "token logged"
-        },
-        {
-          "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:237",
-          "note": "cloudhook URL logged"
+          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:141,234",
+          "note": "automation/cloudhook logs no longer include token or cloudhook URL"
         },
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HaEventListenerService.cs:160",
-          "note": "token logged"
+          "note": "event log no longer includes the token"
         },
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:185",
-          "note": "token logged"
+          "note": "unknown-token log no longer includes the token"
         }
-      ]
+      ],
+      "notes": "Negative property (absence of secrets in logs); verified by code, not a unit test."
     },
     {
       "acId": "E7.S5.A1",

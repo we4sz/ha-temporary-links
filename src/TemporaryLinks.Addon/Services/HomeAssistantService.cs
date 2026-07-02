@@ -65,10 +65,13 @@ public class HomeAssistantService : IHomeAssistantService
             throw new InvalidOperationException($"Invalid actions JSON: {ex.Message}");
         }
 
-        // Build actions array: event trigger first (for tracking), then custom actions
+        // The automation fires ONLY the tracking event — it never runs the link's real
+        // actions. The add-on runs them itself after atomically claiming a use (E7.S1), so
+        // the allowance binds the actions rather than being counted after the fact. The
+        // JSON was parsed above purely to validate it at creation time.
+        _ = customActions;
         var actionsArray = new List<object>
         {
-            // First action: fire event for tracking
             new
             {
                 @event = "temp_link_triggered",
@@ -80,16 +83,6 @@ public class HomeAssistantService : IHomeAssistantService
                 }
             }
         };
-
-        // Add custom actions
-        if (customActions is System.Text.Json.JsonElement jsonElement &&
-            jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
-        {
-            foreach (var action in jsonElement.EnumerateArray())
-            {
-                actionsArray.Add(action);
-            }
-        }
 
         // Create automation config. The condition makes the HOME enforce the validity
         // window: outside it the automation refuses to run, whatever hits the webhook.
@@ -141,14 +134,72 @@ public class HomeAssistantService : IHomeAssistantService
 
         if (response.IsSuccessStatusCode)
         {
-            _logger.LogInformation("Created webhook automation {AutomationId} for token {Token}",
-                automationId, token);
+            _logger.LogInformation("Created webhook automation {AutomationId}", automationId);
             return automationId;
         }
 
         var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
         throw new InvalidOperationException(
             $"Failed to create webhook automation: {response.StatusCode} - {errorBody}");
+    }
+
+    public async Task ExecuteActionsAsync(
+        string actionsJson, CancellationToken cancellationToken = default)
+    {
+        JsonElement root;
+        try
+        {
+            root = JsonSerializer.Deserialize<JsonElement>(actionsJson, _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Invalid actions JSON: {ex.Message}");
+        }
+
+        if (root.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException("Actions must be a JSON array.");
+        }
+
+        foreach (var action in root.EnumerateArray())
+        {
+            if (!action.TryGetProperty("action", out var actionEl) ||
+                actionEl.GetString() is not { Length: > 0 } service ||
+                !service.Contains('.'))
+            {
+                throw new InvalidOperationException(
+                    "Each action must have an \"action\" of the form \"domain.service\".");
+            }
+
+            var dot = service.IndexOf('.');
+            var domain = service[..dot];
+            var name = service[(dot + 1)..];
+
+            // Merge target (e.g. entity_id) and data into the service-call body.
+            var body = new Dictionary<string, JsonElement>();
+            if (action.TryGetProperty("target", out var target) &&
+                target.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var p in target.EnumerateObject()) body[p.Name] = p.Value;
+            }
+            if (action.TryGetProperty("data", out var data) &&
+                data.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var p in data.EnumerateObject()) body[p.Name] = p.Value;
+            }
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(body, _jsonOptions), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(
+                $"services/{domain}/{name}", content, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new InvalidOperationException(
+                    $"Home Assistant refused action {service}: {response.StatusCode} - {err}");
+            }
+        }
     }
 
     public async Task<IReadOnlyList<HaServiceInfo>> GetServicesAsync(
@@ -234,8 +285,7 @@ public class HomeAssistantService : IHomeAssistantService
 
         if (result != null)
         {
-            _logger.LogInformation("Created cloudhook {CloudhookId} with URL {CloudhookUrl}",
-                result.CloudhookId, result.CloudhookUrl);
+            _logger.LogInformation("Created cloudhook {CloudhookId}", result.CloudhookId);
             return new CloudhookResult(result.WebhookId, result.CloudhookId, result.CloudhookUrl);
         }
 

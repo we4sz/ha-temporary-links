@@ -173,4 +173,8 @@ the standing grandma button. Today every grant is a single one-shot window to on
   link to fire, and actions run a beat later. **Not yet built** — the operator chose "spec only"
   for now.
 - **E9.S2 (arch) — done:** advertised architectures trimmed to amd64/aarch64/armv7.
-- **Build queue:** spec only for now; nothing else built pending a later go-ahead.
+- **E7 enforcement cluster — BUILT (2026-07-02):** E7.S1 (actions run by the add-on after an
+  atomic claim; automation fires only the event), E7.S3 (atomic conditional-UPDATE claim +
+  SQLite busy timeout), and E7.S4 (tokens/URLs out of the logs). 34 ACs now proven; the gap has
+  no `contradicted` items left. Remaining E7: S2 (fail-closed warning), S5 (shared-host trust
+  doc), S6 (action allowlist + least-privilege token).

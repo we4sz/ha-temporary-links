@@ -14,8 +14,20 @@ public sealed class FakeHomeAssistantService : IHomeAssistantService
     public List<string> CreatedAutomations { get; } = [];
     public List<(string AutomationId, DateTimeOffset ValidFrom, DateTimeOffset ValidUntil)> ArmedWindows { get; } = [];
     public List<string> DeletedAutomations { get; } = [];
+    private int _executedActions;
+    public int ExecutedActionsCount => Volatile.Read(ref _executedActions);
     public Exception? ThrowOnDelete { get; set; }
     public Exception? ThrowOnCloudhook { get; set; }
+    public Exception? ThrowOnExecuteActions { get; set; }
+
+    public Task ExecuteActionsAsync(
+        string actionsJson, CancellationToken cancellationToken = default)
+    {
+        if (ThrowOnExecuteActions != null)
+            throw ThrowOnExecuteActions;
+        Interlocked.Increment(ref _executedActions);
+        return Task.CompletedTask;
+    }
 
     public Task<string> CreateWebhookAutomationAsync(
         string token, string linkName, string actionsJson,
@@ -87,6 +99,7 @@ public sealed class FakeTwilioService : ITwilioService
 public sealed class LinkServiceHarness : IDisposable
 {
     private readonly SqliteConnection _connection;
+    private readonly AddonConfiguration _config;
 
     public ApplicationDbContext Db { get; }
     public FakeHomeAssistantService Ha { get; } = new();
@@ -107,19 +120,17 @@ public sealed class LinkServiceHarness : IDisposable
         Db = new ApplicationDbContext(options);
         Db.Database.EnsureCreated();
 
+        _config = new AddonConfiguration
+        {
+            HaUrl = "http://ha.test:8123",
+            HaToken = "test-token",
+            DefaultMessageTemplate = defaultTemplate,
+            PublicUrl = publicUrl,
+            SharePageUrl = sharePageUrl,
+        };
+
         Service = new LinkService(
-            Db,
-            new TokenGenerator(),
-            Twilio,
-            Ha,
-            Options.Create(new AddonConfiguration
-            {
-                HaUrl = "http://ha.test:8123",
-                HaToken = "test-token",
-                DefaultMessageTemplate = defaultTemplate,
-                PublicUrl = publicUrl,
-                SharePageUrl = sharePageUrl,
-            }),
+            Db, new TokenGenerator(), Twilio, Ha, Options.Create(_config),
             NullLogger<LinkService>.Instance);
     }
 
