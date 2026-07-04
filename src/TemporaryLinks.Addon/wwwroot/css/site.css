@@ -197,7 +197,10 @@ td .stack .sub { font-size: 0.8rem; color: var(--pico-muted-color); }
     align-items: center;
     gap: 0.4rem;
     padding: 0.5rem 0.95rem;
-    border: 1px solid transparent;
+    /* Default appearance is neutral, so a variant-less .btn (e.g. a Cancel link) looks right. */
+    border: 1px solid var(--neutral-border);
+    background: var(--pico-card-background-color);
+    color: var(--neutral-fg);
     border-radius: 8px;
     cursor: pointer;
     text-decoration: none;
@@ -206,6 +209,11 @@ td .stack .sub { font-size: 0.8rem; color: var(--pico-muted-color); }
     line-height: 1.2;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
     white-space: nowrap;
+}
+a.btn:not(.btn-primary):not(.btn-danger) { color: var(--neutral-fg); }
+.btn:not(.btn-primary):not(.btn-danger):not(.btn-secondary):hover {
+    background: color-mix(in srgb, var(--neutral-fg) 7%, transparent);
+    border-color: color-mix(in srgb, var(--neutral-fg) 35%, transparent);
 }
 .btn-primary { background: var(--brand); color: #fff; border-color: var(--brand); }
 .btn-primary:hover { background: var(--brand-hover); border-color: var(--brand-hover); color: #fff; }
