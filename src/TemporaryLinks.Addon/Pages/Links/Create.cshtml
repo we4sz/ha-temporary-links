@@ -4,245 +4,209 @@
     ViewData["Title"] = "Create Link";
 }
 
-<h1>Create New Link</h1>
+<div class="page-head">
+    <div>
+        <h1>Create link</h1>
+        <p class="subtitle">Hand out time-boxed, usage-limited access to your home.</p>
+    </div>
+    <a asp-page="Index" class="btn btn-secondary">← Back</a>
+</div>
 
 <div class="card">
     <form method="post">
         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-        <div class="form-group">
-            <label asp-for="Input.Name"></label>
-            <input asp-for="Input.Name" class="form-control" placeholder="e.g., Delivery Access" />
-            <span asp-validation-for="Input.Name" class="text-danger"></span>
-        </div>
-
-        <div class="form-group">
-            <label>Select Action Template</label>
-            <select id="templateSelect" class="form-control">
-                @foreach (var option in Model.TemplateOptions)
-                {
-                    <option value="@option.Value">@option.Text</option>
-                }
-            </select>
-            <small class="text-muted">
-                Select a saved template or enter manually below.
-                <a asp-page="/ActionTemplates/Create">Add new template</a>
-            </small>
-        </div>
-
-        @if (Model.PickerAvailable)
-        {
-            <div class="form-group" id="actionPicker">
-                <label>Add an action by picking</label>
-                <div>
-                    <select id="pickerService" class="form-control" style="width: auto; display: inline-block;">
-                        <option value="">-- action --</option>
-                    </select>
-                    <select id="pickerEntity" class="form-control" style="width: auto; display: inline-block;">
-                        <option value="">-- entity --</option>
-                    </select>
-                    <button type="button" class="btn" id="pickerAdd">Add action</button>
-                </div>
-                <small class="text-muted">
-                    Pick what to do and which device/entity — the JSON below is generated for you.
-                    You can still edit it by hand.
-                </small>
+        <div class="form-section">
+            <h3>Basics</h3>
+            <div class="form-group">
+                <label asp-for="Input.Name"></label>
+                <input asp-for="Input.Name" placeholder="e.g. Delivery access" />
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
             </div>
-        }
-        else
-        {
-            <div class="alert alert-warning">
-                Could not load actions and entities from Home Assistant — enter actions as JSON below.
-            </div>
-        }
-
-        <div class="form-group">
-            <label asp-for="Input.Actions"></label>
-            <textarea asp-for="Input.Actions" id="actionsTextarea" class="form-control" rows="8" placeholder='[{"action": "light.turn_on", "target": {"entity_id": "light.living_room"}}]'></textarea>
-            <span asp-validation-for="Input.Actions" class="text-danger"></span>
-            <small class="text-muted">
-                JSON array of Home Assistant actions to execute when the link is clicked.
-                <br/><strong>Examples:</strong>
-                <br/>Turn on light: <code>[{"action": "light.turn_on", "target": {"entity_id": "light.hall"}}]</code>
-                <br/>Unlock door: <code>[{"action": "lock.unlock", "target": {"entity_id": "lock.front_door"}}]</code>
-                <br/>Run script: <code>[{"action": "script.my_script", "data": {"param": "value"}}]</code>
-                <br/>Multiple: <code>[{"action": "light.turn_on", ...}, {"action": "notify.mobile_app", ...}]</code>
-            </small>
         </div>
 
-        <div class="form-group" id="saveTemplateSection" style="display: none;">
-            <label>
-                <input asp-for="SaveAsTemplate" type="checkbox" />
-                Save this action sequence as a template for future use
-            </label>
-        </div>
-
-        @if (Model.PickerAvailable)
-        {
-            <script>
-                (function () {
-                    // Live registries fetched from Home Assistant (E1.S7).
-                    var services = @Html.Raw(Model.ServicesJson);
-                    var entities = @Html.Raw(Model.EntitiesJson);
-                    var svcSelect = document.getElementById('pickerService');
-                    var entSelect = document.getElementById('pickerEntity');
-
-                    services.forEach(function (s) {
-                        var opt = document.createElement('option');
-                        opt.value = s.domain + '.' + s.service;
-                        opt.textContent = s.domain + '.' + s.service + (s.name ? ' — ' + s.name : '');
-                        svcSelect.appendChild(opt);
-                    });
-
-                    // Only offer entities the chosen action can target: same domain,
-                    // or any entity for domain-agnostic services (homeassistant.*, script, scene, automation).
-                    function refreshEntities() {
-                        var domain = (svcSelect.value || '').split('.')[0];
-                        var agnostic = ['homeassistant', 'script', 'scene', 'automation'];
-                        entSelect.innerHTML = '<option value="">-- entity --</option>';
-                        entities.forEach(function (e) {
-                            var entityDomain = e.entityId.split('.')[0];
-                            if (!domain || entityDomain === domain ||
-                                (agnostic.indexOf(domain) >= 0 && domain !== '')) {
-                                var opt = document.createElement('option');
-                                opt.value = e.entityId;
-                                opt.textContent = e.friendlyName
-                                    ? e.friendlyName + ' (' + e.entityId + ')'
-                                    : e.entityId;
-                                entSelect.appendChild(opt);
-                            }
-                        });
+        <div class="form-section">
+            <h3>Actions</h3>
+            <div class="form-group">
+                <label>Start from a template</label>
+                <select id="templateSelect">
+                    @foreach (var option in Model.TemplateOptions)
+                    {
+                        <option value="@option.Value">@option.Text</option>
                     }
-                    svcSelect.addEventListener('change', refreshEntities);
-                    refreshEntities();
+                </select>
+                <p class="form-hint">Pick a saved template, or build actions below. <a asp-page="/ActionTemplates/Create">Manage templates</a></p>
+            </div>
 
-                    document.getElementById('pickerAdd').addEventListener('click', function () {
-                        if (!svcSelect.value) { return; }
-                        var action = { action: svcSelect.value };
-                        if (entSelect.value) {
-                            action.target = { entity_id: entSelect.value };
-                        }
-                        var ta = document.getElementById('actionsTextarea');
-                        var current = [];
-                        if (ta.value.trim()) {
-                            try { current = JSON.parse(ta.value); }
-                            catch { current = []; }
-                            if (!Array.isArray(current)) { current = [current]; }
-                        }
-                        current.push(action);
-                        ta.value = JSON.stringify(current, null, 2);
-                        toggleSaveTemplateSection();
-                    });
-                })();
-            </script>
-        }
-
-        <script>
-            document.getElementById('templateSelect').addEventListener('change', function() {
-                var actionsInput = document.getElementById('actionsTextarea');
-                actionsInput.value = this.value;
-                toggleSaveTemplateSection();
-            });
-
-            document.getElementById('actionsTextarea').addEventListener('input', function() {
-                toggleSaveTemplateSection();
-            });
-
-            function toggleSaveTemplateSection() {
-                var actionsInput = document.getElementById('actionsTextarea');
-                var templateSelect = document.getElementById('templateSelect');
-                var saveSection = document.getElementById('saveTemplateSection');
-
-                // Show "save as template" if actions are entered manually (not from dropdown)
-                if (actionsInput.value && actionsInput.value !== templateSelect.value) {
-                    saveSection.style.display = 'block';
-                } else {
-                    saveSection.style.display = 'none';
-                }
+            @if (Model.PickerAvailable)
+            {
+                <div class="form-group" id="actionPicker">
+                    <label>Add an action</label>
+                    <div class="picker-row">
+                        <select id="pickerService"><option value="">Choose an action…</option></select>
+                        <select id="pickerEntity"><option value="">Choose an entity…</option></select>
+                        <button type="button" class="btn btn-secondary" id="pickerAdd">Add</button>
+                    </div>
+                    <p class="form-hint">Pick what to do and on which device — the JSON below is generated for you, and stays editable.</p>
+                </div>
             }
-        </script>
-
-        <div class="form-group">
-            <label asp-for="Input.ValidFrom"></label>
-            <input asp-for="Input.ValidFrom" type="datetime-local" class="form-control" />
-            <span asp-validation-for="Input.ValidFrom" class="text-danger"></span>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="Input.ValidUntil"></label>
-            <input asp-for="Input.ValidUntil" type="datetime-local" class="form-control" />
-            <span asp-validation-for="Input.ValidUntil" class="text-danger"></span>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="Input.MaxUses"></label>
-            <input asp-for="Input.MaxUses" type="number" min="1" max="100" class="form-control" />
-            <span asp-validation-for="Input.MaxUses" class="text-danger"></span>
-            <small class="text-muted">Number of times this link can be used (1 = single use)</small>
-        </div>
-
-        <div class="form-group">
-            <label>Select Contact</label>
-            <select id="contactSelect" class="form-control">
-                @foreach (var option in Model.ContactOptions)
-                {
-                    <option value="@option.Value">@option.Text</option>
-                }
-            </select>
-            <small class="text-muted">
-                Select a saved contact or enter manually below.
-                <a asp-page="/Contacts/Create">Add new contact</a>
-            </small>
-        </div>
-
-        <div class="form-group">
-            <label asp-for="Input.RecipientPhoneNumber"></label>
-            <input asp-for="Input.RecipientPhoneNumber" id="phoneNumber" class="form-control" placeholder="+1234567890" />
-            <span asp-validation-for="Input.RecipientPhoneNumber" class="text-danger"></span>
-            <small class="text-muted">Phone number in E.164 format</small>
-        </div>
-
-        <div class="form-group" id="saveContactSection" style="display: none;">
-            <label>
-                <input asp-for="SaveAsContact" type="checkbox" />
-                Save this number as a contact for future use
-            </label>
-        </div>
-
-        <script>
-            document.getElementById('contactSelect').addEventListener('change', function() {
-                var phoneInput = document.getElementById('phoneNumber');
-                phoneInput.value = this.value;
-                toggleSaveContactSection();
-            });
-
-            document.getElementById('phoneNumber').addEventListener('input', function() {
-                toggleSaveContactSection();
-            });
-
-            function toggleSaveContactSection() {
-                var phoneInput = document.getElementById('phoneNumber');
-                var contactSelect = document.getElementById('contactSelect');
-                var saveSection = document.getElementById('saveContactSection');
-
-                // Show "save as contact" if phone is entered manually (not from dropdown)
-                if (phoneInput.value && phoneInput.value !== contactSelect.value) {
-                    saveSection.style.display = 'block';
-                } else {
-                    saveSection.style.display = 'none';
-                }
+            else
+            {
+                <div class="alert alert-warning">Couldn't load actions and entities from Home Assistant — enter actions as JSON below.</div>
             }
-        </script>
 
-        <div class="form-group">
-            <label asp-for="Input.CustomMessage"></label>
-            <textarea asp-for="Input.CustomMessage" class="form-control" rows="3"
-                placeholder="Your temporary access link: {link}&#10;Valid from {start_time} to {end_time}"></textarea>
-            <span asp-validation-for="Input.CustomMessage" class="text-danger"></span>
-            <small class="text-muted">Use {link}, {start_time}, {end_time}, {name} as placeholders</small>
+            <div class="form-group">
+                <label asp-for="Input.Actions"></label>
+                <textarea asp-for="Input.Actions" id="actionsTextarea" class="code" rows="6" placeholder='[{"action": "lock.unlock", "target": {"entity_id": "lock.front_door"}}]'></textarea>
+                <span asp-validation-for="Input.Actions" class="text-danger"></span>
+                <details class="examples mt-1">
+                    <summary>JSON examples</summary>
+                    <p class="form-hint">A JSON array of Home Assistant actions to run when the link is used.</p>
+                    <ul class="form-hint code" style="margin:0; padding-left:1.1rem; line-height:1.9;">
+                        <li>Turn on a light: <code>[{"action":"light.turn_on","target":{"entity_id":"light.hall"}}]</code></li>
+                        <li>Unlock a door: <code>[{"action":"lock.unlock","target":{"entity_id":"lock.front_door"}}]</code></li>
+                        <li>Run a script: <code>[{"action":"script.my_script","data":{"param":"value"}}]</code></li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="form-group" id="saveTemplateSection" style="display:none;">
+                <label><input asp-for="SaveAsTemplate" type="checkbox" /> Save this action set as a template</label>
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Create Link</button>
-        <a asp-page="Index" class="btn">Cancel</a>
+        <div class="form-section">
+            <h3>Validity</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label asp-for="Input.ValidFrom"></label>
+                    <input asp-for="Input.ValidFrom" type="datetime-local" />
+                    <span asp-validation-for="Input.ValidFrom" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.ValidUntil"></label>
+                    <input asp-for="Input.ValidUntil" type="datetime-local" />
+                    <span asp-validation-for="Input.ValidUntil" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.MaxUses"></label>
+                <input asp-for="Input.MaxUses" type="number" min="1" max="100" />
+                <span asp-validation-for="Input.MaxUses" class="text-danger"></span>
+                <p class="form-hint">How many times the link can be used. 1 = single use.</p>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Recipient <span class="muted" style="text-transform:none; letter-spacing:0; font-weight:400;">· optional</span></h3>
+            <div class="form-group">
+                <label>Choose a contact</label>
+                <select id="contactSelect">
+                    @foreach (var option in Model.ContactOptions)
+                    {
+                        <option value="@option.Value">@option.Text</option>
+                    }
+                </select>
+                <p class="form-hint">Pick a saved contact, or type a number below. <a asp-page="/Contacts/Create">Manage contacts</a></p>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.RecipientPhoneNumber"></label>
+                <input asp-for="Input.RecipientPhoneNumber" id="phoneNumber" placeholder="+1234567890" />
+                <span asp-validation-for="Input.RecipientPhoneNumber" class="text-danger"></span>
+                <p class="form-hint">E.164 format. Leave empty to just copy and share the link yourself.</p>
+            </div>
+            <div class="form-group" id="saveContactSection" style="display:none;">
+                <label><input asp-for="SaveAsContact" type="checkbox" /> Save this number as a contact</label>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.CustomMessage"></label>
+                <textarea asp-for="Input.CustomMessage" rows="3" placeholder="Your temporary access link: {link}&#10;Valid from {start_time} to {end_time}"></textarea>
+                <span asp-validation-for="Input.CustomMessage" class="text-danger"></span>
+                <p class="form-hint">Placeholders: {link}, {start_time}, {end_time}, {name}</p>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create link</button>
+            <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+        </div>
     </form>
 </div>
+
+@if (Model.PickerAvailable)
+{
+    <script>
+        (function () {
+            var services = @Html.Raw(Model.ServicesJson);
+            var entities = @Html.Raw(Model.EntitiesJson);
+            var svcSelect = document.getElementById('pickerService');
+            var entSelect = document.getElementById('pickerEntity');
+
+            services.forEach(function (s) {
+                var opt = document.createElement('option');
+                opt.value = s.domain + '.' + s.service;
+                opt.textContent = s.domain + '.' + s.service + (s.name ? ' — ' + s.name : '');
+                svcSelect.appendChild(opt);
+            });
+
+            function refreshEntities() {
+                var domain = (svcSelect.value || '').split('.')[0];
+                var agnostic = ['homeassistant', 'script', 'scene', 'automation'];
+                entSelect.innerHTML = '<option value="">Choose an entity…</option>';
+                entities.forEach(function (e) {
+                    var entityDomain = e.entityId.split('.')[0];
+                    if (!domain || entityDomain === domain ||
+                        (agnostic.indexOf(domain) >= 0 && domain !== '')) {
+                        var opt = document.createElement('option');
+                        opt.value = e.entityId;
+                        opt.textContent = e.friendlyName ? e.friendlyName + ' (' + e.entityId + ')' : e.entityId;
+                        entSelect.appendChild(opt);
+                    }
+                });
+            }
+            svcSelect.addEventListener('change', refreshEntities);
+            refreshEntities();
+
+            document.getElementById('pickerAdd').addEventListener('click', function () {
+                if (!svcSelect.value) { return; }
+                var action = { action: svcSelect.value };
+                if (entSelect.value) { action.target = { entity_id: entSelect.value }; }
+                var ta = document.getElementById('actionsTextarea');
+                var current = [];
+                if (ta.value.trim()) {
+                    try { current = JSON.parse(ta.value); } catch { current = []; }
+                    if (!Array.isArray(current)) { current = [current]; }
+                }
+                current.push(action);
+                ta.value = JSON.stringify(current, null, 2);
+                toggleSaveTemplateSection();
+            });
+        })();
+    </script>
+}
+
+<script>
+    document.getElementById('templateSelect').addEventListener('change', function () {
+        document.getElementById('actionsTextarea').value = this.value;
+        toggleSaveTemplateSection();
+    });
+    document.getElementById('actionsTextarea').addEventListener('input', toggleSaveTemplateSection);
+    function toggleSaveTemplateSection() {
+        var actionsInput = document.getElementById('actionsTextarea');
+        var templateSelect = document.getElementById('templateSelect');
+        document.getElementById('saveTemplateSection').style.display =
+            (actionsInput.value && actionsInput.value !== templateSelect.value) ? 'block' : 'none';
+    }
+
+    document.getElementById('contactSelect').addEventListener('change', function () {
+        document.getElementById('phoneNumber').value = this.value;
+        toggleSaveContactSection();
+    });
+    document.getElementById('phoneNumber').addEventListener('input', toggleSaveContactSection);
+    function toggleSaveContactSection() {
+        var phoneInput = document.getElementById('phoneNumber');
+        var contactSelect = document.getElementById('contactSelect');
+        document.getElementById('saveContactSection').style.display =
+            (phoneInput.value && phoneInput.value !== contactSelect.value) ? 'block' : 'none';
+    }
+</script>

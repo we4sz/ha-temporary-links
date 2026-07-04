@@ -4,46 +4,52 @@
     ViewData["Title"] = "Action Templates";
 }
 
-<h1>Action Templates</h1>
-
-<div class="mt-2">
-    <a asp-page="Create" class="btn btn-primary">Add New Template</a>
+<div class="page-head">
+    <div>
+        <h1>Action templates</h1>
+        <p class="subtitle">Reusable sets of actions you can pick when creating a link.</p>
+    </div>
+    <a asp-page="Create" class="btn btn-primary">+ Add template</a>
 </div>
 
-@if (Model.Templates.Any())
-{
-    <div class="card mt-2">
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Actions</th>
-                    <th>Description</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var template in Model.Templates)
-                {
+<div class="card">
+    @if (Model.Templates.Any())
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
                     <tr>
-                        <td>@template.Name</td>
-                        <td>
-                            <code style="max-width: 400px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@template.Actions</code>
-                        </td>
-                        <td style="max-width: 300px;">@(template.Description ?? "-")</td>
-                        <td>
-                            <a asp-page="Edit" asp-route-id="@template.Id" class="btn btn-sm">Edit</a>
-                            <a asp-page="Delete" asp-route-id="@template.Id" class="btn btn-sm btn-danger">Delete</a>
-                        </td>
+                        <th>Name</th>
+                        <th>Actions</th>
+                        <th>Description</th>
+                        <th></th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else
-{
-    <div class="card mt-2">
-        <p class="text-muted">No action templates found. Add your first template to get started.</p>
-    </div>
-}
+                </thead>
+                <tbody>
+                    @foreach (var template in Model.Templates)
+                    {
+                        <tr>
+                            <td><span class="primary-cell">@template.Name</span></td>
+                            <td><partial name="_ActionChips" model="template.Actions" /></td>
+                            <td class="muted" style="max-width:22rem;">@(string.IsNullOrEmpty(template.Description) ? "—" : template.Description)</td>
+                            <td>
+                                <div class="row-actions">
+                                    <a asp-page="Edit" asp-route-id="@template.Id" class="btn btn-secondary btn-sm">Edit</a>
+                                    <a asp-page="Delete" asp-route-id="@template.Id" class="btn btn-danger btn-sm">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty">
+            <div class="empty-icon">⚡</div>
+            <p>No action templates yet.</p>
+            <a asp-page="Create" class="btn btn-primary">Add your first template</a>
+        </div>
+    }
+</div>

@@ -14,10 +14,11 @@ builder.Logging.AddSimpleConsole(options =>
     options.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
 });
 
-// Load Home Assistant addon options from /data/options.json
+// Load Home Assistant addon options from /data/options.json. Optional so the app can also
+// run outside the add-on (local dev / tests) where the Supervisor has not written the file.
 var optionsPath = "/data/options.json";
 
-builder.Configuration.AddJsonFile(optionsPath, optional: false, reloadOnChange: true);
+builder.Configuration.AddJsonFile(optionsPath, optional: true, reloadOnChange: true);
 
 // Configure forwarded headers for running behind HA ingress proxy
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -98,8 +99,10 @@ builder.Services.Configure<TwilioConfiguration>(options =>
 // Database. Two background writers (the expiry sweep and the event handler) plus request
 // handlers share one SQLite file, so a busy timeout lets a contended write wait for the
 // lock instead of failing with "database is locked" and dropping a use (E7.S3.A2).
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Data Source=/data/temporarylinks.db;Default Timeout=30;Pooling=false";
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite("Data Source=/data/temporarylinks.db;Default Timeout=30;Pooling=false"));
+    options.UseSqlite(connectionString));
 
 // HTTP client for Home Assistant
 builder.Services.AddHttpClient<IHomeAssistantService, HomeAssistantService>();
@@ -114,7 +117,12 @@ builder.Services.AddHostedService<LinkExpirationService>();
 builder.Services.AddHostedService<HaEventListenerService>();
 
 // Razor Pages
-builder.Services.AddRazorPages();
+var razorPages = builder.Services.AddRazorPages();
+if (builder.Environment.IsDevelopment())
+{
+    // Recompile .cshtml without a rebuild during local development.
+    razorPages.AddRazorRuntimeCompilation();
+}
 
 var app = builder.Build();
 
@@ -166,6 +174,12 @@ using (var scope = app.Services.CreateScope())
     logger.LogInformation("Applying database migrations...");
     db.Database.Migrate();
     logger.LogInformation("Database migrations applied successfully");
+
+    // Dev-only: seed demo data for local UI work. Never runs in the add-on (SEED_DEMO unset).
+    if (Environment.GetEnvironmentVariable("SEED_DEMO") == "1")
+    {
+        DemoSeeder.Seed(db);
+    }
 
     // Validate Twilio configuration if it's configured
     var twilioService = scope.ServiceProvider.GetRequiredService<ITwilioService>();
