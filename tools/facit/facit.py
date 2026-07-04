@@ -698,7 +698,7 @@ def _find_method_span(lines, method, is_python):
         depth = 0
         started = False
         for j in range(i, len(lines)):
-            for ch in lines[j]:
+            for ch in _strip_csharp_string_and_char_literals(lines[j]):
                 if ch == '{':
                     depth += 1
                     started = True
@@ -708,6 +708,76 @@ def _find_method_span(lines, method, is_python):
                 return (i + 1, j + 1)
         return None
     return None
+
+
+def _strip_csharp_string_and_char_literals(line):
+    """Blank out the CONTENTS of C# string/char literals on a single line so brace-counting
+    in _find_method_span isn't confused by a literal '{' or '}' inside an assertion string
+    (this codebase constantly asserts against generated TS/JS/Python source snippets, which
+    routinely contain an unmatched brace character, e.g. `Contain("void {")`). Handles regular
+    "..." (backslash-escaped), verbatim/interpolated-verbatim @"..." ("" = escaped quote), and
+    '.' char literals. Best-effort / single-line only (a multi-line verbatim string literal is
+    rare in this codebase's assertions and, if present, only widens the scanned span — it does
+    not silently narrow it, so it fails safe).
+    """
+    out = []
+    i, n = 0, len(line)
+    while i < n:
+        ch = line[i]
+        if ch == '@' and i + 1 < n and line[i + 1] == '"':
+            out.append('@"')
+            i += 2
+            closed = False
+            while i < n:
+                if line[i] == '"':
+                    if i + 1 < n and line[i + 1] == '"':
+                        i += 2
+                        continue
+                    out.append('"')
+                    i += 1
+                    closed = True
+                    break
+                i += 1
+            if not closed:
+                break
+            continue
+        if ch == '"':
+            out.append('"')
+            i += 1
+            closed = False
+            while i < n:
+                if line[i] == '\\' and i + 1 < n:
+                    i += 2
+                    continue
+                if line[i] == '"':
+                    out.append('"')
+                    i += 1
+                    closed = True
+                    break
+                i += 1
+            if not closed:
+                break
+            continue
+        if ch == "'":
+            out.append("'")
+            i += 1
+            closed = False
+            while i < n:
+                if line[i] == '\\' and i + 1 < n:
+                    i += 2
+                    continue
+                if line[i] == "'":
+                    out.append("'")
+                    i += 1
+                    closed = True
+                    break
+                i += 1
+            if not closed:
+                break
+            continue
+        out.append(ch)
+        i += 1
+    return "".join(out)
 
 
 def _locate_test_source(test_id, test_roots):
@@ -826,6 +896,20 @@ def cmd_conform(args):
     return 1 if (drifted or unverifiable) else 0
 
 
+def _resolve_src_root(args):
+    """Resolve the source root that bounds covered-file drift triggers (E1.S9.A8):
+    an explicit --src-root wins; else the facit config's srcRoot (a relative path
+    resolves against the repo root); else the facit root's parent — the default,
+    which suits a self-contained project whose facit sits at the repo root, and
+    which a facit nested below the repo (e.g. docs/facit) overrides via config."""
+    if args.src_root:
+        return os.path.abspath(args.src_root)
+    cfg_src = _read_facit_config(args.root).get("srcRoot")
+    if cfg_src:
+        return cfg_src if os.path.isabs(cfg_src) else os.path.normpath(os.path.join(REPO_ROOT, cfg_src))
+    return os.path.abspath(os.path.dirname(args.root))
+
+
 def cmd_prove(args):
     """Prove ACs from implementation files against TRX test results."""
     lock_path = _lock_path(args.root)
@@ -906,9 +990,7 @@ def cmd_prove(args):
     # Parse coverage files if --coverage supplied
     cov_per_test = None   # merged {ctx: set(files)} across all coverage files
     cov_files = set()     # merged aggregate file set
-    src_root = os.path.abspath(
-        args.src_root if args.src_root else os.path.dirname(args.root)
-    )
+    src_root = _resolve_src_root(args)
     if args.coverage:
         for cov_path in args.coverage:
             if not os.path.exists(cov_path):
@@ -1285,31 +1367,79 @@ def cmd_reverify(args):
         print("reverify: nothing to re-run (no drift detected)")
         return 0
 
-    src_root = args.src_root if args.src_root else os.path.dirname(args.root)
+    src_root = _resolve_src_root(args)
 
-    overall_rc = 0
-    reverified = 0
-    refused = 0
+    # E1.S12.A2 — BATCHED: one test-command invocation for the WHOLE affected set. Union the
+    # affected criteria's tests into a single {filter}, run the command ONCE, then attribute each
+    # criterion's outcome + coverage from that one run — N affected ACs cost one test invocation,
+    # not N. (Per-AC coverage stays correct: coverage.py contexts are matched per test id, and
+    # aggregate cobertura is intersected with each AC's own declared code evidence.)
+    affected_list = [q for q in sorted(affected) if q in qid_to_proof]
+    if not affected_list:
+        print("reverify: reverified 0, refused 0")
+        return 0
 
-    for qid in sorted(affected):
-        if qid not in qid_to_proof:
-            continue
-        test_ids, impl_entry, _impl_abs = qid_to_proof[qid]
+    # Build the filter test-ids (E1.S12.A8): strip a parameterized-test suffix like
+    # `(fixtureName: "x")` — the runner filters [Theory] variants by the method's fully-qualified
+    # name, and the raw parameter string contains characters (parens, quotes, colons) that break
+    # the filter grammar (dotnet test errors, the test never runs, and the AC is WRONGLY demoted).
+    # prove still matches the full parameterized name in the results, so only the filter is stripped.
+    def _filter_id(_t):
+        return _t.split("(", 1)[0]
+    _seen = set()
+    all_tests = []
+    for qid in affected_list:
+        for t in qid_to_proof[qid][0]:
+            fid = _filter_id(t)
+            if fid not in _seen:
+                _seen.add(fid)
+                all_tests.append(fid)
+    # E1.S12.A7 — chunk the affected tests into bounded batches so a very large affected set
+    # never produces a filter the test runner can't handle; N ACs cost ceil(N/chunk) invocations,
+    # still far fewer than N. chunk size is configurable (reverifyChunkSize, default 40).
+    try:
+        chunk_size = int(cfg.get("reverifyChunkSize", 40))
+    except (TypeError, ValueError):
+        chunk_size = 40
+    if chunk_size < 1:
+        chunk_size = 1
+    try:
+        max_chars = int(cfg.get("reverifyMaxFilterChars", 1500))
+    except (TypeError, ValueError):
+        max_chars = 1500
+    if max_chars < 1:
+        max_chars = 1500
+    # Bound each chunk by BOTH count (chunk_size) and filter LENGTH (max_chars): a filter of long
+    # test ids (e.g. fully-qualified .NET names) must never overrun the runner and get silently
+    # truncated — that would drop tests, read them as absent, and WRONGLY demote passing ACs.
+    chunks = []
+    _cur, _cur_len = [], 0
+    _jlen = len(filter_join)
+    for t in all_tests:
+        _ilen = len(filter_item.format(test=t)) + _jlen
+        if _cur and (len(_cur) >= chunk_size or _cur_len + _ilen > max_chars):
+            chunks.append(_cur)
+            _cur, _cur_len = [], 0
+        _cur.append(t)
+        _cur_len += _ilen
+    if _cur:
+        chunks.append(_cur)
+    if not chunks:
+        chunks = [[]]
 
-        # Build the filter string for this AC's tests
-        filt = filter_join.join(filter_item.format(test=t) for t in test_ids)
-
-        # Fresh temp dir for this AC's run outputs
-        outdir = tempfile.mkdtemp(prefix="facit-reverify-")
-        try:
+    outdirs = []
+    results_files = []
+    coverage_files = []
+    try:
+        for chunk in chunks:
+            filt = filter_join.join(filter_item.format(test=t) for t in chunk)
+            outdir = tempfile.mkdtemp(prefix="facit-reverify-")
+            outdirs.append(outdir)
             cmd = test_command.replace("{filter}", filt).replace("{outdir}", outdir)
             subprocess.run(cmd, shell=True, cwd=REPO_ROOT)
 
-            # Discover ALL results + coverage under outdir — a testCommand may run several test
-            # projects, each emitting its own trx + cobertura; cmd_prove merges repeated
-            # --results / --coverage, so pass every discovered artifact (E1.S12.A2).
-            results_files = []
-            coverage_files = []
+            # Discover this chunk's results + coverage; accumulate across chunks (cmd_prove merges
+            # repeated --results / --coverage, so every discovered artifact is passed through).
             for walk_root, _, walk_files in os.walk(outdir):
                 for fname in sorted(walk_files):
                     fpath = os.path.join(walk_root, fname)
@@ -1329,51 +1459,46 @@ def cmd_reverify(args):
                         except Exception:
                             pass
 
-            if not results_files:
-                print(f"REVERIFY-NO-RESULTS: {qid}")
-                refused += 1
-                overall_rc = 1
-                continue
+        if not results_files:
+            print(f"REVERIFY-NO-RESULTS: {len(affected_list)} affected AC(s), no results produced")
+            return 1
 
-            # Write a 1-AC subset implementation.json for cmd_prove
-            ac_id = impl_entry["acId"]
-            subset_impl = {
-                "schemaVersion": 1,
-                "facitVersion": "reverify",
-                "entries": [impl_entry],
-            }
-            # Place adjacent to the SOURCE impl's facit.json (its own scope dir) so
-            # _scope_for_impl resolves the scope unambiguously in a multi-scope tree — the root
-            # dir has no facit.json, which would make a local id shared across scopes ambiguous.
-            subset_path = os.path.join(os.path.dirname(_impl_abs), f"_reverify_{ac_id.replace('.', '_')}.json")
+        # Prove per source impl (a subset of that impl's affected ACs) from the shared results —
+        # subsets keep cmd_prove scoped so it never demotes an untouched AC, and _scope_for_impl
+        # resolves each subset's scope from its own dir (the root dir has no facit.json).
+        from collections import defaultdict as _defaultdict
+        by_impl = _defaultdict(list)
+        for qid in affected_list:
+            _tids, entry, impl_abs = qid_to_proof[qid]
+            by_impl[impl_abs].append(entry)
+
+        overall_rc = 0
+        for impl_abs, entries in by_impl.items():
+            subset_impl = {"schemaVersion": 1, "facitVersion": "reverify", "entries": entries}
+            subset_path = os.path.join(os.path.dirname(impl_abs), "_reverify_batch.json")
             try:
                 _write(subset_path, subset_impl)
-
                 prove_args = argparse.Namespace(
-                    root=args.root,
-                    verify=False,
-                    impl=[subset_path],
-                    results=results_files,
-                    coverage=coverage_files,
-                    src_root=src_root,
-                    test_root=[],   # cmd_prove reads testRoots from config itself
-                    max_test_share=9999,
+                    root=args.root, verify=False, impl=[subset_path],
+                    results=results_files, coverage=coverage_files, src_root=src_root,
+                    test_root=[], max_test_share=9999,
                 )
-                rc = cmd_prove(prove_args)
-                if rc != 0:
+                if cmd_prove(prove_args) != 0:
                     overall_rc = 1
-                else:
-                    reverified += 1
             finally:
                 try:
                     os.unlink(subset_path)
                 except OSError:
                     pass
-        finally:
-            shutil.rmtree(outdir, ignore_errors=True)
 
-    print(f"reverify: reverified {reverified}, refused {refused}")
-    return overall_rc
+        final_nodes = _load(_lock_path(args.root)).get("nodes", {})
+        reverified = sum(1 for q in affected_list if final_nodes.get(q, {}).get("status") == "proven")
+        refused = len(affected_list) - reverified
+        print(f"reverify: reverified {reverified}, refused {refused}")
+        return overall_rc
+    finally:
+        for _od in outdirs:
+            shutil.rmtree(_od, ignore_errors=True)
 
 
 def _resolve_root(raw_root):
@@ -1409,7 +1534,7 @@ def main():
     pv.add_argument("--coverage", action="append", default=[], metavar="PATH",
                     help="coverage file (repeatable; .coverage for coverage.py or cobertura .xml)")
     pv.add_argument("--src-root", metavar="DIR", default=None,
-                    help="restrict coveredFiles to files under this dir (default: facit root's parent)")
+                    help="restrict coveredFiles to files under this dir (default: config srcRoot, else facit root's parent)")
     pv.add_argument("--test-root", action="append", default=[], metavar="DIR",
                     help="dir to search for proving-test source (repeatable; adds to facit.config.json testRoots)")
     pv.add_argument("--max-test-share", type=int, default=5, metavar="N",
@@ -1430,7 +1555,7 @@ def main():
                     help="re-run this specific AC id (repeatable; bare or scope-qualified)")
     rv.add_argument("--src-root", metavar="DIR", default=None,
                     help="restrict coveredFiles to files under this dir "
-                         "(default: facit root's parent)")
+                         "(default: config srcRoot, else facit root's parent)")
     rv.add_argument("--test-root", action="append", default=[], metavar="DIR",
                     help="dir to search for proving-test source (repeatable; "
                          "adds to facit.config.json testRoots)")
