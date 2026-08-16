@@ -12,12 +12,15 @@ user stories + acceptance criteria as validated JSON. How we work: [`CLAUDE.md`]
 1. The operator composes a link in the add-on dashboard (actions, validity window,
    usage allowance, optional recipient).
 2. The add-on registers a webhook automation in HA and a **cloudhook** (public URL via
-   HA Cloud / Nabu Casa). The automation carries a **template condition enforcing the
-   validity window**, so HA itself refuses to run the actions outside it.
-3. The recipient opens the URL → HA runs the actions and fires a `temp_link_triggered`
-   event → the add-on judges the use (unknown / exhausted / revoked / expired /
-   not-yet-valid / success), counts it, audits it, and deletes the automation when the
-   link dies.
+   HA Cloud / Nabu Casa). The automation never runs the link's actions itself — it only
+   **announces** the press: inside the validity window it fires `temp_link_triggered`,
+   outside it `temp_link_blocked` (so even refused attempts are audited).
+3. On `temp_link_triggered` the add-on judges the link (unknown / exhausted / revoked /
+   expired / not-yet-valid), **atomically claims a use**, and only then runs the actions —
+   the allowance binds the actions, not just the bookkeeping. The automation is deleted
+   (with retry) when the link dies, re-armed at startup if it predates the current model,
+   and a press missed while the add-on was offline is counted and audited on reconnect —
+   deliberately never executed late.
 
 Requires: HA Cloud (Nabu Casa) for cloudhooks; a long-lived HA access token; optionally
 Twilio for SMS delivery.
@@ -36,9 +39,11 @@ Read this before exposing anything.
   a CSPRNG (~192 bits). Anyone holding the URL can use the link within its grant —
   treat sent links like keys, use short windows and small allowances, and revoke when
   in doubt.
-- **Grant enforcement is layered:** the HA automation refuses outside the validity
-  window (template condition); revocation and exhaustion delete the automation; the
-  add-on independently refuses and audits every out-of-grant attempt it sees.
+- **Grant enforcement is layered:** the home decides in/out of window and announces every
+  attempt (blocked presses fire a distinct event, so they are audited); the add-on
+  atomically claims a use before running any action; revocation and exhaustion delete
+  the automation (retried by the sweep until confirmed); startup re-arms any trigger
+  that predates the current enforcement model.
 - **Data at rest** (`/data/temporarylinks.db`, SQLite, unencrypted): tokens, phone
   numbers, cloudhook URLs, message content, audit history. It stays inside the add-on
   container's data volume; protect backups accordingly.
@@ -50,6 +55,26 @@ Read this before exposing anything.
   **auto-discovered from HA Cloud** — the `public_url` option is only an override for
   unusual setups (own domain/proxy). Without any public URL, links fall back to the
   direct one-tap form, which preview bots can consume.
+
+## Install
+
+The add-on's `config.yaml` lives at the repo root, so it installs as a **local add-on**
+(the add-on *store* requires a subdirectory-per-add-on layout this repo doesn't use yet):
+
+1. Get the repo onto your HA host at `/addons/ha-temporary-links` — e.g. enable the
+   **Samba share** or **SSH** add-on, then
+   `git clone https://github.com/we4sz/ha-temporary-links /addons/ha-temporary-links`
+   (or copy the folder over Samba).
+2. **Settings → Add-ons → Add-on Store → ⋮ → Check for updates.** The add-on appears
+   under **Local add-ons**; install it (HA builds the image locally — first build takes
+   a few minutes).
+3. Configure options: `ha_url` (e.g. `http://homeassistant.local:8123`), `ha_token`
+   (a long-lived access token), optionally Twilio credentials for SMS. `share_page_url`
+   already defaults to the hosted confirm page, so links are bot-immune out of the box.
+4. HA Cloud (Nabu Casa) must be connected — cloudhooks are what make links publicly
+   reachable. Open the dashboard through the add-on's panel (ingress) only.
+
+To update: `git pull` in `/addons/ha-temporary-links`, then **rebuild** the add-on.
 
 ## Development
 
