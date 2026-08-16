@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "facitVersion": "1d284d60abd51855",
-  "generatedAt": "2026-07-02T00:00:00Z",
+  "facitVersion": "93d0fd1f4cc6f65f",
+  "generatedAt": "2026-08-16",
   "summary": {
-    "total": 105,
-    "sound": 78,
-    "partial": 2,
-    "missing": 25,
-    "contradicted": 0
+    "total": 110,
+    "sound": 70,
+    "partial": 8,
+    "missing": 30,
+    "contradicted": 2
   },
   "items": [
     {
@@ -27,8 +27,10 @@
     },
     {
       "acId": "E1.S1.A4",
-      "gapType": "sound",
-      "severity": "none"
+      "gapType": "partial",
+      "severity": "major",
+      "whatsMissing": "Compensation covers only cloudhook failure; a store failure after trigger+cloudhook creation leaves a live orphaned trigger with no owning link.",
+      "action": "Extend creation compensation to remove the trigger and cloudhook on any failure after they exist."
     },
     {
       "acId": "E1.S1.A5",
@@ -122,8 +124,10 @@
     },
     {
       "acId": "E2.S2.A2",
-      "gapType": "sound",
-      "severity": "none"
+      "gapType": "partial",
+      "severity": "major",
+      "whatsMissing": "An exhausted-but-still-active link (allowance edited down, or claim raced) is audited but never retired and its trigger never removed.",
+      "action": "When the claim finds the allowance spent on an active link, retire it (status used) and remove its trigger."
     },
     {
       "acId": "E2.S2.A3",
@@ -132,13 +136,17 @@
     },
     {
       "acId": "E2.S2.A4",
-      "gapType": "sound",
-      "severity": "none"
+      "gapType": "partial",
+      "severity": "major",
+      "whatsMissing": "Unreachable for real triggers: the home-side window guard suppresses the tracking event, so out-of-window attempts are never audited.",
+      "action": "The trigger always reports the attempt; the window gates only what the home would run — refusals stay auditable."
     },
     {
       "acId": "E2.S2.A5",
-      "gapType": "sound",
-      "severity": "none"
+      "gapType": "partial",
+      "severity": "major",
+      "whatsMissing": "Same as E2.S2.A4 — not-yet-valid attempts never reach the add-on to be audited.",
+      "action": "Same mechanism as E2.S2.A4."
     },
     {
       "acId": "E2.S2.A6",
@@ -152,8 +160,10 @@
     },
     {
       "acId": "E2.S3.A2",
-      "gapType": "sound",
-      "severity": "none"
+      "gapType": "partial",
+      "severity": "major",
+      "whatsMissing": "A failed trigger removal after a successful use reports the use as an error to the recipient, and the removal is never retried.",
+      "action": "Report the use by its own outcome; audit the removal failure distinctly; retry removal via the sweep (E1.S4.A5)."
     },
     {
       "acId": "E2.S3.A3",
@@ -189,7 +199,7 @@
       "acId": "E3.S2.A1",
       "gapType": "sound",
       "severity": "minor",
-      "whatsMissing": "Sending is not guarded by link status \u2014 an SMS can be sent for an expired/used/revoked link whose trigger URL is already dead.",
+      "whatsMissing": "Sending is not guarded by link status — an SMS can be sent for an expired/used/revoked link whose trigger URL is already dead.",
       "action": "Refuse (or warn on) sending for non-active links."
     },
     {
@@ -379,8 +389,10 @@
     },
     {
       "acId": "E7.S1.A3",
-      "gapType": "sound",
-      "severity": "none"
+      "gapType": "contradicted",
+      "severity": "blocker",
+      "whatsMissing": "No reconciliation exists: trigger events fired while the listener is disconnected are silently lost — no count, no audit, no retirement.",
+      "action": "On (re)connect, compare each active link's home-side trigger last-fired time against the last processed use; claim and audit missed uses (never execute actions late) and retire exhausted links."
     },
     {
       "acId": "E7.S2.A1",
@@ -391,13 +403,17 @@
     },
     {
       "acId": "E7.S3.A1",
-      "gapType": "sound",
-      "severity": "none"
+      "gapType": "contradicted",
+      "severity": "blocker",
+      "whatsMissing": "After the atomic claim, the tracked entity writes a stale absolute UsageCount back over the row on the next save, re-opening the lost update.",
+      "action": "Never mutate UsageCount on the tracked entity; rely on the atomic claim and re-read the count for display/decisions."
     },
     {
       "acId": "E7.S3.A2",
-      "gapType": "sound",
-      "severity": "none"
+      "gapType": "partial",
+      "severity": "major",
+      "whatsMissing": "The tuned connection string (busy timeout, pooling) is dead in production: run.sh exports ConnectionStrings__DefaultConnection which always wins.",
+      "action": "Make production use the tuned settings (fold them into run.sh or stop overriding)."
     },
     {
       "acId": "E7.S4.A1",
@@ -482,7 +498,7 @@
       "gapType": "missing",
       "severity": "major",
       "whatsMissing": "A half-open connection wedges the listener forever with no signal.",
-      "action": "Add heartbeat/receive timeout \u2192 forced reconnect."
+      "action": "Add heartbeat/receive timeout → forced reconnect."
     },
     {
       "acId": "E9.S3.A2",
@@ -530,7 +546,7 @@
       "acId": "E10.S1.A1",
       "gapType": "missing",
       "severity": "major",
-      "whatsMissing": "No recurring schedule \u2014 only one contiguous window.",
+      "whatsMissing": "No recurring schedule — only one contiguous window.",
       "action": "Model day-of-week + daily time windows; guard executes within an occurrence."
     },
     {
@@ -585,7 +601,42 @@
       "gapType": "partial",
       "severity": "major",
       "whatsMissing": "Silent timezone assumptions can shift the whole window if container TZ != operator TZ.",
-      "action": "Make the intended timezone explicit and consistent form\u2192storage\u2192guard\u2192display."
+      "action": "Make the intended timezone explicit and consistent form→storage→guard→display."
+    },
+    {
+      "acId": "E1.S1.A6",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "Creation validates parse-only; execution enforces a stricter contract, so an accepted link can be unexecutable and still burn a use.",
+      "action": "Validate and normalize actions at creation to the execution contract (accept the home’s service-call syntax)."
+    },
+    {
+      "acId": "E1.S4.A5",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "No retry exists for failed trigger removals; a dead link’s trigger can stand indefinitely.",
+      "action": "Sweep retries removal for dead links whose trigger still stands."
+    },
+    {
+      "acId": "E1.S7.A4",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "The picker silently discards an unparseable hand-edited draft.",
+      "action": "Preserve the draft and tell the operator when a picker addition cannot parse it."
+    },
+    {
+      "acId": "E7.S7.A1",
+      "gapType": "missing",
+      "severity": "blocker",
+      "whatsMissing": "Nothing re-arms pre-upgrade or stale-mode triggers; legacy automations still embed real actions and run them on every fetch.",
+      "action": "On startup, re-arm every active link’s trigger to the current model, window, and sharing mode; audit each re-arm."
+    },
+    {
+      "acId": "E7.S7.A2",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "Share URLs are derived from current config while the trigger’s accepted method is frozen at arm time — they can disagree (405).",
+      "action": "Derive the share URL from the armed trigger’s mode (with startup re-arm keeping them aligned)."
     }
   ]
 }
