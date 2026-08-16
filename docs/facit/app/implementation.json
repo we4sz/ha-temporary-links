@@ -1670,6 +1670,40 @@
       }
     },
     {
+      "acId": "E2.S5.A5",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/SharePage.cs",
+          "note": "submit handler preventDefault + fetch(hook, {mode:'no-cors'}) and inline re-render — the browser never navigates to the relay's raw reply (which downloads as a file); wording claims only the send; failure invites another press; identical in sharepage/open.html"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.BotImmunityProofTests.Share_url_is_the_confirm_page_with_hook_in_fragment",
+          "note": "proving test (embedded copy invariants)"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Published_page_matches_the_embedded_page_invariants",
+          "note": "proving test (published copy invariants)"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Written_page_sends_inline_and_never_navigates_to_the_reply",
+          "note": "proving test (executes TryWrite — real src coverage)"
+        }
+      ],
+      "notes": "Found live by the first real-phone smoke test: form navigation to the cloudhook's empty 200 made browsers download a file. The reply is cross-origin/opaque, so the page can honestly claim only the send.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.BotImmunityProofTests.Share_url_is_the_confirm_page_with_hook_in_fragment",
+          "TemporaryLinks.Addon.Tests.SharedPageProofTests.Published_page_matches_the_embedded_page_invariants",
+          "TemporaryLinks.Addon.Tests.SharedPageProofTests.Written_page_sends_inline_and_never_navigates_to_the_reply"
+        ]
+      }
+    },
+    {
       "acId": "E7.S1.A1",
       "status": "implemented",
       "evidence": [

@@ -40,6 +40,6 @@ LABEL \
     io.hass.name="Temporary Links" \
     io.hass.description="Generate one-time-use temporary links" \
     io.hass.type="addon" \
-    io.hass.version="1.1.1"
+    io.hass.version="1.1.2"
 
 CMD ["/run.sh"]

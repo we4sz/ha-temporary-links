@@ -78,6 +78,12 @@ public class BotImmunityProofTests
         Assert.Contains("method=\"post\"", SharePage.Html);
         Assert.Contains("https://hooks.nabu.casa/", SharePage.Html);
         Assert.Contains("location.hash", SharePage.Html);
+
+        // E2.S5.A5: the page sends the trigger itself and acknowledges inline —
+        // never navigating the browser to the relay's raw reply (a file download).
+        Assert.Contains("preventDefault", SharePage.Html);
+        Assert.Contains("mode: 'no-cors'", SharePage.Html);
+        Assert.Contains("fetch(hook", SharePage.Html);
     }
 
     // Without the feature, the share URL is the raw cloudhook (unchanged behaviour).
@@ -200,5 +206,35 @@ public class SharedPageProofTests
         Assert.Contains("https://hooks.nabu.casa/", published);
         Assert.Contains("location.hash", published);
         Assert.Contains("noindex", published);
+
+        // E2.S5.A5 holds in the published copy too — inline send, no navigation.
+        Assert.Contains("preventDefault", published);
+        Assert.Contains("mode: 'no-cors'", published);
+        Assert.Contains("fetch(hook", published);
+    }
+
+    // E2.S5.A5: what the add-on actually serves confirms inline and never navigates
+    // to the relay's raw reply — proven through the file TryWrite really writes.
+    [Fact]
+    public void Written_page_sends_inline_and_never_navigates_to_the_reply()
+    {
+        var root = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            var path = SharePage.TryWrite(
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, [root]);
+
+            Assert.NotNull(path);
+            var written = File.ReadAllText(path);
+            Assert.Contains("method=\"post\"", written);
+            Assert.Contains("preventDefault", written);
+            Assert.Contains("mode: 'no-cors'", written);
+            Assert.Contains("fetch(hook", written);
+            Assert.Contains("https://hooks.nabu.casa/", written);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 }

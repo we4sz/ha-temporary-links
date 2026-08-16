@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.2 — 2026-08-16
+
+### Fixed
+- **Confirm page no longer downloads a file:** pressing Open now sends the trigger from the
+  page itself and confirms inline ("Sent — if your link is valid, it has now run") instead of
+  navigating the browser to the relay's empty reply, which downloaded as a file. A failed send
+  says so and invites another press; re-pressing is safe (the home refuses anything beyond the
+  link's grant).
+
 ## 1.1.1 — 2026-08-16
 
 ### Fixed

@@ -3,8 +3,8 @@
   "facitVersion": "93d0fd1f4cc6f65f",
   "generatedAt": "2026-08-16",
   "summary": {
-    "total": 112,
-    "sound": 83,
+    "total": 113,
+    "sound": 84,
     "partial": 2,
     "missing": 27,
     "contradicted": 0
@@ -625,6 +625,11 @@
       "severity": "minor",
       "whatsMissing": "Creation currently falls back to a direct GET link when no confirm-page hosting exists.",
       "action": "Refuse creation without confirm-page hosting (supersedes the E7.S2.A1 warning-level behaviour)."
+    },
+    {
+      "acId": "E2.S5.A5",
+      "gapType": "sound",
+      "severity": "none"
     }
   ]
 }

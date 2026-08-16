@@ -384,6 +384,10 @@
             {
               "id": "E2.S5.A4",
               "text": "Given a shared confirm-page service is configured (one publicly hosted copy of the confirm page that any installation can use), when a link is shared, then the link points to that page with the trigger URL carried only in the location fragment — the shared host never receives any trigger URL, no per-home hosting or cloud remote access is needed, and the shared page takes precedence over self-hosting."
+            },
+            {
+              "id": "E2.S5.A5",
+              "text": "Given the recipient confirms on the confirm page, when the trigger is sent, then the page itself sends it and acknowledges inline — the browser never navigates to, nor downloads, the relay's raw reply — and the acknowledgement claims only what the page can know (the send), never a verdict it cannot see; a failed send says so and invites another press."
             }
           ]
         },

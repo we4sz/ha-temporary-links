@@ -39,15 +39,36 @@
             hook = '';
         }
         var form = document.getElementById('openForm');
+        var hint = document.getElementById('hint');
+        var btn = document.getElementById('openBtn');
         // Only ever POST to a Home Assistant webhook relay — this page must not
         // be usable as an open redirector.
         if (hook.indexOf('https://hooks.nabu.casa/') === 0) {
             form.action = hook;
+            // The page sends the trigger itself and re-renders inline: navigating
+            // to the relay's empty reply makes browsers download a file. The reply
+            // is cross-origin and unreadable (no-cors), so the wording claims only
+            // the send, never a verdict. Re-pressing is safe: the home refuses
+            // anything beyond the link's grant.
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                btn.disabled = true;
+                hint.className = '';
+                hint.textContent = 'Sending…';
+                fetch(hook, { method: 'POST', mode: 'no-cors' }).then(function () {
+                    hint.textContent = 'Sent — if your link is valid, it has now run.';
+                    btn.textContent = 'Open again';
+                    btn.disabled = false;
+                }).catch(function () {
+                    hint.textContent = 'Could not reach your home — check your connection and press again.';
+                    hint.className = 'error';
+                    btn.disabled = false;
+                });
+            });
         } else {
             form.style.display = 'none';
-            document.getElementById('hint').textContent =
-                'This link is incomplete — ask the sender to share it again.';
-            document.getElementById('hint').className = 'error';
+            hint.textContent = 'This link is incomplete — ask the sender to share it again.';
+            hint.className = 'error';
         }
     })();
 </script>
