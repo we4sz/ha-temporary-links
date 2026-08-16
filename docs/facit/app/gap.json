@@ -3,10 +3,10 @@
   "facitVersion": "93d0fd1f4cc6f65f",
   "generatedAt": "2026-08-16",
   "summary": {
-    "total": 114,
+    "total": 116,
     "sound": 85,
     "partial": 2,
-    "missing": 27,
+    "missing": 29,
     "contradicted": 0
   },
   "items": [
@@ -635,6 +635,20 @@
       "acId": "E2.S5.A6",
       "gapType": "sound",
       "severity": "none"
+    },
+    {
+      "acId": "E4.S2.A3",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Template create/edit are raw JSON textareas — no picker.",
+      "action": "Extract the link form’s picker into a shared partial and use it on both template pages."
+    },
+    {
+      "acId": "E4.S2.A4",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "Templates save unvalidated — a legacy or invalid template becomes a landmine that only fails at link creation.",
+      "action": "Normalize+validate template actions at save with the same ActionsNormalizer contract as link creation."
     }
   ]
 }

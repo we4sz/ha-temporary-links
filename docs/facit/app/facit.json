@@ -506,6 +506,14 @@
             {
               "id": "E4.S2.A2",
               "text": "Given templates exist, when the operator composes a link, then the actions can be picked from a template as an alternative to writing them by hand."
+            },
+            {
+              "id": "E4.S2.A3",
+              "text": "Given the template form (create or edit), when the operator composes the template's actions, then they can pick from the home's actual services and entities exactly as on the link creation form — the same picker producing the same structured actions — with raw editing remaining available as an escape hatch, and a picker addition that cannot parse the current draft preserves the draft and says why."
+            },
+            {
+              "id": "E4.S2.A4",
+              "text": "Given a template is saved, when its actions are stored, then they are validated and normalized to exactly the contract link creation enforces — a saved template can never later be refused by link creation on the form of its actions, and a form that would be refused there is refused at save with the same clear explanation."
             }
           ]
         },
