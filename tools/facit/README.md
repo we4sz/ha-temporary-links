@@ -66,6 +66,32 @@ re-verification is incremental, not whole-tree.
 
 ## Provenance
 
-Vendored from [openapimapper](../../../openapimapper/tools/facit/) (2026-07-02) with one
-addition: the `app` scope level (schema enum + `scope_ref`) for single-scope facit trees
-like this repo's — one application, one `facit.json`, `extends: null`.
+Vendored from [openapimapper](../../../openapimapper/tools/facit/) (2026-07-02) with these
+local divergences — carry them forward on the next re-sync, they are not upstream yet:
+
+- The `app` scope level (schema enum + `scope_ref`) for single-scope facit trees like this
+  repo's — one application, one `facit.json`, `extends: null`.
+- **`prove` refuses a mass demotion.** If a run's coverage filtering would demote EVERY
+  currently-proven lock node at once, `prove` now fails loudly (non-zero exit, no lock write)
+  instead of silently wiping the whole proven set — that pattern is almost always a
+  configuration error (e.g. `--src-root` / `facit.config.json`'s `srcRoot` resolving to the
+  wrong directory and filtering all coverage out), not a genuine regression across every AC
+  simultaneously. Override with `--allow-mass-demote` for the rare case a whole-set demotion
+  really is intended. (Root cause of the original bug: with no `facit.config.json` present,
+  `_resolve_src_root`'s default — the facit root's parent — silently filtered out all `src/**`
+  coverage for a facit nested below the repo root like `docs/facit`; the fix is two-sided —
+  this refusal, plus always shipping a `facit.config.json` alongside a nested facit root that
+  pins the real `srcRoot`.)
+- **`conform` warns when a proven node has no `testSources`.** The proving-test-source
+  drift-check (E1.S12.A5/A6) was silently a no-op for any proven node recorded without
+  `testSources` (e.g. proven before `testRoots` was configured, or when the proving test
+  couldn't be located under `testRoots`). `conform` now prints a distinct
+  `WARN-NO-TEST-SOURCE` line per such node so the blind spot is visible — it does not affect
+  the conformant/drifted/unverifiable counts or exit code.
+- **`_parse_trx` aggregates by worst outcome per fully-qualified test name.** Previously, when
+  several `<UnitTestResult>` entries shared one FQN — as every parameterized case of an xUnit
+  `[Theory]` does, since `TestMethod`'s `className`+`name` carry no parameter info — the FIRST
+  recorded outcome won and later results for that FQN were dropped. A `[Theory]` whose first
+  case passed and a later case failed would read as `Passed` (fail-open). Now every outcome
+  seen for a given FQN is collected and the FQN resolves to a non-`Passed` outcome if ANY case
+  was non-`Passed`, `Passed` only if all cases were.

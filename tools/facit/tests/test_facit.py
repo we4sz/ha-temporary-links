@@ -2522,6 +2522,186 @@ def test_structural_proof_hashes_declared_code_without_coverage():
     print("PASS test_structural_proof_hashes_declared_code_without_coverage")
 
 
+# ---------------------------------------------------------------------------
+# Defect fixes: destructive prove with default src_root (mass-demote guard) +
+# conform's inert proving-test-drift check + TRX Theory fail-open
+# ---------------------------------------------------------------------------
+
+def test_prove_refuses_mass_demote_of_all_proven_nodes():
+    """DEFECT 1(b): prove refuses (loud, non-zero exit, lock untouched) instead of silently
+    demoting EVERY currently-proven node in one pass -- almost always a configuration error
+    (e.g. a wrong --src-root filtering all coverage out), not a genuine regression across the
+    whole proven set. --allow-mass-demote overrides the refusal."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        spec_dir = _make_facit_two_acs(tmpdir)
+        rc, out = run(["--root", spec_dir, "lock"])
+        assert rc == 0, out
+
+        t1, t2 = "ProjA.ClsA.Test_one", "ProjB.ClsB.Test_two"
+        impl1 = _write_impl(os.path.join(tmpdir, "impl1.json"), "E1.S1.A1", [t1])
+        impl2 = _write_impl(os.path.join(tmpdir, "impl2.json"), "E1.S1.A2", [t2])
+
+        cov_path = _make_covdb(tmpdir, [t1, t2])
+        if cov_path is None:
+            print("SKIP test_prove_refuses_mass_demote_of_all_proven_nodes (coverage not installed)")
+            return
+
+        green = os.path.join(tmpdir, "green.trx")
+        with open(green, "w") as f:
+            f.write(_make_trx({t1: "Passed", t2: "Passed"}))
+        rc, out = run(["--root", spec_dir, "prove", "--impl", impl1, "--impl", impl2,
+                       "--results", green, "--coverage", cov_path])
+        assert rc == 0, f"initial prove of both ACs must pass:\n{out}"
+        lock = read_lock(os.path.join(spec_dir, "facit.lock.json"))
+        assert lock["nodes"]["engine::E1.S1.A1"]["status"] == "proven"
+        assert lock["nodes"]["engine::E1.S1.A2"]["status"] == "proven"
+
+        # Both bound tests now go red -- this run would demote EVERY currently-proven node.
+        red = os.path.join(tmpdir, "red.trx")
+        with open(red, "w") as f:
+            f.write(_make_trx({t1: "Failed", t2: "Failed"}))
+        rc, out = run(["--root", spec_dir, "prove", "--impl", impl1, "--impl", impl2,
+                       "--results", red, "--coverage", cov_path])
+        assert rc != 0, f"mass-demote must be refused (non-zero exit):\n{out}"
+        assert "REFUSING" in out, f"expected a loud refusal in output:\n{out}"
+        assert "DEMOTED" not in out, f"must not silently demote:\n{out}"
+        lock_after = read_lock(os.path.join(spec_dir, "facit.lock.json"))
+        assert lock_after["nodes"]["engine::E1.S1.A1"]["status"] == "proven", (
+            "refusal must leave the lock untouched")
+        assert lock_after["nodes"]["engine::E1.S1.A2"]["status"] == "proven", (
+            "refusal must leave the lock untouched")
+
+        # --allow-mass-demote overrides the refusal (both tests genuinely failed, so the AAA
+        # still exits non-zero -- but now because of the failures, and it actually demotes).
+        rc2, out2 = run(["--root", spec_dir, "prove", "--impl", impl1, "--impl", impl2,
+                        "--results", red, "--coverage", cov_path, "--allow-mass-demote"])
+        assert rc2 != 0, f"still non-zero (both bound tests genuinely failed):\n{out2}"
+        assert "DEMOTED" in out2, f"override must let the demotion through:\n{out2}"
+        lock_final = read_lock(os.path.join(spec_dir, "facit.lock.json"))
+        assert lock_final["nodes"]["engine::E1.S1.A1"]["status"] == "unproven"
+        assert lock_final["nodes"]["engine::E1.S1.A2"]["status"] == "unproven"
+    print("PASS test_prove_refuses_mass_demote_of_all_proven_nodes")
+
+
+def test_prove_records_test_sources_from_config_testroots():
+    """DEFECT 2(a): with testRoots configured via facit.config.json (no --test-root CLI flag),
+    prove records testSources for the proving test -- the config-driven path must actually work
+    end-to-end, not just the --test-root flag."""
+    with tempfile.TemporaryDirectory() as tmp:
+        spec_dir = _make_minimal_facit(tmp)
+        method = "my_configured_proving_test"
+        tdir, tpath = _write_proving_test_file(tmp, method, "original")
+        with open(os.path.join(spec_dir, "facit.config.json"), "w") as f:
+            json.dump({"testRoots": [tdir]}, f)
+        impl_path = _make_impl(tmp, spec_dir, [method])
+        cov_path = _make_covdb(tmp, [method])
+        if cov_path is None:
+            print("SKIP test_prove_records_test_sources_from_config_testroots (coverage not installed)")
+            return
+        trx = os.path.join(tmp, "r.trx")
+        with open(trx, "w") as f:
+            f.write(_make_trx({method: "Passed"}))
+        rc, out = run(["--root", spec_dir, "prove", "--impl", impl_path, "--results", trx,
+                       "--coverage", cov_path])
+        assert rc == 0, f"prove must pass:\n{out}"
+        node = read_lock(os.path.join(spec_dir, "facit.lock.json"))["nodes"]["engine::E1.S1.A1"]
+        ts = node.get("testSources", [])
+        assert ts and ts[0]["path"] == os.path.abspath(tpath), (
+            f"testSources must be populated from config-only testRoots (no --test-root flag): {node}")
+    print("PASS test_prove_records_test_sources_from_config_testroots")
+
+
+def test_conform_warns_on_proven_node_missing_test_sources():
+    """DEFECT 2(b): conform's proving-test-drift check is inert (checks nothing) for a proven
+    node that carries no testSources -- surfaced as a visible WARN instead of silently skipped.
+    The warning must not affect the conformant/drifted/unverifiable counts or the exit code."""
+    try:
+        import coverage as coverage_mod  # noqa: F401
+    except ImportError:
+        print("SKIP test_conform_warns_on_proven_node_missing_test_sources (coverage not installed)")
+        return
+    with tempfile.TemporaryDirectory() as tmpdir:
+        spec_dir = _make_minimal_facit(tmpdir)
+        test_id = "NS.C.t_no_test_source"
+        impl_path = _make_impl(tmpdir, spec_dir, [test_id])
+        cov_path = _make_covdb(tmpdir, [test_id])
+        trx_path = os.path.join(tmpdir, "r.trx")
+        with open(trx_path, "w") as f:
+            f.write(_make_trx({test_id: "Passed"}))
+        # Prove WITHOUT --test-root and with no facit.config.json testRoots -> coveredFiles
+        # populated, testSources absent (mirrors docs/facit's lock before this fix).
+        rc, out = run(["--root", spec_dir, "prove", "--impl", impl_path, "--results", trx_path,
+                       "--coverage", cov_path])
+        assert rc == 0, out
+        node = read_lock(os.path.join(spec_dir, "facit.lock.json"))["nodes"]["engine::E1.S1.A1"]
+        assert node.get("coveredFiles") and not node.get("testSources"), (
+            f"fixture must have coveredFiles but no testSources: {node}")
+
+        rc, out = run(["--root", spec_dir, "conform"])
+        assert rc == 0, f"missing testSources alone must not fail conform:\n{out}"
+        assert "0 drifted" in out and "0 unverifiable" in out, out
+        assert "WARN" in out and "testSources" in out, f"expected a visible testSources warning:\n{out}"
+        assert "WARN-NO-TEST-SOURCE" in out, out
+    print("PASS test_conform_warns_on_proven_node_missing_test_sources")
+
+
+def test_parse_trx_aggregates_theory_cases_by_worst_outcome():
+    """DEFECT 2(c): TRX Theory fail-open. Multiple UnitTestResults sharing one FQN (an xUnit
+    [Theory]'s parameterized cases all share the SAME TestMethod className+name -- parameters
+    aren't part of the method identity) must aggregate by WORST outcome, not first-writer-wins.
+    A Passed case recorded before a Failed case must not hide the failure."""
+    m = _import_facit_module()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        trx_path = os.path.join(tmpdir, "theory.trx")
+        with open(trx_path, "w") as f:
+            f.write(_make_trx_with_defs([
+                {"id": "aaaa1111-0000-0000-0000-000000000001", "displayName": "MyTheory(x: 1)",
+                 "className": "NS.MyClass", "methodName": "MyTheory", "outcome": "Passed"},
+                {"id": "aaaa1111-0000-0000-0000-000000000002", "displayName": "MyTheory(x: 2)",
+                 "className": "NS.MyClass", "methodName": "MyTheory", "outcome": "Failed"},
+            ]))
+        results = m._parse_trx(trx_path)
+        assert results["NS.MyClass.MyTheory"] != "Passed", (
+            f"a later Failed Theory case must not be hidden by an earlier Passed one "
+            f"(first-writer-wins bug): {results}")
+        assert results["NS.MyClass.MyTheory"] == "Failed", results
+        # Each parameterized case's OWN display-name outcome must still be reported correctly.
+        assert results["MyTheory(x: 1)"] == "Passed"
+        assert results["MyTheory(x: 2)"] == "Failed"
+    print("PASS test_parse_trx_aggregates_theory_cases_by_worst_outcome")
+
+
+def test_prove_refuses_theory_binding_when_a_later_case_fails():
+    """DEFECT 2(c) integration: an AC bound to an xUnit [Theory] method by its bare FQN must be
+    REFUSED when even one parameterized case failed -- not silently proven because an earlier
+    case happened to pass first in the TRX. Coverage is supplied so the refusal (pre-fix, a
+    wrongly-succeeding prove; post-fix, a correct TEST-FAILED refusal) isn't masked by the
+    separate strict NO-COVERAGE gate."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        spec_dir = _make_minimal_facit(tmpdir)
+        binding = "NS.MyClass.MyTheory"
+        impl_path = _make_impl(tmpdir, spec_dir, [binding])
+        cov_path = _make_covdb(tmpdir, [binding])
+        if cov_path is None:
+            print("SKIP test_prove_refuses_theory_binding_when_a_later_case_fails (coverage not installed)")
+            return
+        trx_path = os.path.join(tmpdir, "theory.trx")
+        with open(trx_path, "w") as f:
+            f.write(_make_trx_with_defs([
+                {"id": "bbbb2222-0000-0000-0000-000000000001", "displayName": "MyTheory(x: 1)",
+                 "className": "NS.MyClass", "methodName": "MyTheory", "outcome": "Passed"},
+                {"id": "bbbb2222-0000-0000-0000-000000000002", "displayName": "MyTheory(x: 2)",
+                 "className": "NS.MyClass", "methodName": "MyTheory", "outcome": "Failed"},
+            ]))
+        rc, out = run(["--root", spec_dir, "prove", "--impl", impl_path, "--results", trx_path,
+                       "--coverage", cov_path])
+        assert rc != 0, f"a Theory binding with a failing later case must be refused, not proven:\n{out}"
+        assert "TEST-FAILED" in out, f"expected a TEST-FAILED refusal (not NO-COVERAGE):\n{out}"
+        node = read_lock(os.path.join(spec_dir, "facit.lock.json"))["nodes"].get("engine::E1.S1.A1")
+        assert node is None or node["status"] != "proven", f"must not be proven: {node}"
+    print("PASS test_prove_refuses_theory_binding_when_a_later_case_fails")
+
+
 if __name__ == "__main__":
     tests = [
         test_compile_default_root,
