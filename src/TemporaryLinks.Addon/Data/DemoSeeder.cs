@@ -18,9 +18,9 @@ public static class DemoSeeder
         var now = DateTimeOffset.UtcNow;
 
         db.Contacts.AddRange(
-            new Contact { Name = "Erik the dog walker", PhoneNumber = "+46701112233", Email = "erik@example.com", Info = "Weekday afternoons", CreatedAt = now.AddDays(-40) },
-            new Contact { Name = "Cleaning crew", PhoneNumber = "+46702223344", Info = "Every other Friday", CreatedAt = now.AddDays(-30) },
-            new Contact { Name = "Grandma", PhoneNumber = "+46703334455", CreatedAt = now.AddDays(-12) });
+            new Contact { Name = "Erik the dog walker", PhoneNumber = "+46701740001", Email = "erik@example.com", Info = "Weekday afternoons", CreatedAt = now.AddDays(-40) },
+            new Contact { Name = "Cleaning crew", PhoneNumber = "+46701740002", Info = "Every other Friday", CreatedAt = now.AddDays(-30) },
+            new Contact { Name = "Grandma", PhoneNumber = "+46701740003", CreatedAt = now.AddDays(-12) });
 
         db.ActionTemplates.AddRange(
             new ActionTemplate { Name = "Unlock front door", Actions = "[{\"action\":\"lock.unlock\",\"target\":{\"entity_id\":\"lock.front_door\"}}]", Description = "Opens the main entrance lock", CreatedAt = now.AddDays(-40) },
@@ -29,15 +29,15 @@ public static class DemoSeeder
 
         var links = new[]
         {
-            NewLink("Dog walker — Tuesday", "+46701112233", LinkStatus.Active, 0, 1, now.AddHours(-2), now.AddHours(6),
+            NewLink("Dog walker — Tuesday", "+46701740001", LinkStatus.Active, 0, 1, now.AddHours(-2), now.AddHours(6),
                 "[{\"action\":\"lock.unlock\",\"target\":{\"entity_id\":\"lock.front_door\"}}]", now.AddHours(-3), "Erik"),
-            NewLink("Cleaning crew access", "+46702223344", LinkStatus.Active, 1, 5, now.AddDays(-1), now.AddDays(6),
+            NewLink("Cleaning crew access", "+46701740002", LinkStatus.Active, 1, 5, now.AddDays(-1), now.AddDays(6),
                 "[{\"action\":\"cover.open_cover\",\"target\":{\"entity_id\":\"cover.driveway_gate\"}}]", now.AddDays(-1), "Anna"),
-            NewLink("Package delivery", "+46704445566", LinkStatus.Used, 1, 1, now.AddDays(-3), now.AddDays(-2),
+            NewLink("Package delivery", "+46701740004", LinkStatus.Used, 1, 1, now.AddDays(-3), now.AddDays(-2),
                 "[{\"action\":\"lock.unlock\",\"target\":{\"entity_id\":\"lock.front_door\"}}]", now.AddDays(-3), "Anna"),
-            NewLink("Weekend guest", "+46705556677", LinkStatus.Expired, 2, 4, now.AddDays(-9), now.AddDays(-6),
+            NewLink("Weekend guest", "+46701740005", LinkStatus.Expired, 2, 4, now.AddDays(-9), now.AddDays(-6),
                 "[{\"action\":\"scene.turn_on\",\"target\":{\"entity_id\":\"scene.welcome\"}}]", now.AddDays(-10), "Erik"),
-            NewLink("Old contractor link", "+46706667788", LinkStatus.Revoked, 0, 1, now.AddDays(-14), now.AddDays(-1),
+            NewLink("Old contractor link", "+46701740006", LinkStatus.Revoked, 0, 1, now.AddDays(-14), now.AddDays(-1),
                 "[{\"action\":\"cover.open_cover\",\"target\":{\"entity_id\":\"cover.driveway_gate\"}}]", now.AddDays(-15), "Anna"),
             NewLink("Grandma — standing button", null, LinkStatus.Active, 12, 999, now.AddDays(-12), now.AddDays(60),
                 "[{\"action\":\"lock.unlock\",\"target\":{\"entity_id\":\"lock.front_door\"}}]", now.AddDays(-12), "Erik"),
@@ -49,7 +49,7 @@ public static class DemoSeeder
         {
             Audit(links[0].Id, "Created", "Link created by Erik (max uses: 1)", true, now.AddHours(-3)),
             Audit(links[1].Id, "Created", "Link created by Anna (max uses: 5)", true, now.AddDays(-1)),
-            Audit(links[1].Id, "SmsSent", "SMS sent to +46702223344", true, now.AddDays(-1).AddMinutes(2)),
+            Audit(links[1].Id, "SmsSent", "SMS sent to +46701740002", true, now.AddDays(-1).AddMinutes(2)),
             Audit(links[1].Id, "Executed", "Link executed (1/5)", true, now.AddHours(-20)),
             Audit(links[2].Id, "Executed", "Link executed (1/1)", true, now.AddDays(-2).AddHours(3)),
             Audit(links[2].Id, "WebhookDeleted", "Webhook automation deleted (max uses reached)", true, now.AddDays(-2).AddHours(3)),
@@ -64,7 +64,7 @@ public static class DemoSeeder
         {
             TemporaryLinkId = links[1].Id,
             Content = "Your temporary access link: https://hooks.nabu.casa/abc123\nValid from 07/02 to 07/08",
-            TwilioMessageSid = "SM8f3a2b1c9d4e5f60",
+            TwilioMessageSid = "SM0000000000000000",
             SmsSent = true,
             Timestamp = now.AddDays(-1).AddMinutes(2),
         });

@@ -42,7 +42,15 @@ public static class SharePage
         </div>
         <script>
             (function () {
-                var hook = decodeURIComponent((location.hash || '').slice(1));
+                var raw = (location.hash || '').slice(1);
+                var hook;
+                try {
+                    hook = decodeURIComponent(raw);
+                } catch (e) {
+                    // Truncated mid-percent-escape (SMS clients do this) — fall through
+                    // to the same "link is incomplete" branch as a missing hash.
+                    hook = '';
+                }
                 var form = document.getElementById('openForm');
                 // Only ever POST to a Home Assistant webhook relay — this page must not
                 // be usable as an open redirector.

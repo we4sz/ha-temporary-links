@@ -48,6 +48,7 @@
                         <button type="button" class="btn btn-secondary" id="pickerAdd">Add</button>
                     </div>
                     <p class="form-hint">Pick what to do and on which device — the JSON below is generated for you, and stays editable.</p>
+                    <p id="pickerError" class="text-danger" style="display:none;"></p>
                 </div>
             }
             else
@@ -172,11 +173,21 @@
                 var action = { action: svcSelect.value };
                 if (entSelect.value) { action.target = { entity_id: entSelect.value }; }
                 var ta = document.getElementById('actionsTextarea');
+                var errorEl = document.getElementById('pickerError');
                 var current = [];
                 if (ta.value.trim()) {
-                    try { current = JSON.parse(ta.value); } catch { current = []; }
+                    try {
+                        current = JSON.parse(ta.value);
+                    } catch (e) {
+                        // Don't clobber a hand-edited draft that doesn't parse yet — leave
+                        // the textarea untouched and tell the operator why nothing happened.
+                        errorEl.textContent = "Couldn't add — the current actions text isn't valid JSON; fix it or clear it first.";
+                        errorEl.style.display = 'block';
+                        return;
+                    }
                     if (!Array.isArray(current)) { current = [current]; }
                 }
+                errorEl.style.display = 'none';
                 current.push(action);
                 ta.value = JSON.stringify(current, null, 2);
                 toggleSaveTemplateSection();
