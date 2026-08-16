@@ -1,5 +1,5 @@
 name: "Temporary Links"
-version: "1.1.3"
+version: "1.1.4"
 slug: "temporary_links"
 description: "Generate temporary links that trigger Home Assistant actions - time-boxed, usage-limited, shareable via SMS or copy"
 url: "https://github.com/we4sz/ha-temporary-links"

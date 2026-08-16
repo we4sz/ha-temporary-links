@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.4 — 2026-08-16
+
+### Added
+- **Template composer matches the link form:** creating or editing an action template now
+  offers the same action picker link creation uses — pick a service and an entity from the
+  home's actual registries and it's appended to the actions JSON, which stays hand-editable as
+  a fallback. The picker is one shared component now, not two copies.
+
+### Fixed
+- **Templates are validated and normalized at save**, through the identical contract link
+  creation enforces: `service`/top-level `entity_id` (the home's own automation syntax) are
+  rewritten to the canonical form, and a form link creation would refuse (e.g. a stale 1.0.x
+  device-action template) is refused at save with a clear explanation instead of becoming a
+  landmine that only fails later, at link creation.
+
 ## 1.1.3 — 2026-08-16
 
 ### Added

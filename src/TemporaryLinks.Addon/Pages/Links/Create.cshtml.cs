@@ -9,7 +9,7 @@ using TemporaryLinks.Addon.Services;
 
 namespace TemporaryLinks.Addon.Pages.Links;
 
-public class CreateModel : PageModel
+public class CreateModel : PageModel, IActionPickerSource
 {
     private readonly ILinkService _linkService;
     private readonly ApplicationDbContext _context;
@@ -101,25 +101,8 @@ public class CreateModel : PageModel
         await LoadRegistriesAsync();
     }
 
-    private async Task LoadRegistriesAsync()
-    {
-        try
-        {
-            var services = await _haService.GetServicesAsync();
-            var entities = await _haService.GetEntitiesAsync();
-            ServicesJson = System.Text.Json.JsonSerializer.Serialize(
-                services.Select(s => new { domain = s.Domain, service = s.Service, name = s.Name }));
-            EntitiesJson = System.Text.Json.JsonSerializer.Serialize(
-                entities.Select(e => new { entityId = e.EntityId, friendlyName = e.FriendlyName }));
-            PickerAvailable = services.Count > 0;
-        }
-        catch (Exception ex)
-        {
-            // The picker is a convenience — creation must keep working without it.
-            _logger.LogWarning(ex, "Could not load HA registries for the action picker");
-            PickerAvailable = false;
-        }
-    }
+    private Task LoadRegistriesAsync() =>
+        ActionPickerRegistryLoader.LoadAsync(this, _haService, _logger);
 
     private async Task LoadContactsAsync()
     {

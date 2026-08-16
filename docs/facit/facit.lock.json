@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "lockedAt": "2026-08-16T12:48:25Z",
-  "facitHash": "deaf9139c5834992",
+  "lockedAt": "2026-08-16T13:06:34Z",
+  "facitHash": "bb8f2a1ef7d16768",
   "nodes": {
     "app::E1.S1": {
       "hash": "a210187e906e9412",
@@ -17,7 +17,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "3266df9a804742dd"
+          "hash": "bd404175e5c7a414"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
@@ -635,7 +635,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "3266df9a804742dd"
+          "hash": "bd404175e5c7a414"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
@@ -1066,7 +1066,7 @@
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
-          "hash": "6aed0084cc19fce1"
+          "hash": "9b0f812c8798b19d"
         }
       ],
       "testSources": [
@@ -1138,7 +1138,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
-          "hash": "6aed0084cc19fce1"
+          "hash": "9b0f812c8798b19d"
         }
       ],
       "testSources": [
@@ -1174,7 +1174,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
-          "hash": "6aed0084cc19fce1"
+          "hash": "9b0f812c8798b19d"
         }
       ],
       "testSources": [
@@ -1381,7 +1381,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "3266df9a804742dd"
+          "hash": "bd404175e5c7a414"
         }
       ],
       "testSources": [
@@ -1408,7 +1408,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/ActionTemplates/Create.cshtml.cs",
-          "hash": "5d83caf74636ca4f"
+          "hash": "e91253876c7e633b"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Pages/ActionTemplates/Edit.cshtml.cs",
+          "hash": "3d3c660c418fa55c"
         }
       ],
       "testSources": [
@@ -1417,7 +1421,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/PageHandlerProofTests.cs",
           "startLine": 58,
           "endLine": 78,
-          "hash": "4a45df1cc4263b6d"
+          "hash": "dea81d8810fc9b99"
         }
       ]
     },
@@ -1430,7 +1434,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "3266df9a804742dd"
+          "hash": "bd404175e5c7a414"
         }
       ],
       "testSources": [
@@ -1440,6 +1444,73 @@
           "startLine": 83,
           "endLine": 95,
           "hash": "529bc6ebbb93b911"
+        }
+      ]
+    },
+    "app::E4.S2.A3": {
+      "hash": "12fb72ec060cb66b",
+      "status": "unproven",
+      "tests": []
+    },
+    "app::E4.S2.A4": {
+      "hash": "26fa539514139b23",
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_normalizes_service_keyed_actions_to_the_execution_contract",
+        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_normalizes_top_level_entity_id_to_a_target",
+        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_refuses_a_device_action_form_and_saves_nothing",
+        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_normalizes_actions_to_the_execution_contract_on_save",
+        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_refuses_a_device_action_form_and_leaves_the_template_unchanged"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Pages/ActionTemplates/Create.cshtml.cs",
+          "hash": "e91253876c7e633b"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Pages/ActionTemplates/Edit.cshtml.cs",
+          "hash": "3d3c660c418fa55c"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Services/ActionsNormalizer.cs",
+          "hash": "199f10644eb03148"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_normalizes_service_keyed_actions_to_the_execution_contract",
+          "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
+          "startLine": 24,
+          "endLine": 43,
+          "hash": "200d828a2ad678ba"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_normalizes_top_level_entity_id_to_a_target",
+          "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
+          "startLine": 48,
+          "endLine": 66,
+          "hash": "e2dd0aa7324079a2"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_refuses_a_device_action_form_and_saves_nothing",
+          "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
+          "startLine": 72,
+          "endLine": 90,
+          "hash": "892b43218a12ba79"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_normalizes_actions_to_the_execution_contract_on_save",
+          "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
+          "startLine": 95,
+          "endLine": 114,
+          "hash": "3401d4a00b5eac90"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_refuses_a_device_action_form_and_leaves_the_template_unchanged",
+          "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
+          "startLine": 119,
+          "endLine": 144,
+          "hash": "b71fe2185011eae2"
         }
       ]
     },
@@ -1457,7 +1528,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "3266df9a804742dd"
+          "hash": "bd404175e5c7a414"
         }
       ],
       "testSources": [
@@ -1479,7 +1550,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "3266df9a804742dd"
+          "hash": "bd404175e5c7a414"
         }
       ],
       "testSources": [
@@ -1506,7 +1577,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "3266df9a804742dd"
+          "hash": "bd404175e5c7a414"
         }
       ],
       "testSources": [

@@ -22,6 +22,8 @@ else
                 <span asp-validation-for="Input.Name" class="text-danger"></span>
             </div>
 
+            <partial name="_ActionPicker" model="Model" />
+
             <div class="form-group">
                 <label asp-for="Input.Actions"></label>
                 <textarea asp-for="Input.Actions" class="form-control" rows="8"></textarea>

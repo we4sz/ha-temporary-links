@@ -3,22 +3,34 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
 using TemporaryLinks.Addon.Data;
 using TemporaryLinks.Addon.Models;
+using TemporaryLinks.Addon.Services;
 
 namespace TemporaryLinks.Addon.Pages.ActionTemplates;
 
-public class EditModel : PageModel
+public class EditModel : PageModel, IActionPickerSource
 {
     private readonly ApplicationDbContext _context;
+    private readonly IHomeAssistantService _haService;
+    private readonly ILogger<EditModel> _logger;
 
-    public EditModel(ApplicationDbContext context)
+    public EditModel(
+        ApplicationDbContext context,
+        IHomeAssistantService haService,
+        ILogger<EditModel> logger)
     {
         _context = context;
+        _haService = haService;
+        _logger = logger;
     }
 
     [BindProperty]
     public EditTemplateInput Input { get; set; } = new();
 
     public ActionTemplate? Template { get; set; }
+
+    public bool PickerAvailable { get; set; }
+    public string ServicesJson { get; set; } = "[]";
+    public string EntitiesJson { get; set; } = "[]";
 
     public class EditTemplateInput
     {
@@ -50,6 +62,8 @@ public class EditModel : PageModel
             Description = Template.Description
         };
 
+        await ActionPickerRegistryLoader.LoadAsync(this, _haService, _logger);
+
         return Page();
     }
 
@@ -58,6 +72,7 @@ public class EditModel : PageModel
         if (!ModelState.IsValid)
         {
             Template = await _context.ActionTemplates.FindAsync(id);
+            await ActionPickerRegistryLoader.LoadAsync(this, _haService, _logger);
             return Page();
         }
 
@@ -68,8 +83,22 @@ public class EditModel : PageModel
             return NotFound();
         }
 
+        string normalizedActions;
+        try
+        {
+            // Same normalization/validation link creation enforces: a saved template can
+            // never later be refused by link creation on the form of its actions.
+            normalizedActions = ActionsNormalizer.Normalize(Input.Actions);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("Input.Actions", ex.Message);
+            await ActionPickerRegistryLoader.LoadAsync(this, _haService, _logger);
+            return Page();
+        }
+
         Template.Name = Input.Name;
-        Template.Actions = Input.Actions;
+        Template.Actions = normalizedActions;
         Template.Description = Input.Description;
         Template.UpdatedAt = DateTimeOffset.UtcNow;
 

@@ -58,7 +58,7 @@ public class PageHandlerProofTests
     public async Task Templates_create_persists()
     {
         using var h = new LinkServiceHarness();
-        var create = new TemplatesCreate(h.Db)
+        var create = new TemplatesCreate(h.Db, h.Ha, NullLogger<TemplatesCreate>.Instance)
         {
             Input = new TemplatesCreate.CreateTemplateInput
             {
