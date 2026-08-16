@@ -3,8 +3,8 @@
   "facitVersion": "93d0fd1f4cc6f65f",
   "generatedAt": "2026-08-16",
   "summary": {
-    "total": 113,
-    "sound": 84,
+    "total": 114,
+    "sound": 85,
     "partial": 2,
     "missing": 27,
     "contradicted": 0
@@ -628,6 +628,11 @@
     },
     {
       "acId": "E2.S5.A5",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S5.A6",
       "gapType": "sound",
       "severity": "none"
     }

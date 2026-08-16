@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "lockedAt": "2026-08-16T12:39:42Z",
-  "facitHash": "b456a42e9d9fe62a",
+  "lockedAt": "2026-08-16T12:48:25Z",
+  "facitHash": "deaf9139c5834992",
   "nodes": {
     "app::E1.S1": {
       "hash": "a210187e906e9412",
@@ -1066,7 +1066,7 @@
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
-          "hash": "2c226a0b70ff0d7f"
+          "hash": "6aed0084cc19fce1"
         }
       ],
       "testSources": [
@@ -1138,7 +1138,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
-          "hash": "2c226a0b70ff0d7f"
+          "hash": "6aed0084cc19fce1"
         }
       ],
       "testSources": [
@@ -1159,9 +1159,31 @@
         {
           "test": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Written_page_sends_inline_and_never_navigates_to_the_reply",
           "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
-          "startLine": 219,
-          "endLine": 239,
+          "startLine": 250,
+          "endLine": 270,
           "hash": "08462863705eea1f"
+        }
+      ]
+    },
+    "app::E2.S5.A6": {
+      "hash": "96d65f9eff35c6ac",
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.SharedPageProofTests.Page_shows_the_release_version_in_every_copy"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
+          "hash": "6aed0084cc19fce1"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Page_shows_the_release_version_in_every_copy",
+          "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
+          "startLine": 219,
+          "endLine": 245,
+          "hash": "90fd3bcb0f195aa1"
         }
       ]
     },

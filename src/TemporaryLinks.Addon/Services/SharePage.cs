@@ -30,6 +30,7 @@ public static class SharePage
                          cursor: pointer; }
                 button:active { background: #0288d1; }
                 .error { color: #b00020; }
+                .version { color: #9aa0a6; font-size: .75rem; margin: 1.25rem 0 0; }
             </style>
         </head>
         <body>
@@ -39,6 +40,7 @@ public static class SharePage
             <form id="openForm" method="post">
                 <button type="submit" id="openBtn">Open</button>
             </form>
+            <p class="version">Temporary Links · v1.1.3</p>
         </div>
         <script>
             (function () {

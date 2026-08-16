@@ -213,6 +213,37 @@ public class SharedPageProofTests
         Assert.Contains("fetch(hook", published);
     }
 
+    // E2.S5.A6: every copy of the page shows the release version it shipped with,
+    // pinned to config.yaml so the label cannot go stale on a version bump.
+    [Fact]
+    public void Page_shows_the_release_version_in_every_copy()
+    {
+        var root = AppContext.BaseDirectory;
+        while (!File.Exists(Path.Combine(root, "ha-temporary-links.sln")))
+            root = Path.GetDirectoryName(root)!;
+
+        var configVersion = File.ReadLines(Path.Combine(root, "config.yaml"))
+            .First(l => l.StartsWith("version:"))
+            .Split('"')[1];
+        var marker = $"Temporary Links · v{configVersion}";
+
+        var tmp = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            var written = SharePage.TryWrite(
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, [tmp]);
+            Assert.NotNull(written);
+            Assert.Contains(marker, File.ReadAllText(written));
+        }
+        finally
+        {
+            Directory.Delete(tmp, recursive: true);
+        }
+
+        Assert.Contains(marker,
+            File.ReadAllText(Path.Combine(root, "sharepage", "open.html")));
+    }
+
     // E2.S5.A5: what the add-on actually serves confirms inline and never navigates
     // to the relay's raw reply — proven through the file TryWrite really writes.
     [Fact]

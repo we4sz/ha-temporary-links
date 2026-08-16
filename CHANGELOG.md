@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.3 — 2026-08-16
+
+### Added
+- The confirm page shows its version discreetly (e.g. "Temporary Links · v1.1.3"), so a stale
+  cached or outdated self-hosted copy is recognizable at a glance. A test pins the page's
+  version to the release version — they cannot drift apart.
+
 ## 1.1.2 — 2026-08-16
 
 ### Fixed

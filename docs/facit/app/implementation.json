@@ -1704,6 +1704,28 @@
       }
     },
     {
+      "acId": "E2.S5.A6",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/SharePage.cs",
+          "note": "discreet '.version' footer ('Temporary Links · v<release>') in the card; identical in sharepage/open.html"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Page_shows_the_release_version_in_every_copy",
+          "note": "proving test — pins the page's version string to config.yaml's release version in both copies, so the label cannot go stale"
+        }
+      ],
+      "notes": "Asked for after a stale-cache confusion during the first real-phone smoke test: the old and new page looked identical.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.SharedPageProofTests.Page_shows_the_release_version_in_every_copy"
+        ]
+      }
+    },
+    {
       "acId": "E7.S1.A1",
       "status": "implemented",
       "evidence": [
