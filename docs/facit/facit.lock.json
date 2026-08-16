@@ -17,7 +17,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "bd404175e5c7a414"
+          "hash": "4ba5882243435e32"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
@@ -635,7 +635,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "bd404175e5c7a414"
+          "hash": "4ba5882243435e32"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
@@ -1381,7 +1381,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "bd404175e5c7a414"
+          "hash": "4ba5882243435e32"
         }
       ],
       "testSources": [
@@ -1434,7 +1434,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "bd404175e5c7a414"
+          "hash": "4ba5882243435e32"
         }
       ],
       "testSources": [
@@ -1460,7 +1460,9 @@
         "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_normalizes_top_level_entity_id_to_a_target",
         "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_refuses_a_device_action_form_and_saves_nothing",
         "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_normalizes_actions_to_the_execution_contract_on_save",
-        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_refuses_a_device_action_form_and_leaves_the_template_unchanged"
+        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_refuses_a_device_action_form_and_leaves_the_template_unchanged",
+        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Save_as_template_at_link_creation_stores_the_normalized_form",
+        "TemporaryLinks.Addon.Tests.TemplateContractProofTests.A_refused_form_never_survives_as_a_template_via_link_creation"
       ],
       "coveredFiles": [
         {
@@ -1470,6 +1472,10 @@
         {
           "path": "src/TemporaryLinks.Addon/Pages/ActionTemplates/Edit.cshtml.cs",
           "hash": "3d3c660c418fa55c"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
+          "hash": "4ba5882243435e32"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/ActionsNormalizer.cs",
@@ -1511,6 +1517,20 @@
           "startLine": 119,
           "endLine": 144,
           "hash": "b71fe2185011eae2"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Save_as_template_at_link_creation_stores_the_normalized_form",
+          "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
+          "startLine": 152,
+          "endLine": 171,
+          "hash": "5fba50329905cc16"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.A_refused_form_never_survives_as_a_template_via_link_creation",
+          "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
+          "startLine": 175,
+          "endLine": 192,
+          "hash": "c6a044de1658325d"
         }
       ]
     },
@@ -1528,7 +1548,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "bd404175e5c7a414"
+          "hash": "4ba5882243435e32"
         }
       ],
       "testSources": [
@@ -1550,7 +1570,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "bd404175e5c7a414"
+          "hash": "4ba5882243435e32"
         }
       ],
       "testSources": [
@@ -1577,7 +1597,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
-          "hash": "bd404175e5c7a414"
+          "hash": "4ba5882243435e32"
         }
       ],
       "testSources": [

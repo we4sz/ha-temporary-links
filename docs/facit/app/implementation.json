@@ -1188,6 +1188,11 @@
           "kind": "test",
           "ref": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_refuses_a_device_action_form_and_leaves_the_template_unchanged",
           "note": "proving test"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
+          "note": "the save-as-template door at link creation saves only AFTER CreateLinkAsync accepted the actions, from the link's stored normalized form — no path saves an unvalidated template"
         }
       ],
       "notes": "Templates now go through the exact same ActionsNormalizer.Normalize call link creation makes, on both Create and Edit, before the row is written. A legacy or garbage form (e.g. 1.0.x device-action JSON, which has neither \"action\" nor \"service\") is refused at save with the normalizer's message, matching what link creation would refuse it with.",
@@ -1197,7 +1202,9 @@
           "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_normalizes_top_level_entity_id_to_a_target",
           "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Create_refuses_a_device_action_form_and_saves_nothing",
           "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_normalizes_actions_to_the_execution_contract_on_save",
-          "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_refuses_a_device_action_form_and_leaves_the_template_unchanged"
+          "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Edit_refuses_a_device_action_form_and_leaves_the_template_unchanged",
+          "TemporaryLinks.Addon.Tests.TemplateContractProofTests.Save_as_template_at_link_creation_stores_the_normalized_form",
+          "TemporaryLinks.Addon.Tests.TemplateContractProofTests.A_refused_form_never_survives_as_a_template_via_link_creation"
         ]
       }
     },
@@ -1207,7 +1214,7 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:138-155",
+          "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:185-203",
           "note": "save-as-template with identical-Actions dedupe"
         },
         {

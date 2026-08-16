@@ -150,26 +150,6 @@ public class CreateModel : PageModel, IActionPickerSource
             return Page();
         }
 
-        // Save as template if requested
-        if (SaveAsTemplate && !string.IsNullOrWhiteSpace(Input.Actions))
-        {
-            // Check if template already exists
-            var existingTemplate = await _context.ActionTemplates
-                .FirstOrDefaultAsync(t => t.Actions == Input.Actions);
-
-            if (existingTemplate == null)
-            {
-                var newTemplate = new ActionTemplate
-                {
-                    Name = Input.Name,
-                    Actions = Input.Actions,
-                    Description = $"Added from link: {Input.Name}"
-                };
-                _context.ActionTemplates.Add(newTemplate);
-                await _context.SaveChangesAsync();
-            }
-        }
-
         // Save as contact if requested
         if (SaveAsContact && !string.IsNullOrWhiteSpace(Input.RecipientPhoneNumber))
         {
@@ -201,6 +181,26 @@ public class CreateModel : PageModel, IActionPickerSource
                 createdBy: "WebUI",
                 maxUses: Input.MaxUses,
                 actions: Input.Actions);
+
+            // Save as template if requested — from the link's stored (normalized) actions,
+            // and only after creation accepted them: a form creation would refuse must
+            // never survive as a template (E4.S2.A4), whatever door it came through.
+            if (SaveAsTemplate && !string.IsNullOrWhiteSpace(link.Actions))
+            {
+                var existingTemplate = await _context.ActionTemplates
+                    .FirstOrDefaultAsync(t => t.Actions == link.Actions);
+
+                if (existingTemplate == null)
+                {
+                    _context.ActionTemplates.Add(new ActionTemplate
+                    {
+                        Name = Input.Name,
+                        Actions = link.Actions,
+                        Description = $"Added from link: {Input.Name}"
+                    });
+                    await _context.SaveChangesAsync();
+                }
+            }
 
             return RedirectToPage("Details", new { id = link.Id });
         }

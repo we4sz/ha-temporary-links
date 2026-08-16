@@ -142,4 +142,52 @@ public class TemplateContractProofTests
         await h.Db.Entry(template).ReloadAsync();
         Assert.Equal("""[{"action":"cover.open_cover"}]""", template.Actions);
     }
+
+    private static TemporaryLinks.Addon.Pages.Links.CreateModel NewLinksCreate(LinkServiceHarness h) =>
+        new(h.Service, h.Db, h.Ha, NullLogger<TemporaryLinks.Addon.Pages.Links.CreateModel>.Instance);
+
+    // The link-creation door (save-as-template checkbox) honours the same contract: the
+    // template is saved only after creation accepted the actions, in normalized form.
+    [Fact]
+    public async Task Save_as_template_at_link_creation_stores_the_normalized_form()
+    {
+        using var h = new LinkServiceHarness();
+        var now = DateTime.Now;
+        var page = NewLinksCreate(h);
+        page.Input = new TemporaryLinks.Addon.Pages.Links.CreateModel.CreateLinkInput
+        {
+            Name = "L", ValidFrom = now, ValidUntil = now.AddHours(1),
+            RecipientPhoneNumber = "+15553330000", MaxUses = 1,
+            Actions = """[{"service":"lock.unlock","target":{"entity_id":"lock.front_door"}}]""",
+        };
+        page.SaveAsTemplate = true;
+
+        await page.OnPostAsync();
+
+        var t = Assert.Single(h.Db.ActionTemplates);
+        using var doc = JsonDocument.Parse(t.Actions);
+        Assert.Equal("lock.unlock", doc.RootElement[0].GetProperty("action").GetString());
+        Assert.False(doc.RootElement[0].TryGetProperty("service", out _));
+    }
+
+    // A form creation refuses must never survive as a template through that door either.
+    [Fact]
+    public async Task A_refused_form_never_survives_as_a_template_via_link_creation()
+    {
+        using var h = new LinkServiceHarness();
+        var now = DateTime.Now;
+        var page = NewLinksCreate(h);
+        page.Input = new TemporaryLinks.Addon.Pages.Links.CreateModel.CreateLinkInput
+        {
+            Name = "L", ValidFrom = now, ValidUntil = now.AddHours(1),
+            RecipientPhoneNumber = "+15553330000", MaxUses = 1,
+            Actions = """[{"type":"turn_on","device_id":"abc"}]""",
+        };
+        page.SaveAsTemplate = true;
+
+        await page.OnPostAsync();
+
+        Assert.Empty(h.Db.ActionTemplates);
+        Assert.Empty(h.Db.TemporaryLinks);
+    }
 }
