@@ -339,6 +339,7 @@ def _parse_trx(trx_path):
     # recorded as an ambiguity sentinel so _match_trx fails closed on a bare-name binding.
     results = {}
     display_outcomes = {}  # display_name → set of outcomes seen
+    fqn_outcomes = {}      # fqn → list of outcomes seen, in order
     for el in _iter("UnitTestResult"):
         test_id_guid = el.get("testId", "")
         display_name = el.get("testName", "")
@@ -349,11 +350,24 @@ def _parse_trx(trx_path):
             display_outcomes.setdefault(display_name, set()).add(outcome)
             results[display_name] = outcome
         fqn = guid_to_fqn.get(test_id_guid)
-        if fqn and fqn not in results:
-            results[fqn] = outcome
+        if fqn:
+            fqn_outcomes.setdefault(fqn, []).append(outcome)
     for _dname, _outs in display_outcomes.items():
         if len(_outs) > 1:
             results[_dname] = _AMBIGUOUS
+
+    # Worst-outcome aggregation per FQN (fixes TRX Theory fail-open): an xUnit [Theory] gives
+    # every parameterized case its OWN testId/UnitTestResult but the SAME TestMethod
+    # className+name (parameters aren't part of the method identity) — so several distinct
+    # cases share one FQN key here. First-writer-wins would let an early Passed case hide a
+    # later Failed one; aggregate instead: any non-Passed case among them makes the FQN
+    # not-passed. Skip a fqn string already claimed by an exact display-name key above (do not
+    # clobber that binding).
+    for _fqn, _outs in fqn_outcomes.items():
+        if _fqn in results:
+            continue
+        _non_passed = [o for o in _outs if o != "Passed"]
+        results[_fqn] = _non_passed[0] if _non_passed else _outs[0]
 
     # Fallback for un-namespaced minimal fixtures without TestDefinitions
     if not results:
@@ -844,6 +858,8 @@ def cmd_conform(args):
     conformant = []
     drifted = []      # list of (qid, [(path, reason)])
     unverifiable = []
+    no_test_sources = []  # proven nodes with coveredFiles but no testSources (E1.S12.A5/A6
+                           # drift-check is inert for these — surfaced as a warning, not a fail)
 
     for qid in sorted(lock_nodes):
         node = lock_nodes[qid]
@@ -853,6 +869,8 @@ def cmd_conform(args):
         if not covered:
             unverifiable.append(qid)
             continue
+        if not node.get("testSources"):
+            no_test_sources.append(qid)
 
         drifted_files = []
         for cf in covered:
@@ -891,6 +909,17 @@ def cmd_conform(args):
             print(f"    {path}: {reason}")
     for qid in unverifiable:
         print(f"  UNVERIFIABLE: {qid}")
+
+    # E1.S12.A5/A6 drift-check is inert (checks nothing) for a proven node with no testSources —
+    # make that visible instead of silently skipping it. Informational: does NOT affect the exit
+    # code (a node missing testSources is not itself drift; re-run `prove` with testRoots
+    # configured to populate it).
+    if no_test_sources:
+        print(f"  WARN: {len(no_test_sources)} proven node(s) have no testSources recorded — "
+              f"proving-test drift cannot be detected for them (re-run `prove` with testRoots "
+              f"configured in facit.config.json):")
+        for qid in no_test_sources:
+            print(f"    WARN-NO-TEST-SOURCE: {qid}")
 
     # E1.S9.A3 (strict): a proven node with no code-drift trigger cannot be trusted — fail.
     return 1 if (drifted or unverifiable) else 0
@@ -1212,6 +1241,27 @@ def cmd_prove(args):
     # exit non-zero if any were refused.
     # E1.S8.A8: demote any locked-proven AC whose bound test is now red/absent/uncovered.
     demotions = {q for q in demotions if lock_nodes.get(q, {}).get("status") == "proven"}
+
+    # Mass-demote guard: refuse a run that would demote EVERY currently-proven node at once.
+    # That pattern — the whole proven set losing its trigger in one pass — is almost always a
+    # configuration error (e.g. --src-root / config srcRoot resolving to the wrong directory
+    # and filtering ALL coverage out, so every AC hits NO-COVERAGE) rather than a genuine
+    # regression across the entire proven set simultaneously. Fail loudly and refuse to write
+    # the lock instead of silently demoting everything; --allow-mass-demote overrides for the
+    # rare case a whole-set demotion really is intended.
+    proven_before = {q for q, v in lock_nodes.items() if v.get("status") == "proven"}
+    if (demotions and len(proven_before) > 1 and demotions == proven_before
+            and not getattr(args, "allow_mass_demote", False)):
+        print(
+            f"prove: REFUSING — this run would demote ALL {len(proven_before)} currently-proven "
+            f"AC(s) to unproven in one pass. That is almost certainly a configuration error "
+            f"(e.g. --src-root or facit.config.json's srcRoot pointing at the wrong directory, "
+            f"filtering all coverage out) rather than a genuine regression across the whole "
+            f"proven set — refusing to write the lock. Pass --allow-mass-demote to force this "
+            f"through if a whole-set demotion is truly intended."
+        )
+        return 1
+
     for qid in demotions:
         lock_nodes[qid]["status"] = "unproven"
         lock_nodes[qid]["tests"] = []
@@ -1539,6 +1589,10 @@ def main():
                     help="dir to search for proving-test source (repeatable; adds to facit.config.json testRoots)")
     pv.add_argument("--max-test-share", type=int, default=5, metavar="N",
                     help="warn if a test id is bound to more than N ACs (default: 5)")
+    pv.add_argument("--allow-mass-demote", action="store_true",
+                    help="override the mass-demote refusal: allow a prove run to demote EVERY "
+                         "currently-proven node at once (default: refused as a likely "
+                         "configuration error, e.g. a wrong --src-root)")
     pv.set_defaults(fn=cmd_prove)
     sub.add_parser("conform", description=(
         "check code drift: verify covered-file hashes for all proven lock nodes"
