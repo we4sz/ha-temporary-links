@@ -43,6 +43,8 @@ public class GrantEnforcementProofTests
 
     // Proves app::E2.S1.A3 — the trigger automation carries a guard condition on the
     // validity window, so the home itself refuses to run the actions outside the grant.
+    // The guard now sits inside the automation's choose (the branch that announces a use),
+    // so the home still decides in/out of window — see E2.S2.A4/A5 for the other branch.
     [Fact]
     public async Task Automation_config_guards_the_validity_window()
     {
@@ -56,12 +58,16 @@ public class GrantEnforcementProofTests
         var post = Assert.Single(handler.Requests,
             r => r.Method == HttpMethod.Post && r.Path.Contains("config/automation/config/"));
         using var config = JsonDocument.Parse(post.Body!);
-        var condition = config.RootElement.GetProperty("condition");
+        var choose = config.RootElement.GetProperty("action")[0].GetProperty("choose");
+        var condition = choose[0].GetProperty("conditions");
         Assert.Equal(JsonValueKind.Array, condition.ValueKind);
         var template = condition[0].GetProperty("value_template").GetString()!;
         Assert.Contains(from.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss"), template);
         Assert.Contains(until.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss"), template);
         Assert.Contains("now()", template);
+        // Only the in-window branch announces a use.
+        Assert.Equal("temp_link_triggered",
+            choose[0].GetProperty("sequence")[0].GetProperty("event").GetString());
     }
 
     // Proves app::E1.S2.A5 (and re-proves app::E1.S2.A1) — amending the window re-arms
@@ -119,6 +125,8 @@ public class GrantEnforcementProofTests
         Assert.Equal(LinkStatus.Revoked, link.Status);
         var audits = await h.AuditsForAsync(link.Id);
         Assert.Single(audits, a => a.EventType == "Revoked");
-        Assert.Single(audits, a => a.EventType == "ExecutionException");
+        Assert.Single(audits, a => a.EventType == "WebhookDeleteFailed" && !a.Success);
+        // The trigger may still stand, so the link keeps its id — the sweep retries it.
+        Assert.False(string.IsNullOrEmpty(link.WebhookId));
     }
 }

@@ -1,7 +1,11 @@
+using System.Text.Json;
+
 namespace TemporaryLinks.Addon.Services;
 
 public interface IHomeAssistantService
 {
+    /// <summary>Arms (or re-arms, same id) a link's home-side trigger to the current
+    /// enforcement model and sharing mode. Idempotent.</summary>
     Task<string> CreateWebhookAutomationAsync(
         string token,
         string linkName,
@@ -10,11 +14,31 @@ public interface IHomeAssistantService
         DateTimeOffset validUntil,
         CancellationToken cancellationToken = default);
 
-    Task DeleteWebhookAutomationAsync(
+    /// <summary>Removes a link's trigger from the home. Returns true when this call removed
+    /// it, false when the home reports it was already gone; throws when the home refuses,
+    /// which means the trigger may still be standing.</summary>
+    Task<bool> DeleteWebhookAutomationAsync(
         string automationId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>The automation config the home currently stores for an id, or null when the
+    /// home has none. Used to tell a trigger armed to the current model from an older one.</summary>
+    Task<JsonElement?> TryGetAutomationConfigAsync(
+        string automationId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>When each automation last ran, keyed by automation id — the home's own record
+    /// of trigger fires, which the add-on reconciles against what it processed.</summary>
+    Task<IReadOnlyDictionary<string, DateTimeOffset>> GetAutomationLastTriggeredAsync(
+        CancellationToken cancellationToken = default);
+
     Task<CloudhookResult> CreateCloudhookAsync(
+        string webhookId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Removes the public relay registration for a webhook (compensation when a
+    /// creation fails after the cloudhook already exists).</summary>
+    Task DeleteCloudhookAsync(
         string webhookId,
         CancellationToken cancellationToken = default);
 

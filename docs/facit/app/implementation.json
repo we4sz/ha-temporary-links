@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "facitVersion": "1d284d60abd51855",
-  "generatedAt": "2026-07-02T00:00:00Z",
+  "facitVersion": "93d0fd1f4cc6f65f",
+  "generatedAt": "2026-08-16T00:00:00Z",
   "entries": [
     {
       "acId": "E1.S1.A1",
@@ -20,7 +20,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:65-67",
-          "note": "[Phone] only \u2014 no [Required] on recipient"
+          "note": "[Phone] only — no [Required] on recipient"
         },
         {
           "kind": "test",
@@ -95,19 +95,40 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:50-70",
-          "note": "cloudhook failure \u2192 compensating DeleteWebhookAutomationAsync, then rethrow; no link persisted"
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:60-70",
+          "note": "cloudhook failure -> compensate the automation, rethrow"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:92-104",
+          "note": "store failure AFTER trigger+cloudhook exist -> detach, compensate both, rethrow; no link persisted"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:114-138",
+          "note": "CompensateCreationAsync: DeleteCloudhookAsync then DeleteWebhookAutomationAsync, each best-effort logged"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:308-323",
+          "note": "DeleteCloudhookAsync over the HA WebSocket (cloud/cloudhook/delete)"
         },
         {
           "kind": "test",
-          "ref": "TemporaryLinks.Addon.Tests.GrantEnforcementProofTests.Failed_creation_leaves_no_orphaned_trigger_and_no_link",
+          "ref": "TemporaryLinks.Addon.Tests.CreationCompensationProofTests.Store_failure_after_the_trigger_exists_leaves_nothing_behind",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.CreationCompensationProofTests.Relay_failure_removes_the_trigger_and_leaves_no_link",
           "note": "proving test"
         }
       ],
-      "notes": "Compensation is best-effort (cleanup failure is logged); no link row is ever persisted on failure.",
+      "notes": "Compensation now covers every failure after the home-side artifacts exist (relay failure and store failure alike). Cleanup itself is best-effort: a cleanup failure is logged and never masks the original error.",
       "proof": {
         "tests": [
-          "TemporaryLinks.Addon.Tests.GrantEnforcementProofTests.Failed_creation_leaves_no_orphaned_trigger_and_no_link"
+          "TemporaryLinks.Addon.Tests.CreationCompensationProofTests.Store_failure_after_the_trigger_exists_leaves_nothing_behind",
+          "TemporaryLinks.Addon.Tests.CreationCompensationProofTests.Relay_failure_removes_the_trigger_and_leaves_no_link"
         ]
       }
     },
@@ -118,10 +139,10 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:177-197",
-          "note": "catch \u2192 ModelState error with ex.Message \u2192 re-render with entries preserved"
+          "note": "catch → ModelState error with ex.Message → re-render with entries preserved"
         }
       ],
-      "notes": "Raw exception message is shown to the operator (admin-only surface). Unproven.  [Verified by inspection: Razor page error re-render (ModelState) \u2014 framework-run validation, not unit-provable.]"
+      "notes": "Raw exception message is shown to the operator (admin-only surface). Unproven.  [Verified by inspection: Razor page error re-render (ModelState) — framework-run validation, not unit-provable.]"
     },
     {
       "acId": "E1.S2.A1",
@@ -157,7 +178,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:94-97",
-          "note": "non-Active \u2192 InvalidOperationException, no changes"
+          "note": "non-Active → InvalidOperationException, no changes"
         },
         {
           "kind": "test",
@@ -179,7 +200,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:99-103",
-          "note": "maxUses < UsageCount \u2192 refused"
+          "note": "maxUses < UsageCount → refused"
         },
         {
           "kind": "test",
@@ -255,7 +276,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:277-278",
-          "note": "Status==Used \u2192 return false"
+          "note": "Status==Used → return false"
         },
         {
           "kind": "test",
@@ -277,7 +298,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:174-179",
-          "note": "Revoked \u2192 refused + audited on execution"
+          "note": "Revoked → refused + audited on execution"
         },
         {
           "kind": "test",
@@ -299,7 +320,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Delete.cshtml.cs:25-35",
-          "note": "revoke, never Remove \u2014 rows retained"
+          "note": "revoke, never Remove — rows retained"
         },
         {
           "kind": "code",
@@ -326,7 +347,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:296-328",
-          "note": "ExpireOldLinksAsync: Active + ValidUntil past \u2192 delete webhook, audit, Status=Expired"
+          "note": "ExpireOldLinksAsync: Active + ValidUntil past → delete webhook, audit, Status=Expired"
         },
         {
           "kind": "test",
@@ -351,7 +372,7 @@
           "note": "BackgroundService loop, TimeSpan.FromMinutes(1), catch keeps loop alive"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: Background-service cadence (1-min loop) \u2014 timing/hosted-service, needs integration harness.]"
+      "notes": "Unproven.  [Verified by inspection: Background-service cadence (1-min loop) — timing/hosted-service, needs integration harness.]"
     },
     {
       "acId": "E1.S4.A3",
@@ -360,7 +381,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:204-235",
-          "note": "expired/overdue \u2192 mark Expired, refuse, audit; delete automation with audited failure path"
+          "note": "expired/overdue → mark Expired, refuse, audit; delete automation with audited failure path"
         },
         {
           "kind": "test",
@@ -404,7 +425,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/TokenGenerator.cs:7-14",
-          "note": "32 random bytes \u2192 Base64 \u2192 '+'\u2192'-', '/'\u2192'_', strip '=', truncate to 32 chars"
+          "note": "32 random bytes → Base64 → '+'→'-', '/'→'_', strip '=', truncate to 32 chars"
         },
         {
           "kind": "test",
@@ -471,7 +492,7 @@
           "note": "proving test"
         }
       ],
-      "notes": "The event fires as the automation's FIRST action, before the custom actions \u2014 the add-on records a use without verifying the actions succeeded. Trigger answers any GET (see E2.S1 note in facit): link-preview/prefetch bots can consume a one-time use. Unproven.",
+      "notes": "The event fires as the automation's FIRST action, before the custom actions — the add-on records a use without verifying the actions succeeded. Trigger answers any GET (see E2.S1 note in facit): link-preview/prefetch bots can consume a one-time use. Unproven.",
       "proof": {
         "tests": [
           "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Addon_runs_actions_as_service_calls",
@@ -499,7 +520,7 @@
           "note": "proving test"
         }
       ],
-      "notes": "Recipient-facing pages are not served by the add-on (the dead Views/Link/* were removed); the listener\u2192ExecuteLinkAsync delivery is the integration path.",
+      "notes": "Recipient-facing pages are not served by the add-on (the dead Views/Link/* were removed); the listener→ExecuteLinkAsync delivery is the integration path.",
       "proof": {
         "tests": [
           "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Valid_use_runs_actions_and_counts_once"
@@ -513,7 +534,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:153-157",
-          "note": "unknown token \u2192 NotFound, no state change, no audit (no link to attach to)"
+          "note": "unknown token → NotFound, no state change, no audit (no link to attach to)"
         },
         {
           "kind": "test",
@@ -534,19 +555,30 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:162-172",
-          "note": "Used or UsageCount>=MaxUses \u2192 AlreadyUsed, audited failure"
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:262-276",
+          "note": "status Used -> AlreadyUsed, audited as a failure"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:330-350",
+          "note": "claim refused on a still-Active link -> audited as a failure AND retired (RetireAsync: status Used + trigger removed), so an allowance edited down or a lost race ends the link"
         },
         {
           "kind": "test",
           "ref": "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Exhausted_link_is_refused_as_already_used",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRemovalProofTests.An_exhausted_but_still_active_link_is_retired_on_the_next_attempt",
           "note": "proving test"
         }
       ],
       "notes": "",
       "proof": {
         "tests": [
-          "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Exhausted_link_is_refused_as_already_used"
+          "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Exhausted_link_is_refused_as_already_used",
+          "TemporaryLinks.Addon.Tests.TriggerRemovalProofTests.An_exhausted_but_still_active_link_is_retired_on_the_next_attempt"
         ]
       }
     },
@@ -557,7 +589,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:174-179",
-          "note": "Revoked \u2192 refused, audited failure"
+          "note": "Revoked → refused, audited failure"
         },
         {
           "kind": "test",
@@ -578,18 +610,50 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:204-235",
-          "note": "expired/overdue \u2192 mark Expired, refuse, audit; delete automation with audited failure path"
+          "ref": "src/TemporaryLinks.Addon/Services/AutomationModel.cs:37-105",
+          "note": "the trigger's single action is a choose: in-window announces temp_link_triggered, otherwise temp_link_blocked — no top-level condition, so a refusal is never swallowed"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/HaEventListenerService.cs:126-148",
+          "note": "the listener subscribes to BOTH events"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:225-236",
+          "note": "RecordBlockedTriggerAsync routes a refused trigger into the same order of scrutiny"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:277-298",
+          "note": "expired/overdue -> mark Expired, refuse, audit as a failure, remove the trigger"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.AuditableRefusalProofTests.Trigger_reports_out_of_window_attempts_instead_of_swallowing_them",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.AuditableRefusalProofTests.Refused_attempt_after_the_window_is_audited_and_expires_the_link",
+          "note": "proving test"
         },
         {
           "kind": "test",
           "ref": "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Overdue_link_is_marked_expired_and_refused",
           "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.IntegrationTests.HaSeamTests.Outside_the_window_the_home_blocks_the_trigger_and_reports_the_refusal",
+          "note": "opt-in integration proof against a real home: no temp_link_triggered, but a temp_link_blocked arrives"
         }
       ],
-      "notes": "",
+      "notes": "The home still decides in/out of window (it never runs a use outside it); it now reports the refused attempt so the add-on can audit it.",
       "proof": {
         "tests": [
+          "TemporaryLinks.Addon.Tests.AuditableRefusalProofTests.Refused_attempt_after_the_window_is_audited_and_expires_the_link",
+          "TemporaryLinks.Addon.Tests.AuditableRefusalProofTests.Trigger_reports_out_of_window_attempts_instead_of_swallowing_them",
           "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Overdue_link_is_marked_expired_and_refused"
         ]
       }
@@ -600,8 +664,28 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:194-204",
-          "note": "now<ValidFrom \u2192 NotYetValid, audited failure, status untouched"
+          "ref": "src/TemporaryLinks.Addon/Services/AutomationModel.cs:70-105",
+          "note": "the choose's default branch announces temp_link_blocked for a before-window press"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:300-311",
+          "note": "now<ValidFrom -> NotYetValid, audited as a failure, link left active"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:313-326",
+          "note": "a refusal the home announces while the add-on's own clock says in-window claims no use and runs no actions (clock skew: the home's verdict on its trigger stands)"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.AuditableRefusalProofTests.Refused_attempt_before_the_window_is_audited_and_leaves_the_link_active",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.AuditableRefusalProofTests.A_refusal_never_claims_a_use_even_when_the_addon_clock_disagrees",
+          "note": "proving test"
         },
         {
           "kind": "test",
@@ -612,6 +696,8 @@
       "notes": "",
       "proof": {
         "tests": [
+          "TemporaryLinks.Addon.Tests.AuditableRefusalProofTests.Refused_attempt_before_the_window_is_audited_and_leaves_the_link_active",
+          "TemporaryLinks.Addon.Tests.AuditableRefusalProofTests.A_refusal_never_claims_a_use_even_when_the_addon_clock_disagrees",
           "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Link_before_window_is_refused_and_stays_active"
         ]
       }
@@ -645,7 +731,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:213-224",
-          "note": "count>=allowance \u2192 Status=Used, DeleteWebhookAutomationAsync, audit 'WebhookDeleted'"
+          "note": "count>=allowance → Status=Used, DeleteWebhookAutomationAsync, audit 'WebhookDeleted'"
         },
         {
           "kind": "test",
@@ -666,8 +752,13 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:225-236",
-          "note": "cleanup failure \u2192 audit 'ExecutionException'; the increment + 'Executed' audit at :206-211 already stand"
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:448-459",
+          "note": "removal failure -> audited 'WebhookDeleteFailed' (distinct from the use's own audit) and the link keeps its WebhookId for the sweep to retry"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:371-386",
+          "note": "the execution result is the EXECUTION's outcome: a failed cleanup no longer turns a successful use into an error"
         },
         {
           "kind": "test",
@@ -675,7 +766,7 @@
           "note": "proving test"
         }
       ],
-      "notes": "The result surfaced to the caller is Error despite the use having counted; only logged today since no recipient-facing surface.",
+      "notes": "The retry itself is E1.S4.A5 (the sweep).",
       "proof": {
         "tests": [
           "TemporaryLinks.Addon.Tests.ExecuteLinkProofTests.Trigger_removal_failure_does_not_undo_the_use"
@@ -711,10 +802,10 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HaEventListenerService.cs:23-34",
-          "note": "outer while loop, catch \u2192 10s delay \u2192 reconnect, indefinitely"
+          "note": "outer while loop, catch → 10s delay → reconnect, indefinitely"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: WebSocket listener reconnect \u2014 needs a stubbed HA WS server (integration).]"
+      "notes": "Unproven.  [Verified by inspection: WebSocket listener reconnect — needs a stubbed HA WS server (integration).]"
     },
     {
       "acId": "E2.S4.A2",
@@ -723,10 +814,10 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HaEventListenerService.cs:77-110",
-          "note": "auth_invalid \u2192 throw \u2192 outer catch logs error"
+          "note": "auth_invalid → throw → outer catch logs error"
         }
       ],
-      "notes": "Surfaced via error log; the service then retries forever every 10s against bad credentials \u2014 noisy but visible. Unproven.  [Verified by inspection: WebSocket auth handling \u2014 needs a stubbed HA WS server (integration).]"
+      "notes": "Surfaced via error log; the service then retries forever every 10s against bad credentials — noisy but visible. Unproven.  [Verified by inspection: WebSocket auth handling — needs a stubbed HA WS server (integration).]"
     },
     {
       "acId": "E2.S4.A3",
@@ -738,7 +829,7 @@
           "note": "event-type + token guards; per-event try/catch keeps listener alive"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: WebSocket event filtering \u2014 needs a stubbed HA WS server (integration).]"
+      "notes": "Unproven.  [Verified by inspection: WebSocket event filtering — needs a stubbed HA WS server (integration).]"
     },
     {
       "acId": "E3.S1.A1",
@@ -769,7 +860,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:358-362",
-          "note": "{link}\u2192CloudhookUrl, {start_time}/{end_time}\u2192local 'g', {name}\u2192Name"
+          "note": "{link}→CloudhookUrl, {start_time}/{end_time}→local 'g', {name}→Name"
         },
         {
           "kind": "test",
@@ -791,7 +882,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Details.cshtml.cs:38-65",
-          "note": "OnPostSendSmsAsync \u2192 TempData success/error"
+          "note": "OnPostSendSmsAsync → TempData success/error"
         },
         {
           "kind": "code",
@@ -804,7 +895,7 @@
           "note": "proving test"
         }
       ],
-      "notes": "No guard on link status \u2014 SMS can be sent for expired/used/revoked links whose trigger URL is already dead. Unproven.",
+      "notes": "No guard on link status — SMS can be sent for expired/used/revoked links whose trigger URL is already dead. Unproven.",
       "proof": {
         "tests": [
           "TemporaryLinks.Addon.Tests.CoverageProofTests.Successful_send_records_message_and_audits"
@@ -818,12 +909,12 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:124-131",
-          "note": "failure \u2192 audit 'SmsFailure' + throw"
+          "note": "failure → audit 'SmsFailure' + throw"
         },
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Details.cshtml.cs:54-64",
-          "note": "exception \u2192 ErrorMessage to operator"
+          "note": "exception → ErrorMessage to operator"
         },
         {
           "kind": "test",
@@ -872,10 +963,10 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Program.cs:149-152",
-          "note": "not configured \u2192 logged, app continues with SMS disabled"
+          "note": "not configured → logged, app continues with SMS disabled"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: Details-page 'SMS unavailable' rendering \u2014 Razor view, needs e2e.]"
+      "notes": "Unproven.  [Verified by inspection: Details-page 'SMS unavailable' rendering — Razor view, needs e2e.]"
     },
     {
       "acId": "E3.S3.A2",
@@ -889,10 +980,10 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Program.cs:136-147",
-          "note": "validation failure \u2192 Environment.Exit(1)"
+          "note": "validation failure → Environment.Exit(1)"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: Twilio startup validation + Environment.Exit \u2014 Program.cs startup, needs integration.]"
+      "notes": "Unproven.  [Verified by inspection: Twilio startup validation + Environment.Exit — Program.cs startup, needs integration.]"
     },
     {
       "acId": "E4.S1.A1",
@@ -1137,7 +1228,7 @@
           "note": "trigger URL shown for active links; SMS history; audit log"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: Details view rendering (loads GetLinkByIdAsync data, itself proven) \u2014 Razor view, needs e2e.]"
+      "notes": "Unproven.  [Verified by inspection: Details view rendering (loads GetLinkByIdAsync data, itself proven) — Razor view, needs e2e.]"
     },
     {
       "acId": "E5.S3.A1",
@@ -1149,7 +1240,7 @@
           "note": "last 100 audits incl. link, desc by timestamp"
         }
       ],
-      "notes": "Fixed cap of 100, no paging. Unproven.  [Verified by inspection: Audit-log page rendering/cap \u2014 Razor view, needs e2e.]"
+      "notes": "Fixed cap of 100, no paging. Unproven.  [Verified by inspection: Audit-log page rendering/cap — Razor view, needs e2e.]"
     },
     {
       "acId": "E5.S3.A2",
@@ -1193,7 +1284,7 @@
           "note": "AddonConfiguration + TwilioConfiguration bound with option-key overrides"
         }
       ],
-      "notes": "run.sh also exports env vars incl. HomeAssistant__BaseUri/Token from SUPERVISOR_TOKEN, but AddonConfiguration has no such properties \u2014 those exports bind to nothing (dead config path); HA access uses user-supplied ha_url/ha_token. Unproven.  [Verified by inspection: Config binding at startup \u2014 Program.cs, needs integration.]"
+      "notes": "run.sh also exports env vars incl. HomeAssistant__BaseUri/Token from SUPERVISOR_TOKEN, but AddonConfiguration has no such properties — those exports bind to nothing (dead config path); HA access uses user-supplied ha_url/ha_token. Unproven.  [Verified by inspection: Config binding at startup — Program.cs, needs integration.]"
     },
     {
       "acId": "E6.S1.A2",
@@ -1202,10 +1293,10 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Program.cs:113-125",
-          "note": "missing ha_url or ha_token \u2192 specific error log + Environment.Exit(1)"
+          "note": "missing ha_url or ha_token → specific error log + Environment.Exit(1)"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: Missing-config Environment.Exit \u2014 Program.cs startup, needs integration.]"
+      "notes": "Unproven.  [Verified by inspection: Missing-config Environment.Exit — Program.cs startup, needs integration.]"
     },
     {
       "acId": "E6.S2.A1",
@@ -1222,7 +1313,7 @@
           "note": "Database.Migrate() at startup before serving"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: DB path + Database.Migrate at startup \u2014 Program.cs, needs integration.]"
+      "notes": "Unproven.  [Verified by inspection: DB path + Database.Migrate at startup — Program.cs, needs integration.]"
     },
     {
       "acId": "E6.S2.A2",
@@ -1234,7 +1325,7 @@
           "note": "delete page revokes; no code path removes TemporaryLink rows"
         }
       ],
-      "notes": "Audit rows are FK-cascade from links, but since links are never removed the history is retained. Unproven.  [Verified by inspection: No hard-delete \u2014 a whole-codebase negative property; verified by inspection.]"
+      "notes": "Audit rows are FK-cascade from links, but since links are never removed the history is retained. Unproven.  [Verified by inspection: No hard-delete — a whole-codebase negative property; verified by inspection.]"
     },
     {
       "acId": "E6.S3.A1",
@@ -1243,7 +1334,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Program.cs:155-175",
-          "note": "X-Ingress-Path \u2192 Request.PathBase; '//' normalization"
+          "note": "X-Ingress-Path → Request.PathBase; '//' normalization"
         },
         {
           "kind": "code",
@@ -1251,7 +1342,7 @@
           "note": "<base href='@Context.Request.PathBase/'>"
         }
       ],
-      "notes": "Unproven.  [Verified by inspection: Ingress X-Ingress-Path middleware \u2014 Program.cs middleware, needs integration.]"
+      "notes": "Unproven.  [Verified by inspection: Ingress X-Ingress-Path middleware — Program.cs middleware, needs integration.]"
     },
     {
       "acId": "E6.S3.A2",
@@ -1263,7 +1354,7 @@
           "note": "Security posture section: ingress-only, never expose 8099, forwarded-headers caveat, token-as-credential, data-at-rest, secrets"
         }
       ],
-      "notes": "Documentation AC \u2014 no test binding.  [Verified by inspection: Security-posture documentation \u2014 README, not code.]"
+      "notes": "Documentation AC — no test binding.  [Verified by inspection: Security-posture documentation — README, not code.]"
     },
     {
       "acId": "E2.S1.A3",
@@ -1277,7 +1368,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:115-122",
-          "note": "condition block in the automation config \u2014 HA refuses to run actions outside the window"
+          "note": "condition block in the automation config — HA refuses to run actions outside the window"
         },
         {
           "kind": "code",
@@ -1385,7 +1476,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:104-122",
-          "note": "LoadRegistriesAsync \u2014 picker fed from live registries, tolerant of HA being down"
+          "note": "LoadRegistriesAsync — picker fed from live registries, tolerant of HA being down"
         },
         {
           "kind": "test",
@@ -1410,7 +1501,7 @@
           "note": "pickerAdd builds {action, target.entity_id} into the same Actions textarea; textarea remains hand-editable"
         }
       ],
-      "notes": "Picker output lands in the same JSON textarea the operator could type into \u2014 identical data path. Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Client-side picker JS \u2014 needs a browser/e2e harness.]"
+      "notes": "Picker output lands in the same JSON textarea the operator could type into — identical data path. Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Client-side picker JS — needs a browser/e2e harness.]"
     },
     {
       "acId": "E1.S7.A3",
@@ -1422,7 +1513,7 @@
           "note": "refreshEntities(): entities filtered to the chosen service's domain (domain-agnostic services excepted)"
         }
       ],
-      "notes": "Composition-time validity by domain filtering. Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Client-side picker JS (domain filtering) \u2014 needs a browser/e2e harness.]"
+      "notes": "Composition-time validity by domain filtering. Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Client-side picker JS (domain filtering) — needs a browser/e2e harness.]"
     },
     {
       "acId": "E2.S5.A1",
@@ -1431,7 +1522,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:109-117",
-          "note": "allowed_methods POST-only when public_url set \u2014 preview bots only GET, so a prefetch gets 405 and nothing runs"
+          "note": "allowed_methods POST-only when public_url set — preview bots only GET, so a prefetch gets 405 and nothing runs"
         },
         {
           "kind": "test",
@@ -1483,7 +1574,7 @@
           "note": "Copy link button: navigator.clipboard with execCommand fallback (ingress iframe), 'Copied!' confirmation"
         }
       ],
-      "notes": "Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Copy-link button JS \u2014 needs a browser/e2e harness.]"
+      "notes": "Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Copy-link button JS — needs a browser/e2e harness.]"
     },
     {
       "acId": "E1.S2.A5",
@@ -1492,7 +1583,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:123-127",
-          "note": "CreateWebhookAutomationAsync re-posted with the new window BEFORE SaveChanges (same automation id \u2192 overwrite)"
+          "note": "CreateWebhookAutomationAsync re-posted with the new window BEFORE SaveChanges (same automation id → overwrite)"
         },
         {
           "kind": "test",
@@ -1514,12 +1605,12 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/PublicUrlResolver.cs",
-          "note": "configured public_url wins; else discovered from HA Cloud; else null \u2192 direct-link fallback"
+          "note": "configured public_url wins; else discovered from HA Cloud; else null → direct-link fallback"
         },
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "note": "GetRemoteUiUrlAsync: cloud/status over the existing WS plumbing \u2192 https://{remote_domain} when remote_enabled"
+          "note": "GetRemoteUiUrlAsync: cloud/status over the existing WS plumbing → https://{remote_domain} when remote_enabled"
         },
         {
           "kind": "test",
@@ -1573,7 +1664,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:68-84",
-          "note": "automation fires ONLY the tracking event \u2014 never the link's custom actions"
+          "note": "automation fires ONLY the tracking event — never the link's custom actions"
         },
         {
           "kind": "code",
@@ -1627,19 +1718,62 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:68-84",
-          "note": "automation runs no actions; while the add-on is offline a trigger does nothing, so there is no unrecorded use to reconcile"
+          "ref": "src/TemporaryLinks.Addon/Models/TemporaryLink.cs:28",
+          "note": "LastTriggerProcessedAt: the watermark of what the add-on has already accounted for"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:250-253",
+          "note": "every processed trigger event moves the watermark"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:597-690",
+          "note": "ReconcileOfflineTriggersAsync: a home-reported run later than the watermark claims one use atomically, audits 'OfflineUse' ('actions were not executed'), retires the link if that spent the allowance, and NEVER calls ExecuteActionsAsync"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:253-289",
+          "note": "GetAutomationLastTriggeredAsync reads each automation's last_triggered from api/states"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/HaEventListenerService.cs:145-162",
+          "note": "reconciliation runs on every (re)connect, before/alongside live events"
         },
         {
           "kind": "test",
-          "ref": "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Automation_never_embeds_the_links_real_actions",
-          "note": "proving test (home cannot run actions on its own)"
+          "ref": "TemporaryLinks.Addon.Tests.OfflineReconcileProofTests.A_press_missed_while_offline_is_counted_and_audited_but_never_executed",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.OfflineReconcileProofTests.A_missed_press_that_spends_the_allowance_retires_the_link",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.OfflineReconcileProofTests.The_same_missed_press_is_never_counted_twice",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.OfflineReconcileProofTests.A_press_the_addon_processed_is_not_reconciled_again",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.IntegrationTests.HaSeamTests.The_home_reports_when_a_links_trigger_last_ran",
+          "note": "opt-in integration proof that a real home reports last_triggered as reconciliation reads it"
         }
       ],
-      "notes": "Reconciliation is unnecessary under this mechanism: a use cannot occur without the add-on running the actions, so downtime yields no forgotten use.",
+      "notes": "Product decision: actions are never run late — direct when called or not at all — so a missed press is counted and audited, not executed. HA reports only the LAST run, so a burst during downtime counts as at least one press (the audit says so). A press the home itself refused (outside the window) is audited without taking a use, and a link with no watermark (issued before it was recorded) adopts the home's value instead of counting a press that may already be accounted for.",
       "proof": {
         "tests": [
-          "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Automation_never_embeds_the_links_real_actions"
+          "TemporaryLinks.Addon.Tests.OfflineReconcileProofTests.A_press_missed_while_offline_is_counted_and_audited_but_never_executed",
+          "TemporaryLinks.Addon.Tests.OfflineReconcileProofTests.A_missed_press_that_spends_the_allowance_retires_the_link",
+          "TemporaryLinks.Addon.Tests.OfflineReconcileProofTests.The_same_missed_press_is_never_counted_twice",
+          "TemporaryLinks.Addon.Tests.OfflineReconcileProofTests.A_press_the_addon_processed_is_not_reconciled_again"
         ]
       }
     },
@@ -1660,8 +1794,23 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:255-268",
-          "note": "ExecuteUpdateAsync conditional claim \u2014 no lost update"
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:389-395",
+          "note": "ClaimOneUseAsync: the one conditional UPDATE (Active AND UsageCount<MaxUses) every path counts by"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:330-337",
+          "note": "after the claim the count is RE-READ from the row (Entry.ReloadAsync); the count is never written through the tracked entity, so no later save can flush a stale absolute value over it"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.UsageCountRaceProofTests.Concurrent_handlers_never_lose_a_claimed_use",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.UsageCountRaceProofTests.Concurrent_handlers_never_over_consume_a_single_use_link",
+          "note": "proving test"
         },
         {
           "kind": "test",
@@ -1669,9 +1818,11 @@
           "note": "proving test"
         }
       ],
-      "notes": "",
+      "notes": "The race proof runs two independent handlers with their own DbContext over one SQLite file — the only shape that can catch a stale write-back (a single shared context cannot).",
       "proof": {
         "tests": [
+          "TemporaryLinks.Addon.Tests.UsageCountRaceProofTests.Concurrent_handlers_never_lose_a_claimed_use",
+          "TemporaryLinks.Addon.Tests.UsageCountRaceProofTests.Concurrent_handlers_never_over_consume_a_single_use_link",
           "TemporaryLinks.Addon.Tests.EnforcementBuildProofTests.Atomic_claim_refuses_a_use_when_the_allowance_is_already_taken"
         ]
       }
@@ -1686,7 +1837,7 @@
           "note": "Default Timeout=30 so a contended write waits instead of dropping the use"
         }
       ],
-      "notes": "Config-level; not unit-proven.  [Verified by inspection: SQLite busy-timeout connection string \u2014 config, verified by inspection.]"
+      "notes": "Config-level; not unit-proven.  [Verified by inspection: SQLite busy-timeout connection string — config, verified by inspection.]"
     },
     {
       "acId": "E7.S4.A1",
@@ -1708,7 +1859,7 @@
           "note": "unknown-token log no longer includes the token"
         }
       ],
-      "notes": "Negative property (absence of secrets in logs); verified by code, not a unit test.  [Verified by inspection: Absence of secrets in logs \u2014 negative property, verified by inspection.]"
+      "notes": "Negative property (absence of secrets in logs); verified by code, not a unit test.  [Verified by inspection: Absence of secrets in logs — negative property, verified by inspection.]"
     },
     {
       "acId": "E7.S5.A1",
@@ -1828,10 +1979,10 @@
         {
           "kind": "code",
           "ref": "config.yaml",
-          "note": "advertised arch list trimmed to amd64/aarch64/armv7 \u2014 all buildable by the .NET base images; armhf/i386 removed (no .NET runtime)"
+          "note": "advertised arch list trimmed to amd64/aarch64/armv7 — all buildable by the .NET base images; armhf/i386 removed (no .NET runtime)"
         }
       ],
-      "notes": "Not test-proven (build-matrix proof would come with CI, E9.S7).  [Verified by inspection: Advertised architecture list \u2014 config.yaml/CI build matrix, verified by inspection.]"
+      "notes": "Not test-proven (build-matrix proof would come with CI, E9.S7).  [Verified by inspection: Advertised architecture list — config.yaml/CI build matrix, verified by inspection.]"
     },
     {
       "acId": "E9.S3.A1",
@@ -1851,7 +2002,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/HaEventListenerService.cs:97-100",
-          "note": "auth_invalid throws \u2192 retried every 10s forever"
+          "note": "auth_invalid throws → retried every 10s forever"
         }
       ]
     },
@@ -1862,7 +2013,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Program.cs:169-180",
-          "note": "Twilio validation failure \u2192 Environment.Exit(1)"
+          "note": "Twilio validation failure → Environment.Exit(1)"
         }
       ]
     },
@@ -1900,7 +2051,7 @@
         {
           "kind": "code",
           "ref": ".github",
-          "note": "absent \u2014 no CI in this repo"
+          "note": "absent — no CI in this repo"
         }
       ]
     },
@@ -1911,7 +2062,7 @@
         {
           "kind": "code",
           "ref": "run.sh:20-22",
-          "note": "exports HomeAssistant__BaseUri/Token from SUPERVISOR_TOKEN that bind to nothing \u2014 dead path"
+          "note": "exports HomeAssistant__BaseUri/Token from SUPERVISOR_TOKEN that bind to nothing — dead path"
         },
         {
           "kind": "code",
@@ -2014,6 +2165,219 @@
         }
       ],
       "notes": "Times work but timezone is implicit/server-local and never shown."
+    },
+    {
+      "acId": "E1.S1.A6",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/ActionsNormalizer.cs:20-53",
+          "note": "Normalize: rejects non-array / unparseable actions with an operator-readable reason"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/ActionsNormalizer.cs:55-119",
+          "note": "per action: 'service' -> 'action', top-level entity_id -> target.entity_id, data kept, anything without a domain.service refused"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:50-52",
+          "note": "CreateLinkAsync normalizes BEFORE arming the trigger, so a rejected form creates nothing"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:93-150",
+          "note": "ExecuteActionsAsync keeps enforcing the canonical contract the normalizer targets"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/ActionFormatter.cs:34-36",
+          "note": "UI summary reads the canonical 'action' (with a 'service' fallback for pre-normalization links)"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.ActionContractProofTests.Service_key_is_normalized_to_the_execution_contract",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.ActionContractProofTests.Top_level_entity_id_becomes_a_target",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.ActionContractProofTests.A_form_execution_would_refuse_is_refused_at_creation",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.ActionContractProofTests.What_creation_accepted_is_what_execution_runs",
+          "note": "proving test"
+        }
+      ],
+      "notes": "Actions are immutable after creation (E1.S2.A4), so normalizing at creation is what makes the creation contract and the execution contract the same contract.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.ActionContractProofTests.Service_key_is_normalized_to_the_execution_contract",
+          "TemporaryLinks.Addon.Tests.ActionContractProofTests.Top_level_entity_id_becomes_a_target",
+          "TemporaryLinks.Addon.Tests.ActionContractProofTests.A_form_execution_would_refuse_is_refused_at_creation",
+          "TemporaryLinks.Addon.Tests.ActionContractProofTests.What_creation_accepted_is_what_execution_runs"
+        ]
+      }
+    },
+    {
+      "acId": "E1.S4.A5",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:426-460",
+          "note": "TryRemoveTriggerAsync: clears WebhookId ONLY on confirmed removal; a failure is audited 'WebhookDeleteFailed' and leaves the id set as the 'still standing' marker"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:526-536",
+          "note": "ExpireOldLinksAsync retries removal for every dead link (Used/Expired/Revoked) whose WebhookId is still set, auditing the removal when it lands"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRemovalProofTests.Sweep_retries_a_standing_trigger_on_a_dead_link_until_it_lands",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRemovalProofTests.Sweep_retries_a_standing_trigger_on_a_revoked_link",
+          "note": "proving test"
+        }
+      ],
+      "notes": "The retry is idempotent and self-limiting: a home answering 404 counts as confirmed removal (no audit written for a no-op), so the retry set drains instead of re-auditing every pass.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.TriggerRemovalProofTests.Sweep_retries_a_standing_trigger_on_a_dead_link_until_it_lands",
+          "TemporaryLinks.Addon.Tests.TriggerRemovalProofTests.Sweep_retries_a_standing_trigger_on_a_revoked_link"
+        ]
+      }
+    },
+    {
+      "acId": "E7.S7.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/TriggerRearmService.cs:16-79",
+          "note": "startup background pass; never blocks startup, retries while the home is unreachable"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:539-595",
+          "note": "RearmTriggersAsync: per active link, read the stored automation and re-arm in place (idempotent POST, same id) unless it already matches; each re-arm audited 'TriggerRearmed'; a missing automation is re-armed too"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/AutomationModel.cs:116-190",
+          "note": "MatchesCurrentModel: current shape (choose -> triggered/blocked events), this link's window template, current allowed_methods, no top-level condition; tolerant of HA's plural keys"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:230-251",
+          "note": "TryGetAutomationConfigAsync reads the stored automation (null when the home has none)"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Program.cs:118",
+          "note": "registered as a hosted service"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_legacy_trigger_is_rearmed_to_the_current_model_and_audited",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_current_trigger_is_left_alone",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_missing_trigger_is_rearmed",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_sharing_mode_change_rearms_the_accepted_gesture",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.Dead_links_are_not_rearmed",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.IntegrationTests.HaSeamTests.Real_ha_accepts_and_loads_the_generated_automation",
+          "note": "opt-in integration proof that MatchesCurrentModel recognises what a REAL home stores back (plural keys), so a boot does not re-arm everything"
+        }
+      ],
+      "notes": "A link that already matches is left untouched, so booting writes no audit noise.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_legacy_trigger_is_rearmed_to_the_current_model_and_audited",
+          "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_current_trigger_is_left_alone",
+          "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_missing_trigger_is_rearmed",
+          "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_sharing_mode_change_rearms_the_accepted_gesture",
+          "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.Dead_links_are_not_rearmed"
+        ]
+      }
+    },
+    {
+      "acId": "E7.S7.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Models/TemporaryLink.cs:23",
+          "note": "TriggerAcceptsPost: the gesture the link's trigger was ARMED to accept (null = armed before it was recorded)"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Migrations/20260816113734_AddTriggerArmState.cs",
+          "note": "adds TriggerAcceptsPost + LastTriggerProcessedAt"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:700-726",
+          "note": "GetShareUrl derives the URL's form from the link's armed mode, not from current config"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:55-88",
+          "note": "creation records the armed mode; also set on amendment (:176) and on every re-arm (:578)"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_get_armed_link_keeps_handing_out_the_url_its_trigger_accepts",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_post_armed_link_is_shared_through_the_confirm_page",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.Creation_records_the_gesture_it_armed",
+          "note": "proving test"
+        }
+      ],
+      "notes": "Startup re-arming (E7.S7.A1) aligns armed modes with the current configuration; a link that could not be re-armed keeps handing out the URL its trigger actually accepts. Pre-upgrade links (null armed mode) fall back to the current configuration until the boot pass re-arms them.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_get_armed_link_keeps_handing_out_the_url_its_trigger_accepts",
+          "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_post_armed_link_is_shared_through_the_confirm_page",
+          "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.Creation_records_the_gesture_it_armed"
+        ]
+      }
     }
   ]
 }
