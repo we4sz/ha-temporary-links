@@ -58,23 +58,20 @@ Read this before exposing anything.
 
 ## Install
 
-The add-on's `config.yaml` lives at the repo root, so it installs as a **local add-on**
-(the add-on *store* requires a subdirectory-per-add-on layout this repo doesn't use yet):
+Install through the add-on store, straight from this repository:
 
-1. Get the repo onto your HA host at `/addons/ha-temporary-links` — e.g. enable the
-   **Samba share** or **SSH** add-on, then
-   `git clone https://github.com/we4sz/ha-temporary-links /addons/ha-temporary-links`
-   (or copy the folder over Samba).
-2. **Settings → Add-ons → Add-on Store → ⋮ → Check for updates.** The add-on appears
-   under **Local add-ons**; install it (HA builds the image locally — first build takes
-   a few minutes).
+1. **Settings → Add-ons → Add-on Store → ⋮ (top right) → Repositories**, add
+   `https://github.com/we4sz/ha-temporary-links`.
+2. **Temporary Links** appears in the store; install it (HA builds the image locally —
+   the first build takes a few minutes).
 3. Configure options: `ha_url` (e.g. `http://homeassistant.local:8123`), `ha_token`
    (a long-lived access token), optionally Twilio credentials for SMS. `share_page_url`
    already defaults to the hosted confirm page, so links are bot-immune out of the box.
 4. HA Cloud (Nabu Casa) must be connected — cloudhooks are what make links publicly
    reachable. Open the dashboard through the add-on's panel (ingress) only.
 
-To update: `git pull` in `/addons/ha-temporary-links`, then **rebuild** the add-on.
+To update: the store follows this repo's `main` — **⋮ → Check for updates**, then
+**Update** on the add-on's page (HA rebuilds locally).
 
 ## Development
 
