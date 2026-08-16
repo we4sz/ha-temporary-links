@@ -386,6 +386,22 @@
               "text": "Given a shared confirm-page service is configured (one publicly hosted copy of the confirm page that any installation can use), when a link is shared, then the link points to that page with the trigger URL carried only in the location fragment — the shared host never receives any trigger URL, no per-home hosting or cloud remote access is needed, and the shared page takes precedence over self-hosting."
             }
           ]
+        },
+        {
+          "id": "E2.S6",
+          "role": "operator",
+          "want": "the confirm page to be the only sharing gesture — every shared link goes through it, and the one-tap direct form no longer exists",
+          "soThat": "there is a single sharing mode: nothing can drift between a link's URL form and its trigger, and no link is ever consumable by an automated preview fetch",
+          "acceptanceCriteria": [
+            {
+              "id": "E2.S6.A1",
+              "text": "Given any link is shared, when its share URL is produced, then it points to a confirm page (shared or self-hosted) and the trigger accepts only the page's explicit confirmation gesture — no direct one-tap form of the link exists."
+            },
+            {
+              "id": "E2.S6.A2",
+              "text": "Given no confirm-page hosting is available (no shared page configured and no cloud remote access), when a link would be created, then creation is refused with a clear explanation of what to enable — never silently falling back to a preview-consumable link."
+            }
+          ]
         }
       ]
     },

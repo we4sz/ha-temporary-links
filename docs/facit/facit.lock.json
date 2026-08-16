@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "lockedAt": "2026-08-16T12:00:39Z",
-  "facitHash": "93d0fd1f4cc6f65f",
+  "lockedAt": "2026-08-16T12:12:31Z",
+  "facitHash": "f6cf34e93023ab13",
   "nodes": {
     "app::E1.S1": {
       "hash": "a210187e906e9412",
@@ -1122,6 +1122,21 @@
           "hash": "f4088c7a2fa4e15b"
         }
       ]
+    },
+    "app::E2.S6": {
+      "hash": "3894a65c2bab7a9c",
+      "status": "unproven",
+      "tests": []
+    },
+    "app::E2.S6.A1": {
+      "hash": "89a817f204a7d246",
+      "status": "unproven",
+      "tests": []
+    },
+    "app::E2.S6.A2": {
+      "hash": "ec8e5ae37e1305c3",
+      "status": "unproven",
+      "tests": []
     },
     "app::E3.S1": {
       "hash": "37783dada1ded292",

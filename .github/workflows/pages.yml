@@ -6,7 +6,7 @@ name: Publish share page
 
 on:
   push:
-    branches: [main, spec-first-facit-and-audit]
+    branches: [main]
     paths:
       - "sharepage/**"
       - ".github/workflows/pages.yml"

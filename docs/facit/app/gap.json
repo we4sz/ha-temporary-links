@@ -3,10 +3,10 @@
   "facitVersion": "93d0fd1f4cc6f65f",
   "generatedAt": "2026-08-16",
   "summary": {
-    "total": 110,
+    "total": 112,
     "sound": 83,
     "partial": 2,
-    "missing": 25,
+    "missing": 27,
     "contradicted": 0
   },
   "items": [
@@ -611,6 +611,20 @@
       "acId": "E7.S7.A2",
       "gapType": "sound",
       "severity": "none"
+    },
+    {
+      "acId": "E2.S6.A1",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Both sharing modes still exist; one-tap GET remains the fallback.",
+      "action": "Collapse sharing to confirm-page-only; delete the GET path and its armed-mode branching."
+    },
+    {
+      "acId": "E2.S6.A2",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Creation currently falls back to a direct GET link when no confirm-page hosting exists.",
+      "action": "Refuse creation without confirm-page hosting (supersedes the E7.S2.A1 warning-level behaviour)."
     }
   ]
 }

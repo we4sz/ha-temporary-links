@@ -1654,7 +1654,7 @@
         {
           "kind": "code",
           "ref": "config.yaml",
-          "note": "share_page_url option (str?, default empty until a hosted copy exists)"
+          "note": "share_page_url option (str?); default is the canonical hosted copy https://we4sz.github.io/ha-temporary-links/open.html (GitHub Pages, deployed from sharepage/ by .github/workflows/pages.yml) — bot-immune links with zero configuration"
         },
         {
           "kind": "test",

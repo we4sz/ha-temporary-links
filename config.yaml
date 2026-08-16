@@ -30,7 +30,7 @@ options:
   ha_url: ""
   ha_token: ""
   public_url: ""
-  share_page_url: ""
+  share_page_url: "https://we4sz.github.io/ha-temporary-links/open.html"
   log_level: "Information"
 
 schema:

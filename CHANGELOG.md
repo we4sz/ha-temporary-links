@@ -27,6 +27,13 @@
   confirm page survives truncated links; the action picker no longer discards a hand-edited
   draft it cannot parse.
 
+### Added
+- **Bot-immune links out of the box:** the shared confirm page is now hosted at
+  `https://we4sz.github.io/ha-temporary-links/open.html` (deployed from `sharepage/` by CI) and
+  ships as the default `share_page_url` — every install gets preview-bot-immune, POST-only links
+  with zero configuration. The hook rides only in the URL fragment, so the host never sees it;
+  clear the option or point it at your own copy if you prefer not to trust the shared host.
+
 ## 1.1.0 — 2026-07-02
 
 ### Fixed
