@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "scope": { "level": "engine" },
+  "extends": null,
+  "preamble": "The facit CLI manages a structured facit tree. It compiles every facit document under a root into one validated, addressable set of nodes, and locks/diffs that whole set so re-proving is incremental. It is root-agnostic: the same commands work on the platform facit, on the CLI's own facit, or on any future project's facit. This document is the CLI's own facit, kept in a self-contained subfolder so the tool can graduate to its own project; the CLI is proven against it (dogfooding).",
+  "howToRead": "One epic. Each story is As a [role], I want [capability], so that [benefit], with numbered Given/When/Then acceptance criteria. The CLI's domain vocabulary (compile, validate, lock, diff, a facit root, a node, the lock) is named directly here because it IS this tool's domain.",
+  "glossary": [
+    { "id": "G.facit-root", "term": "Facit root", "definition": "a directory under which one or more facit documents live; the CLI operates on exactly one root at a time, selectable so the tool is reusable across projects." },
+    { "id": "G.node", "term": "Node", "definition": "an addressable unit of a facit the lock tracks: a story or an acceptance criterion, identified by a globally-qualified id (scope-ref plus the local id)." },
+    { "id": "G.scope-ref", "term": "Scope ref", "definition": "the canonical string identifying which facit a node belongs to, derived from the facit's scope (e.g. engine, utility:crawl, domain:apimapping/target:openapi-spec)." },
+    { "id": "G.lock", "term": "Lock", "definition": "a single snapshot file recording, per node, the content-hash that was proven plus its proven status and proving tests; the baseline future change is measured against." },
+    { "id": "G.proven", "term": "Proven", "definition": "a node whose acceptance criterion is satisfied by a passing test; proven status survives a re-lock only while the node's content is unchanged." }
+  ],
+  "epics": [
+    {
+      "id": "E1",
+      "title": "The facit CLI",
+      "framing": "The CLI turns a tree of facit documents into one checked, lockable, diffable set of nodes. It is a strict gate (validate), a single-lock snapshotter (lock), an incremental change detector (diff), and a coverage reporter (status/gap) — over any facit root.",
+      "stories": [
+        {
+          "id": "E1.S1",
+          "role": "a facit maintainer",
+          "want": "to compile a facit root into one validated, addressable set of nodes",
+          "soThat": "the whole tree is checked and every story and criterion is addressable as one set",
+          "acceptanceCriteria": [
+            { "id": "E1.S1.A1", "text": "Given a facit root containing one or more facit documents, when compile runs, then it discovers every facit document under the root and validates each against the facit schema, reporting schema errors per document." },
+            { "id": "E1.S1.A2", "text": "Given the discovered facits, when compile flattens them, then every story and every acceptance criterion becomes a node with a globally-qualified id (the facit's scope ref, then the local id), and the report states the facit count, the node count, and a stable overall facit hash." },
+            { "id": "E1.S1.A3", "text": "Given any schema or integrity error, when compile finishes, then it exits with a non-zero status; given none, then it exits zero." }
+          ]
+        },
+        {
+          "id": "E1.S2",
+          "role": "a continuous-integration gate",
+          "want": "a strict pass/fail validate command",
+          "soThat": "an invalid facit blocks the build before anything is locked or built against it",
+          "acceptanceCriteria": [
+            { "id": "E1.S2.A1", "text": "Given a valid facit root, when validate runs, then it reports the node count and overall hash and exits zero." },
+            { "id": "E1.S2.A2", "text": "Given a facit root with any schema or integrity error, when validate runs, then it prints each error and exits non-zero." }
+          ]
+        },
+        {
+          "id": "E1.S3",
+          "role": "a facit maintainer",
+          "want": "id and reference integrity checked at compile time",
+          "soThat": "the lock keys are trustworthy and cross-references resolve",
+          "acceptanceCriteria": [
+            { "id": "E1.S3.A1", "text": "Given a facit, when compile checks integrity, then it flags any duplicate node id within that facit and any acceptance-criterion id that is not parent-bound to its story." },
+            { "id": "E1.S3.A2", "text": "Given a facit whose extends names a parent, when compile checks it, then an extends that resolves to no known facit is surfaced as a warning (not fatal during build-out)." },
+            { "id": "E1.S3.A3", "text": "Given a target facit that recommends a utility, when compile checks it, then a recommended-utility id with no corresponding utility facit is surfaced as a warning." }
+          ]
+        },
+        {
+          "id": "E1.S4",
+          "role": "a user of the CLI",
+          "want": "the CLI to operate on any facit root I point it at",
+          "soThat": "the same tool serves the platform facit, the CLI's own facit, and any future project's facit",
+          "acceptanceCriteria": [
+            { "id": "E1.S4.A1", "text": "Given a root argument, when any command runs, then it operates on the facit tree under that root; given none, then it defaults to the platform facit root." },
+            { "id": "E1.S4.A2", "text": "Given two different roots, when the same command runs on each, then it behaves identically against each tree (the tool holds no hard-coded knowledge of a particular root's contents)." },
+            { "id": "E1.S4.A3", "text": "Given the CLI's own facit document as a root, when compile and validate run on it, then they succeed — the tool can compile and validate itself (dogfooding)." }
+          ]
+        },
+        {
+          "id": "E1.S5",
+          "role": "a facit maintainer",
+          "want": "lock to snapshot the whole compiled tree into one lock",
+          "soThat": "there is a single proven baseline for the entire facit",
+          "acceptanceCriteria": [
+            { "id": "E1.S5.A1", "text": "Given a valid compiled facit, when lock runs, then it writes one lock file recording, per node, a content-hash plus a proven status and proving tests, along with the lock time and the overall facit hash." },
+            { "id": "E1.S5.A2", "text": "Given an invalid facit, when lock runs, then it refuses to lock and reports the errors." },
+            { "id": "E1.S5.A3", "text": "Given a prior lock exists, when lock runs again, then proven status and tests carry forward only for nodes whose content-hash is unchanged; a node whose content changed resets to unproven." },
+            { "id": "E1.S5.A4", "text": "Given lock or prove writes the lock file, when the write occurs, then it is performed atomically — written to a temporary file in the same directory then atomically renamed over the target — so an interrupted or concurrent write never leaves the lock truncated or partially written; the trust anchor is never observed in a corrupt state." }
+          ]
+        },
+        {
+          "id": "E1.S6",
+          "role": "the autonomous build loop",
+          "want": "diff to show only what changed since the lock",
+          "soThat": "re-proving is incremental, not whole-tree",
+          "acceptanceCriteria": [
+            { "id": "E1.S6.A1", "text": "Given a lock and the live facit, when diff runs, then it lists nodes added, changed, and removed relative to the lock." },
+            { "id": "E1.S6.A2", "text": "Given exactly one acceptance criterion's text is edited, when diff runs, then exactly that one node is reported changed and no other." },
+            { "id": "E1.S6.A3", "text": "Given the live facit equals the lock, when diff runs, then it reports zero changes." }
+          ]
+        },
+        {
+          "id": "E1.S7",
+          "role": "the autonomous build loop",
+          "want": "coverage status and gap support",
+          "soThat": "I can see how much is proven and build a gap on the compiled whole",
+          "acceptanceCriteria": [
+            { "id": "E1.S7.A1", "text": "Given a compiled facit and a lock, when status runs, then it reports the total node count, how many are locked, how many are proven against the current content, and how many changed since the lock." },
+            { "id": "E1.S7.A2", "text": "Given no gap file, when gap runs, then it lists every acceptance-criterion id in the compiled facit so a gap can be built on the whole." },
+            { "id": "E1.S7.A3", "text": "Given a gap file, when gap runs, then it reports how many acceptance criteria are covered by an entry, how many are uncovered, and flags any entry whose acceptance-criterion id resolves to no node." }
+          ]
+        },
+        {
+          "id": "E1.S8",
+          "role": "a facit maintainer",
+          "want": "a prove command that records an AC as proven only when its proving test is green and a test binding exists",
+          "soThat": "proven is test-verified, never asserted",
+          "acceptanceCriteria": [
+            { "id": "E1.S8.A1", "text": "Given an implementation map with a non-empty proof.tests binding and a test-results file marking those tests Passed, when prove runs, then it sets the matching lock node status to proven and records the test ids — only if the node hash is diff-clean vs the lock." },
+            { "id": "E1.S8.A2", "text": "Given a bound test that is failed or absent in the results, when prove runs, then it refuses that AC and exits non-zero." },
+            { "id": "E1.S8.A3", "text": "Given a node marked proven with no test binding, when verify runs, then it is rejected (proven-without-binding cannot persist)." },
+            { "id": "E1.S8.A4", "text": "Given an AC whose facit node changed since the lock, when prove runs, then it refuses to mark it proven." },
+            { "id": "E1.S8.A5", "text": "Given proof bindings that span more than one implementation map and more than one test-results file, when prove runs with repeated --impl and --results arguments, then it loads every implementation map and merges every results file, so a binding in any map may be satisfied by a test recorded in any results file (proofs spanning multiple test projects all count)." },
+            { "id": "E1.S8.A6", "text": "Given a single proving test recorded in the results under both its display name and its fully-qualified method name with the same outcome, when prove matches a binding to it, then it treats the two records as one test and proves on that single outcome rather than reporting an ambiguous match." },
+            { "id": "E1.S8.A7", "text": "Given a binding whose test id matches two genuinely different recorded tests with differing outcomes, when prove runs, then it reports an ambiguous match and refuses that AC (fail closed) — this holds even when the two tests share a bare display-name (a same-named method in two classes must not collapse to a single last-writer-wins outcome)." },
+            { "id": "E1.S8.A8", "text": "Given a node the lock already records as proven, when prove runs with results in which that node's bound proving test is now failed or absent, then prove demotes the node to unproven — clearing its proven status, tests, and covered files in the lock — and exits non-zero; the lock is rewritten even when a demotion is the only change (a red test un-proves its acceptance criterion, so the durable lock can never keep asserting a proven that is no longer test-green)." },
+            { "id": "E1.S8.A9", "text": "Given a results file is supplied to verify (prove --verify --results …), when verify runs, then for every proven lock node it re-matches the bound test in the results and requires a Passed outcome now; a proven node whose bound test is failed or absent is reported and verify exits non-zero — verify confirms tests-green-now, not merely that a binding and clean hash exist. Given no results are supplied, verify checks binding-presence and hash-cleanliness only, as before." }
+          ]
+        },
+        {
+          "id": "E1.S9",
+          "role": "the autonomous build loop",
+          "want": "the lock to record which implementation files each proven AC's tests cover, and detect when that code changes",
+          "soThat": "regenerating or editing code re-opens only the affected ACs for re-proving — making code regeneration safe, not blind",
+          "acceptanceCriteria": [
+            { "id": "E1.S9.A1", "text": "Given an AC is certified from a test run that carries coverage, when certify records the proof, then it stores, per proving test, the set of covered implementation files and a content-hash of each — the code-drift trigger (proof.coveredFiles is populated, not empty)." },
+            { "id": "E1.S9.A2", "text": "Given proven ACs with recorded covered-file hashes, when conform runs, then it reports each proven AC whose covered files have changed (hash mismatch) as drifted — re-test required — and reports the rest as conformant." },
+            { "id": "E1.S9.A3", "text": "Given a node marked proven with no recorded covered files, when conform runs, then it fails — exiting non-zero and reporting the node as unverifiable-drift: proven-without-coverage cannot detect code drift and so is not a trustworthy proof (strict; a proven node must carry a code-drift trigger)." },
+            { "id": "E1.S9.A5", "text": "Given prove is asked to mark an acceptance criterion proven, when the proving run supplies no coverage or the binding computes an empty covered-file set, then prove refuses that criterion and exits non-zero — a criterion cannot become proven without a populated code-drift trigger, so proven always implies conformable (strict)." },
+            { "id": "E1.S9.A6", "text": "Given prove runs with coverage and an acceptance criterion's implementation map declares no explicit code evidence, when it computes that criterion's covered files, then it records every covered source file under the src-root as the code-drift trigger — so a coverage-backed proof always has a populated, hash-tracked trigger even without hand-declared evidence (supporting aggregate-only coverage such as .NET cobertura)." },
+            { "id": "E1.S9.A7", "text": "Given a proving test is structural — it inspects code structure or metadata (a reflection or source-inspection test) and executes no product code, so runtime coverage cannot attribute a trigger — when its implementation entry marks the proof structural and declares the governed code file(s) it asserts about, then prove records those declared files' hashes DIRECTLY as the code-drift trigger (bypassing the coverage-intersection), and refuses a structural proof that declares no governed file — so a structural proof is still honestly code-drift-tracked by the very code it governs, and the exemption is explicit and auditable rather than a silent empty trigger." },
+            { "id": "E1.S9.A4", "text": "Given a set of drifted ACs, when the loop re-proves, then only the proving tests of the drifted ACs need run; an AC whose covered files are all unchanged never triggers a re-run (incremental, not whole-tree)." }
+          ]
+        },
+        {
+          "id": "E1.S10",
+          "role": "a facit maintainer",
+          "want": "certification to reject or flag a binding whose proving test does not actually execute the AC's implementation",
+          "soThat": "proven means the test genuinely exercises the code, not merely that a topically-related test happens to be green",
+          "acceptanceCriteria": [
+            { "id": "E1.S10.A1", "text": "Given a binding from a coverage-bearing run and an AC whose implementation files are declared in the implementation map (code evidence), when certify checks the binding, then a proving test whose coverage does not intersect any of the AC's implementation files is rejected — a test cannot prove code it never executes." },
+            { "id": "E1.S10.A2", "text": "Given an implementation map where one proving test is bound to many ACs, when certify checks it, then it warns once the share exceeds a configurable threshold — an inflation smell surfaced at bind time, not in a later audit." }
+          ]
+        },
+        {
+          "id": "E1.S11",
+          "role": "a facit maintainer",
+          "want": "the tool to certify and conform its OWN facit using its OWN machinery, ingesting its own test and coverage results",
+          "soThat": "the tool is trustworthy because it is proven by the very process it runs (dogfood), not merely asserted to work",
+          "acceptanceCriteria": [
+            { "id": "E1.S11.A1", "text": "Given test results and coverage from more than one ecosystem (for example .NET TRX plus coverlet/cobertura, and Python pytest plus coverage.py), when certify and conform ingest them, then both are accepted through the same verbs — the tool is not bound to a single test runner." },
+            { "id": "E1.S11.A2", "text": "Given the CLI's own test suite and its coverage, when the tool runs certify and conform on its own facit root, then the CLI's own acceptance criteria are proven and conform-clean — the tool verifies itself." },
+            { "id": "E1.S11.A3", "text": "Given the self-verification run, when it completes, then every CLI AC marked proven carries a coverage-backed binding and is conform-clean — no CLI AC is proven on weaker evidence than the tool demands of the product it certifies." },
+            { "id": "E1.S11.A4", "text": "Given the self-proof orchestrator (the runner that ingests the tool's own tests and coverage and proves the tool's own facit), when a bound proving test is deliberately made to fail, then the orchestrator exits non-zero — the orchestrator is itself exercised by a test, so the component that verifies everything is not the one unverified blind spot." }
+          ]
+        },
+        {
+          "id": "E1.S12",
+          "role": "a facit maintainer",
+          "want": "the tool to run the proving tests itself and hash each proving test's own source, so trust is established by execution and a changed test is caught, not just changed code",
+          "soThat": "the incremental diff loop is autonomous — a spec, code, or test change re-runs exactly the affected acceptance criteria and the lock never rests on a stale or weakened proof",
+          "acceptanceCriteria": [
+            { "id": "E1.S12.A1", "text": "Given a facit root, when it declares a test-runner command for a scope (a command template with a filter placeholder that runs the named tests and emits a results file and a coverage file), then reverify uses that command to run tests for that scope — the tool stays runner-agnostic (the command, not the tool, knows dotnet or pytest)." },
+            { "id": "E1.S12.A2", "text": "Given the acceptance criteria to re-establish, when reverify runs, then for each it invokes the configured command filtered to that criterion's proving tests, ingests the produced results and coverage, and proves it exactly as prove would (green now and coverage-backed) — greenness is established by executing the test, not ingested from an externally-supplied artifact." },
+            { "id": "E1.S12.A3", "text": "Given a lock and the live tree, when reverify runs without an explicit target, then it re-runs only the AFFECTED acceptance criteria — those whose facit node changed since the lock (spec drift), or whose covered files changed (code drift), or whose proving-test source changed (test drift) — so re-proving is incremental, not whole-tree." },
+            { "id": "E1.S12.A4", "text": "Given prove or reverify records a proof, when it does so, then for each proving test it also records that test's source location — the file's absolute path, the method's start and end line, and a hash of exactly those lines — as the test-drift trigger (the proving test itself is hash-tracked, not only the code it covers)." },
+            { "id": "E1.S12.A5", "text": "Given proven acceptance criteria with recorded proving-test source hashes, when conform runs, then it reports each proven criterion whose proving-test source changed (hash mismatch) as drifted — a weakened or edited test re-opens its criterion for re-run, exactly as a covered-code change does." },
+            { "id": "E1.S12.A6", "text": "Given a proving test's source changed, when the tool surfaces it, then it is re-opened for re-run AND marked that the test itself changed — the tool cannot judge whether a test is correct, so a changed test must be re-run and re-blessed, never silently re-trusted on its prior verdict." }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openapimapper.dev/facit/implementation.schema.json",
+  "title": "Implementation Map",
+  "description": "How each facit acceptance criterion is implemented today, grounded in real code/test references. Keyed by AC id (a foreign key into facit.json). The honest 'how it's implemented' half of the stories->gap->build loop. Referential integrity (every acId exists in the facit) is checked by the facit CLI, not by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "facitVersion", "entries"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "facitVersion": { "type": "string", "description": "The facitHash of the facit.json this map was derived against (so staleness is detectable)." },
+    "generatedAt": { "type": "string", "description": "ISO timestamp." },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["acId", "status", "evidence"],
+        "properties": {
+          "acId": { "type": "string", "pattern": "^E[0-9]+\\.S[0-9]+\\.A[0-9]+$", "description": "FK to a facit AC id." },
+          "status": { "type": "string", "enum": ["implemented", "partial", "missing", "obsolete"], "description": "obsolete = code exists for an AC the facit no longer has." },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "ref"],
+              "properties": {
+                "kind": { "type": "string", "enum": ["code", "test"] },
+                "ref": { "type": "string", "description": "file:line or test id, a verified real reference (not paraphrase)." },
+                "note": { "type": "string" }
+              }
+            }
+          },
+          "notes": { "type": "string", "description": "How it is implemented; what is partial or missing." },
+          "proof": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Where + how this AC is PROVEN. Enforced by the CLI once the AC is claimed proven: the proving test(s) — the behaviour verdict — and the files those tests cover (auto-derived from coverage, never hand-listed), each with a content-hash that triggers re-running the covering test on code drift. A proven AC with no test binding is rejected, so 'where/how is this proven?' is always answerable and verifiable.",
+            "properties": {
+              "tests": { "type": "array", "items": { "type": "string" }, "description": "proving test ids — the verdict that the code satisfies this AC" },
+              "coveredFiles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["path", "hash"],
+                  "properties": {
+                    "path": { "type": "string" },
+                    "hash": { "type": "string", "description": "content-hash of the file at proof time; a change triggers re-running the covering test (the test, not the hash, is the verdict)" }
+                  }
+                },
+                "description": "files the proving tests execute, from coverage"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

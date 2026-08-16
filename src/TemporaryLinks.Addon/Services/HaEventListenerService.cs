@@ -125,15 +125,40 @@ public class HaEventListenerService(
 
     private async Task SubscribeToEventsAsync(CancellationToken stoppingToken)
     {
-        var subscribeMessage = new
+        // Both verdicts the home can announce: a use inside the window, and a refusal outside
+        // it. The refusal is what makes an out-of-grant attempt auditable at all.
+        foreach (var eventType in new[]
+                 {
+                     AutomationModel.TriggeredEvent,
+                     AutomationModel.BlockedEvent,
+                 })
         {
-            id = GetNextMessageId(),
-            type = "subscribe_events",
-            event_type = "temp_link_triggered"
-        };
+            await SendMessageAsync(new
+            {
+                id = GetNextMessageId(),
+                type = "subscribe_events",
+                event_type = eventType,
+            }, stoppingToken);
+            logger.LogInformation("Subscribed to {EventType} events", eventType);
+        }
 
-        await SendMessageAsync(subscribeMessage, stoppingToken);
-        logger.LogInformation("Subscribed to temp_link_triggered events");
+        // Anything the home ran while we were not listening is accounted for now — counted
+        // and audited, never executed late (E7.S1.A3).
+        await ReconcileMissedTriggersAsync(stoppingToken);
+    }
+
+    private async Task ReconcileMissedTriggersAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            using var scope = serviceProvider.CreateScope();
+            var linkService = scope.ServiceProvider.GetRequiredService<ILinkService>();
+            await linkService.ReconcileOfflineTriggersAsync(stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Could not reconcile triggers fired while the add-on was offline");
+        }
     }
 
     private async Task HandleEventAsync(JsonElement eventMessage, CancellationToken stoppingToken)
@@ -143,8 +168,12 @@ public class HaEventListenerService(
             if (!eventMessage.TryGetProperty("event", out var eventElement))
                 return;
 
-            if (!eventElement.TryGetProperty("event_type", out var eventTypeElement) ||
-                eventTypeElement.GetString() != "temp_link_triggered")
+            if (!eventElement.TryGetProperty("event_type", out var eventTypeElement))
+                return;
+
+            var eventType = eventTypeElement.GetString();
+            if (eventType != AutomationModel.TriggeredEvent &&
+                eventType != AutomationModel.BlockedEvent)
                 return;
 
             if (!eventElement.TryGetProperty("data", out var dataElement))
@@ -157,18 +186,21 @@ public class HaEventListenerService(
             if (string.IsNullOrEmpty(token))
                 return;
 
-            logger.LogInformation("Received temp_link_triggered event for token {Token}", token);
+            logger.LogInformation("Received {EventType} event", eventType);
 
             using var scope = serviceProvider.CreateScope();
             var linkService = scope.ServiceProvider.GetRequiredService<ILinkService>();
 
-            var result = await linkService.ExecuteLinkAsync(token, "webhook", "Home Assistant Webhook");
+            var result = eventType == AutomationModel.TriggeredEvent
+                ? await linkService.ExecuteLinkAsync(token, "webhook", "Home Assistant Webhook")
+                : await linkService.RecordBlockedTriggerAsync(
+                    token, "webhook", "Home Assistant Webhook");
 
             logger.LogInformation("Link execution result: {Status}", result.Status);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error handling temp_link_triggered event");
+            logger.LogError(ex, "Error handling a link trigger event");
         }
     }
 

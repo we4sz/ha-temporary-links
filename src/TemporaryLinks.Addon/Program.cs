@@ -14,10 +14,11 @@ builder.Logging.AddSimpleConsole(options =>
     options.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
 });
 
-// Load Home Assistant addon options from /data/options.json
+// Load Home Assistant addon options from /data/options.json. Optional so the app can also
+// run outside the add-on (local dev / tests) where the Supervisor has not written the file.
 var optionsPath = "/data/options.json";
 
-builder.Configuration.AddJsonFile(optionsPath, optional: false, reloadOnChange: true);
+builder.Configuration.AddJsonFile(optionsPath, optional: true, reloadOnChange: true);
 
 // Configure forwarded headers for running behind HA ingress proxy
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -54,6 +55,20 @@ builder.Services.Configure<AddonConfiguration>(options =>
     {
         options.DefaultMessageTemplate = defaultMessageTemplate;
     }
+
+    // Map public_url -> PublicUrl (enables the bot-immune share page)
+    var publicUrl = builder.Configuration["public_url"];
+    if (!string.IsNullOrWhiteSpace(publicUrl))
+    {
+        options.PublicUrl = publicUrl;
+    }
+
+    // Map share_page_url -> SharePageUrl (shared hosted confirm page; wins over self-hosting)
+    var sharePageUrl = builder.Configuration["share_page_url"];
+    if (!string.IsNullOrWhiteSpace(sharePageUrl))
+    {
+        options.SharePageUrl = sharePageUrl;
+    }
 });
 
 builder.Services.Configure<TwilioConfiguration>(options =>
@@ -81,9 +96,13 @@ builder.Services.Configure<TwilioConfiguration>(options =>
     }
 });
 
-// Database
+// Database. Two background writers (the expiry sweep and the event handler) plus request
+// handlers share one SQLite file, so a busy timeout lets a contended write wait for the
+// lock instead of failing with "database is locked" and dropping a use (E7.S3.A2).
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Data Source=/data/temporarylinks.db;Default Timeout=30;Pooling=false";
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite("Data Source=/data/temporarylinks.db"));
+    options.UseSqlite(connectionString));
 
 // HTTP client for Home Assistant
 builder.Services.AddHttpClient<IHomeAssistantService, HomeAssistantService>();
@@ -96,10 +115,15 @@ builder.Services.AddScoped<ILinkService, LinkService>();
 // Background services
 builder.Services.AddHostedService<LinkExpirationService>();
 builder.Services.AddHostedService<HaEventListenerService>();
+builder.Services.AddHostedService<TriggerRearmService>();
 
-// Razor Pages and Controllers
-builder.Services.AddRazorPages();
-builder.Services.AddControllersWithViews();
+// Razor Pages
+var razorPages = builder.Services.AddRazorPages();
+if (builder.Environment.IsDevelopment())
+{
+    // Recompile .cshtml without a rebuild during local development.
+    razorPages.AddRazorRuntimeCompilation();
+}
 
 var app = builder.Build();
 
@@ -126,11 +150,37 @@ using (var scope = app.Services.CreateScope())
 
     logger.LogInformation("Home Assistant configuration validated. URL: {HaUrl}", config.HaUrl);
 
+    // Confirm-page hosting for bot-immune links. A shared hosted page (share_page_url)
+    // needs nothing from this home; otherwise self-host via public_url (configured or
+    // auto-discovered from HA Cloud) + a page written to HA's /local.
+    if (!string.IsNullOrWhiteSpace(config.SharePageUrl))
+    {
+        logger.LogInformation("Using shared confirm page: {Url}", config.SharePageUrl);
+    }
+    else
+    {
+        var haService = scope.ServiceProvider.GetRequiredService<IHomeAssistantService>();
+        var publicUrl = await PublicUrlResolver.ResolveAsync(config, haService, logger);
+        if (publicUrl != null && SharePage.TryWrite(logger) == null)
+        {
+            logger.LogWarning(
+                "A public URL is available but no Home Assistant config mount exists to host " +
+                "the confirm page — ensure 'homeassistant_config:rw' is in the add-on's map. " +
+                "Shared links will point to a missing page until then.");
+        }
+    }
+
     // Apply database migrations
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     logger.LogInformation("Applying database migrations...");
     db.Database.Migrate();
     logger.LogInformation("Database migrations applied successfully");
+
+    // Dev-only: seed demo data for local UI work. Never runs in the add-on (SEED_DEMO unset).
+    if (Environment.GetEnvironmentVariable("SEED_DEMO") == "1")
+    {
+        DemoSeeder.Seed(db);
+    }
 
     // Validate Twilio configuration if it's configured
     var twilioService = scope.ServiceProvider.GetRequiredService<ITwilioService>();

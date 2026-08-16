@@ -4,56 +4,64 @@
     ViewData["Title"] = "Audit Log";
 }
 
-<h1>Audit Log</h1>
+<div class="page-head">
+    <div>
+        <h1>Audit log</h1>
+        <p class="subtitle">Every consequential event across all links, newest first.</p>
+    </div>
+</div>
 
 <div class="card">
     @if (Model.AuditEntries.Any())
     {
-        <table>
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Link</th>
-                    <th>Event</th>
-                    <th>Description</th>
-                    <th>IP Address</th>
-                    <th>Success</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var audit in Model.AuditEntries)
-                {
+        <div class="table-wrap">
+            <table>
+                <thead>
                     <tr>
-                        <td>@audit.Timestamp.ToLocalTime().ToString("g")</td>
-                        <td>
-                            <a asp-page="/Links/Details" asp-route-id="@audit.TemporaryLinkId">
-                                @audit.TemporaryLink.Name
-                            </a>
-                        </td>
-                        <td>@audit.EventType</td>
-                        <td>@audit.Description</td>
-                        <td>@audit.IpAddress</td>
-                        <td>
-                            @if (audit.Success)
-                            {
-                                <span class="status status-used">Yes</span>
-                            }
-                            else
-                            {
-                                <span class="status status-revoked">No</span>
-                                @if (!string.IsNullOrEmpty(audit.ErrorMessage))
-                                {
-                                    <br /><small class="text-muted">@audit.ErrorMessage</small>
-                                }
-                            }
-                        </td>
+                        <th>Time</th>
+                        <th>Link</th>
+                        <th>Event</th>
+                        <th>Description</th>
+                        <th>Result</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var audit in Model.AuditEntries)
+                    {
+                        <tr>
+                            <td class="muted" style="white-space:nowrap;">@audit.Timestamp.ToLocalTime().ToString("MMM d, HH:mm")</td>
+                            <td>
+                                <a asp-page="/Links/Details" asp-route-id="@audit.TemporaryLinkId">@audit.TemporaryLink.Name</a>
+                            </td>
+                            <td>@audit.EventType</td>
+                            <td class="muted">
+                                @audit.Description
+                                @if (!audit.Success && !string.IsNullOrEmpty(audit.ErrorMessage))
+                                {
+                                    <div class="text-danger" style="font-size:0.8rem;">@audit.ErrorMessage</div>
+                                }
+                            </td>
+                            <td>
+                                @if (audit.Success)
+                                {
+                                    <span class="pill ok">✓ OK</span>
+                                }
+                                else
+                                {
+                                    <span class="pill fail">✕ Failed</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
     else
     {
-        <p class="text-muted">No audit entries yet.</p>
+        <div class="empty">
+            <div class="empty-icon">📋</div>
+            <p>No activity has been recorded yet.</p>
+        </div>
     }
 </div>

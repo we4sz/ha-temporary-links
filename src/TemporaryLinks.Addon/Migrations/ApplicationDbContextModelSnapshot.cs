@@ -15,7 +15,7 @@ namespace TemporaryLinks.Addon.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
 
             modelBuilder.Entity("TemporaryLinks.Addon.Models.ActionTemplate", b =>
                 {
@@ -190,6 +190,9 @@ namespace TemporaryLinks.Addon.Migrations
                     b.Property<string>("CustomMessage")
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("LastTriggerProcessedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("MaxUses")
                         .HasColumnType("INTEGER");
 
@@ -199,7 +202,6 @@ namespace TemporaryLinks.Addon.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RecipientPhoneNumber")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
@@ -210,6 +212,9 @@ namespace TemporaryLinks.Addon.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool?>("TriggerAcceptsPost")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("UsageCount")
                         .HasColumnType("INTEGER");

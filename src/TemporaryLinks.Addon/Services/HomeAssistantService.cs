@@ -49,67 +49,25 @@ public class HomeAssistantService : IHomeAssistantService
         DateTimeOffset validUntil,
         CancellationToken cancellationToken = default)
     {
-        var webhookId = $"temp_link_{token}";
-        var automationId = $"temp_link_{token}";
+        var automationId = AutomationModel.WebhookIdFor(token);
 
-        // Parse custom actions from JSON
-        object customActions;
+        // Parse the link's actions purely to validate them here — the automation NEVER
+        // carries them. It only announces the attempt to the add-on, which runs the actions
+        // itself after atomically claiming a use (E7.S1), so the allowance binds the actions
+        // rather than being counted after the fact.
         try
         {
-            customActions = JsonSerializer.Deserialize<object>(actionsJson, _jsonOptions)
-                            ?? throw new InvalidOperationException("Actions JSON is null");
+            _ = JsonSerializer.Deserialize<object>(actionsJson, _jsonOptions)
+                ?? throw new InvalidOperationException("Actions JSON is null");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to parse actions JSON: {ActionsJson}", actionsJson);
+            _logger.LogError(ex, "Failed to parse actions JSON");
             throw new InvalidOperationException($"Invalid actions JSON: {ex.Message}");
         }
 
-        // Build actions array: event trigger first (for tracking), then custom actions
-        var actionsArray = new List<object>
-        {
-            // First action: fire event for tracking
-            new
-            {
-                @event = "temp_link_triggered",
-                event_data = new
-                {
-                    token,
-                    link_name = linkName,
-                    webhook_id = webhookId
-                }
-            }
-        };
-
-        // Add custom actions
-        if (customActions is System.Text.Json.JsonElement jsonElement &&
-            jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
-        {
-            foreach (var action in jsonElement.EnumerateArray())
-            {
-                actionsArray.Add(action);
-            }
-        }
-
-        // Create automation config
-        var automation = new
-        {
-            id = automationId, // Include the ID in the payload
-            alias = $"Temp Link: {linkName}",
-            description = $"Webhook handler for temporary link: {linkName}. Valid from {validFrom:u} to {validUntil:u}",
-            trigger = new[]
-            {
-                new
-                {
-                    platform = "webhook",
-                    webhook_id = webhookId,
-                    allowed_methods = new[] { "GET" },
-                    local_only = false
-                }
-            },
-            action = actionsArray, // Event + custom actions
-            mode = "single"
-        };
+        var automation = AutomationModel.BuildAutomation(
+            token, linkName, validFrom, validUntil, AutomationModel.AcceptsPost(_config));
 
         var content = new StringContent(
             JsonSerializer.Serialize(automation, _jsonOptions),
@@ -123,8 +81,7 @@ public class HomeAssistantService : IHomeAssistantService
 
         if (response.IsSuccessStatusCode)
         {
-            _logger.LogInformation("Created webhook automation {AutomationId} for token {Token}",
-                automationId, token);
+            _logger.LogInformation("Created webhook automation {AutomationId}", automationId);
             return automationId;
         }
 
@@ -133,7 +90,120 @@ public class HomeAssistantService : IHomeAssistantService
             $"Failed to create webhook automation: {response.StatusCode} - {errorBody}");
     }
 
-    public async Task DeleteWebhookAutomationAsync(
+    public async Task ExecuteActionsAsync(
+        string actionsJson, CancellationToken cancellationToken = default)
+    {
+        JsonElement root;
+        try
+        {
+            root = JsonSerializer.Deserialize<JsonElement>(actionsJson, _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Invalid actions JSON: {ex.Message}");
+        }
+
+        if (root.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException("Actions must be a JSON array.");
+        }
+
+        foreach (var action in root.EnumerateArray())
+        {
+            if (!action.TryGetProperty("action", out var actionEl) ||
+                actionEl.GetString() is not { Length: > 0 } service ||
+                !service.Contains('.'))
+            {
+                throw new InvalidOperationException(
+                    "Each action must have an \"action\" of the form \"domain.service\".");
+            }
+
+            var dot = service.IndexOf('.');
+            var domain = service[..dot];
+            var name = service[(dot + 1)..];
+
+            // Merge target (e.g. entity_id) and data into the service-call body.
+            var body = new Dictionary<string, JsonElement>();
+            if (action.TryGetProperty("target", out var target) &&
+                target.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var p in target.EnumerateObject()) body[p.Name] = p.Value;
+            }
+            if (action.TryGetProperty("data", out var data) &&
+                data.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var p in data.EnumerateObject()) body[p.Name] = p.Value;
+            }
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(body, _jsonOptions), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(
+                $"services/{domain}/{name}", content, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new InvalidOperationException(
+                    $"Home Assistant refused action {service}: {response.StatusCode} - {err}");
+            }
+        }
+    }
+
+    public async Task<IReadOnlyList<HaServiceInfo>> GetServicesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("services", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+
+        var result = new List<HaServiceInfo>();
+        foreach (var domainEl in doc.RootElement.EnumerateArray())
+        {
+            var domain = domainEl.GetProperty("domain").GetString();
+            if (domain == null || !domainEl.TryGetProperty("services", out var services))
+                continue;
+            foreach (var svc in services.EnumerateObject())
+            {
+                string? name = null;
+                if (svc.Value.ValueKind == JsonValueKind.Object &&
+                    svc.Value.TryGetProperty("name", out var nameEl))
+                {
+                    name = nameEl.GetString();
+                }
+                result.Add(new HaServiceInfo(domain, svc.Name, name));
+            }
+        }
+        return result;
+    }
+
+    public async Task<IReadOnlyList<HaEntityInfo>> GetEntitiesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("states", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+
+        var result = new List<HaEntityInfo>();
+        foreach (var stateEl in doc.RootElement.EnumerateArray())
+        {
+            var entityId = stateEl.GetProperty("entity_id").GetString();
+            if (entityId == null)
+                continue;
+            string? friendly = null;
+            if (stateEl.TryGetProperty("attributes", out var attrs) &&
+                attrs.ValueKind == JsonValueKind.Object &&
+                attrs.TryGetProperty("friendly_name", out var fn))
+            {
+                friendly = fn.GetString();
+            }
+            result.Add(new HaEntityInfo(entityId, friendly));
+        }
+        return result;
+    }
+
+    public async Task<bool> DeleteWebhookAutomationAsync(
         string automationId,
         CancellationToken cancellationToken = default)
     {
@@ -143,10 +213,76 @@ public class HomeAssistantService : IHomeAssistantService
             $"config/automation/config/{automationId}",
             cancellationToken);
 
-        if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // Already gone — the trigger is confirmed absent, nothing was removed now.
+            return false;
+        }
+
+        if (!response.IsSuccessStatusCode)
         {
             throw new InvalidOperationException($"Failed to delete webhook automation: {response.StatusCode}");
         }
+
+        return true;
+    }
+
+    public async Task<JsonElement?> TryGetAutomationConfigAsync(
+        string automationId,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync(
+            $"config/automation/config/{automationId}", cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"Failed to read automation {automationId}: {response.StatusCode}");
+        }
+
+        using var doc = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+        return doc.RootElement.Clone();
+    }
+
+    public async Task<IReadOnlyDictionary<string, DateTimeOffset>> GetAutomationLastTriggeredAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("states", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+
+        var result = new Dictionary<string, DateTimeOffset>();
+        foreach (var state in doc.RootElement.EnumerateArray())
+        {
+            if (state.GetProperty("entity_id").GetString() is not { } entityId ||
+                !entityId.StartsWith("automation.", StringComparison.Ordinal) ||
+                !state.TryGetProperty("attributes", out var attributes) ||
+                attributes.ValueKind != JsonValueKind.Object ||
+                !attributes.TryGetProperty("id", out var id) ||
+                id.GetString() is not { Length: > 0 } automationId ||
+                !attributes.TryGetProperty("last_triggered", out var lastTriggered) ||
+                lastTriggered.ValueKind != JsonValueKind.String ||
+                !DateTimeOffset.TryParse(
+                    lastTriggered.GetString(),
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AdjustToUniversal |
+                    System.Globalization.DateTimeStyles.AssumeUniversal,
+                    out var fired))
+            {
+                continue;
+            }
+
+            result[automationId] = fired;
+        }
+
+        return result;
     }
 
     public async Task<CloudhookResult> CreateCloudhookAsync(
@@ -162,12 +298,55 @@ public class HomeAssistantService : IHomeAssistantService
 
         if (result != null)
         {
-            _logger.LogInformation("Created cloudhook {CloudhookId} with URL {CloudhookUrl}",
-                result.CloudhookId, result.CloudhookUrl);
+            _logger.LogInformation("Created cloudhook {CloudhookId}", result.CloudhookId);
             return new CloudhookResult(result.WebhookId, result.CloudhookId, result.CloudhookUrl);
         }
 
         throw new InvalidOperationException($"Failed to create cloudhook for webhook {webhookId}");
+    }
+
+    public async Task DeleteCloudhookAsync(
+        string webhookId,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Deleting cloudhook for webhook {WebhookId}", webhookId);
+
+        var result = await SendWebSocketCommandAsync<object>(
+            "cloud/cloudhook/delete",
+            new { webhook_id = webhookId },
+            cancellationToken);
+
+        if (result == null)
+        {
+            throw new InvalidOperationException(
+                $"Failed to delete cloudhook for webhook {webhookId}");
+        }
+    }
+
+    public async Task<string?> GetRemoteUiUrlAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var status = await SendWebSocketCommandAsync<CloudStatusResponse>(
+                "cloud/status", new { }, cancellationToken);
+
+            if (status?.RemoteDomain is { Length: > 0 } domain && status.RemoteEnabled != false)
+            {
+                var url = $"https://{domain}";
+                _logger.LogInformation("Discovered public remote UI URL: {Url}", url);
+                return url;
+            }
+
+            _logger.LogInformation(
+                "No usable remote UI (remote_enabled={Enabled}, remote_domain={Domain})",
+                status?.RemoteEnabled, status?.RemoteDomain);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation(ex, "Cloud status unavailable — no public URL discovered");
+            return null;
+        }
     }
 
     private async Task<T?> SendWebSocketCommandAsync<T>(
@@ -282,6 +461,15 @@ public class HomeAssistantService : IHomeAssistantService
                 return messageBuilder.ToString();
             }
         }
+    }
+
+    private class CloudStatusResponse
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("remote_domain")]
+        public string? RemoteDomain { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("remote_enabled")]
+        public bool? RemoteEnabled { get; set; }
     }
 
     private class CloudhookResponse

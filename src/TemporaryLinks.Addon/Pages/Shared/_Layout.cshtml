@@ -1,31 +1,36 @@
+@{
+    var path = (Context.Request.Path.Value ?? "/").TrimEnd('/');
+    if (path.Length == 0) path = "/";
+    bool Starts(string p) => path.StartsWith(p, StringComparison.OrdinalIgnoreCase);
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Temporary Links</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>@ViewData["Title"] · Temporary Links</title>
     <base href="@(Context.Request.PathBase)/" />
+    <link rel="stylesheet" href="css/pico.min.css" />
     <link rel="stylesheet" href="css/site.css" />
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="nav-brand"> <a href="./">Temporary Links</a></div>
-            <div class="nav-links">
-                <a href="./">Dashboard</a>
-                <a href="Links">Links</a>
-                <a href="Links/Create">Create Link</a>
-                <a href="Contacts">Contacts</a>
-                <a href="ActionTemplates">Action Templates</a>
-                <a href="Audit">Audit Log</a>
-            </div>
-        </nav>
+    <header class="topbar">
+        <div class="bar">
+            <span class="brand"><span class="dot"></span><a href="./">Temporary Links</a></span>
+            <nav class="topnav">
+                <a href="./" class="@(path == "/" ? "active" : "")">Dashboard</a>
+                <a href="Links" class="@(Starts("/Links") && !Starts("/Links/Create") ? "active" : "")">Links</a>
+                <a href="Links/Create" class="@(Starts("/Links/Create") ? "active" : "")">Create</a>
+                <a href="Contacts" class="@(Starts("/Contacts") ? "active" : "")">Contacts</a>
+                <a href="ActionTemplates" class="@(Starts("/ActionTemplates") ? "active" : "")">Templates</a>
+                <a href="Audit" class="@(Starts("/Audit") ? "active" : "")">Audit</a>
+            </nav>
+        </div>
     </header>
     <main>
         @RenderBody()
     </main>
-    <footer>
-        <p>Home Assistant Temporary Links Addon</p>
-    </footer>
+    <footer class="appfoot">Home Assistant · Temporary Links add-on</footer>
 </body>
 </html>

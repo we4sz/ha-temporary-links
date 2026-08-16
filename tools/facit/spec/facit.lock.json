@@ -1,0 +1,1208 @@
+{
+  "schemaVersion": 1,
+  "lockedAt": "2026-08-16T11:59:12Z",
+  "facitHash": "1b237513961e77a8",
+  "nodes": {
+    "engine::E1.S1": {
+      "hash": "0b252defd1f2548d",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S1.A1": {
+      "hash": "d4e0529d6d5ab9e0",
+      "status": "proven",
+      "tests": [
+        "test_compile_cli_spec"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_cli_spec",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 149,
+          "endLine": 155,
+          "hash": "d5ff00cb3d2e86eb"
+        }
+      ]
+    },
+    "engine::E1.S1.A2": {
+      "hash": "c00b44967487bd47",
+      "status": "proven",
+      "tests": [
+        "test_compile_reports_counts_and_stable_hash"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_reports_counts_and_stable_hash",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1412,
+          "endLine": 1440,
+          "hash": "03db138baef4f00e"
+        }
+      ]
+    },
+    "engine::E1.S1.A3": {
+      "hash": "c7962b96f20fa5b9",
+      "status": "proven",
+      "tests": [
+        "test_compile_exit_codes_valid_zero_invalid_nonzero"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_exit_codes_valid_zero_invalid_nonzero",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1444,
+          "endLine": 1477,
+          "hash": "14c712622cffc3de"
+        }
+      ]
+    },
+    "engine::E1.S2": {
+      "hash": "718060e9a4c4c000",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S2.A1": {
+      "hash": "d9752ae1121bc358",
+      "status": "proven",
+      "tests": [
+        "test_validate_cli_spec"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_validate_cli_spec",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 158,
+          "endLine": 163,
+          "hash": "6147c574a44c63da"
+        }
+      ]
+    },
+    "engine::E1.S2.A2": {
+      "hash": "32cd9a5620725298",
+      "status": "proven",
+      "tests": [
+        "test_validate_invalid_prints_errors_nonzero"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_validate_invalid_prints_errors_nonzero",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1481,
+          "endLine": 1510,
+          "hash": "083f56492a6bd81f"
+        }
+      ]
+    },
+    "engine::E1.S3": {
+      "hash": "6b89e146a206e78b",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S3.A1": {
+      "hash": "3622a3165f00eff1",
+      "status": "proven",
+      "tests": [
+        "test_compile_flags_duplicate_id",
+        "test_compile_flags_non_parent_bound_ac"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_flags_duplicate_id",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1514,
+          "endLine": 1543,
+          "hash": "e62cc0136107cf3a"
+        },
+        {
+          "test": "test_compile_flags_non_parent_bound_ac",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1547,
+          "endLine": 1577,
+          "hash": "1a1229123c46f3c6"
+        }
+      ]
+    },
+    "engine::E1.S3.A2": {
+      "hash": "15831eb31860c860",
+      "status": "proven",
+      "tests": [
+        "test_compile_warns_unknown_extends"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_warns_unknown_extends",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1581,
+          "endLine": 1599,
+          "hash": "80414e8493933ad5"
+        }
+      ]
+    },
+    "engine::E1.S3.A3": {
+      "hash": "be565b6730d7e78b",
+      "status": "proven",
+      "tests": [
+        "test_compile_warns_unknown_recommended_utility"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_warns_unknown_recommended_utility",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1603,
+          "endLine": 1638,
+          "hash": "cfa343549e0f8a09"
+        }
+      ]
+    },
+    "engine::E1.S4": {
+      "hash": "85f752c0214abf4e",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S4.A1": {
+      "hash": "78bc23c47ba2ff3d",
+      "status": "proven",
+      "tests": [
+        "test_compile_default_root"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_default_root",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 113,
+          "endLine": 119,
+          "hash": "fff21b36b41258e1"
+        }
+      ]
+    },
+    "engine::E1.S4.A2": {
+      "hash": "1b5072bd164e44d5",
+      "status": "proven",
+      "tests": [
+        "test_compile_explicit_docs_root"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_explicit_docs_root",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 130,
+          "endLine": 142,
+          "hash": "779cada9f91754f8"
+        }
+      ]
+    },
+    "engine::E1.S4.A3": {
+      "hash": "d6f60910aef22db9",
+      "status": "proven",
+      "tests": [
+        "test_compile_cli_spec",
+        "test_validate_cli_spec"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compile_cli_spec",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 149,
+          "endLine": 155,
+          "hash": "d5ff00cb3d2e86eb"
+        },
+        {
+          "test": "test_validate_cli_spec",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 158,
+          "endLine": 163,
+          "hash": "6147c574a44c63da"
+        }
+      ]
+    },
+    "engine::E1.S5": {
+      "hash": "6ef71157ae351789",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S5.A1": {
+      "hash": "d051083b9d3f917f",
+      "status": "proven",
+      "tests": [
+        "test_lock_writes_per_node_hash_status_tests_and_metadata"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_lock_writes_per_node_hash_status_tests_and_metadata",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1642,
+          "endLine": 1659,
+          "hash": "1e54f27986c4dbef"
+        }
+      ]
+    },
+    "engine::E1.S5.A2": {
+      "hash": "3b215d6bc2fce4d9",
+      "status": "proven",
+      "tests": [
+        "test_lock_refuses_invalid_facit"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_lock_refuses_invalid_facit",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 237,
+          "endLine": 251,
+          "hash": "d0611d48d21f7a70"
+        }
+      ]
+    },
+    "engine::E1.S5.A3": {
+      "hash": "a298d6eeee6585c4",
+      "status": "proven",
+      "tests": [
+        "test_relock_carries_proven_forward",
+        "test_relock_preserves_testsources"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_relock_carries_proven_forward",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 258,
+          "endLine": 310,
+          "hash": "d8e8afbc4756e68c"
+        },
+        {
+          "test": "test_relock_preserves_testsources",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2445,
+          "endLine": 2472,
+          "hash": "78d60042a738c413"
+        }
+      ]
+    },
+    "engine::E1.S5.A4": {
+      "hash": "9552c3c85015abfe",
+      "status": "proven",
+      "tests": [
+        "test_atomic_write_no_tmp_leftover"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_atomic_write_no_tmp_leftover",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2095,
+          "endLine": 2107,
+          "hash": "13eeac8c0a53289c"
+        }
+      ]
+    },
+    "engine::E1.S6": {
+      "hash": "67e4d41bc2e74b23",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S6.A1": {
+      "hash": "36a11abe7671b221",
+      "status": "proven",
+      "tests": [
+        "test_diff_lists_added_changed_and_removed"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_diff_lists_added_changed_and_removed",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1663,
+          "endLine": 1690,
+          "hash": "f73dc3cacba46307"
+        }
+      ]
+    },
+    "engine::E1.S6.A2": {
+      "hash": "846f595876c264a6",
+      "status": "proven",
+      "tests": [
+        "test_diff_single_ac_change"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_diff_single_ac_change",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 186,
+          "endLine": 230,
+          "hash": "f593b8cb9c9bd425"
+        }
+      ]
+    },
+    "engine::E1.S6.A3": {
+      "hash": "7c026372e67c0095",
+      "status": "proven",
+      "tests": [
+        "test_lock_then_diff_clean"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_lock_then_diff_clean",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 170,
+          "endLine": 179,
+          "hash": "24ec92e51e210b4d"
+        }
+      ]
+    },
+    "engine::E1.S7": {
+      "hash": "2444bbbacd1d71b5",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S7.A1": {
+      "hash": "e56a3c08621f0173",
+      "status": "proven",
+      "tests": [
+        "test_status_reports_counts"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_status_reports_counts",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1694,
+          "endLine": 1714,
+          "hash": "c20f092a2cf9292a"
+        }
+      ]
+    },
+    "engine::E1.S7.A2": {
+      "hash": "212d39cb46a9267a",
+      "status": "proven",
+      "tests": [
+        "test_gap_no_file_lists_every_ac"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_gap_no_file_lists_every_ac",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1718,
+          "endLine": 1732,
+          "hash": "08d05e508ac0357a"
+        }
+      ]
+    },
+    "engine::E1.S7.A3": {
+      "hash": "cf24f8443c8ac359",
+      "status": "proven",
+      "tests": [
+        "test_gap_file_reports_coverage_and_flags_unknown"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_gap_file_reports_coverage_and_flags_unknown",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1736,
+          "endLine": 1766,
+          "hash": "8d601a0a7366973d"
+        }
+      ]
+    },
+    "engine::E1.S8": {
+      "hash": "cdd1df444da54caa",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S8.A1": {
+      "hash": "6dbcbce0d259ade0",
+      "status": "proven",
+      "tests": [
+        "test_prove_marks_ac_proven_when_test_passes"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_marks_ac_proven_when_test_passes",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 405,
+          "endLine": 432,
+          "hash": "77f1995a577450ef"
+        }
+      ]
+    },
+    "engine::E1.S8.A2": {
+      "hash": "51bbb92dd687858b",
+      "status": "proven",
+      "tests": [
+        "test_prove_refuses_when_test_failed"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_refuses_when_test_failed",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 435,
+          "endLine": 456,
+          "hash": "9f3ce7b40e1e1a9c"
+        }
+      ]
+    },
+    "engine::E1.S8.A3": {
+      "hash": "b84d91101f400662",
+      "status": "proven",
+      "tests": [
+        "test_prove_refuses_proven_without_binding"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_refuses_proven_without_binding",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 459,
+          "endLine": 481,
+          "hash": "baee4fe8e131d9d8"
+        }
+      ]
+    },
+    "engine::E1.S8.A4": {
+      "hash": "8ee073deecfa25ca",
+      "status": "proven",
+      "tests": [
+        "test_prove_refuses_when_node_diff_dirty"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_refuses_when_node_diff_dirty",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 484,
+          "endLine": 511,
+          "hash": "5e60edc90dbe48c2"
+        }
+      ]
+    },
+    "engine::E1.S8.A5": {
+      "hash": "6fc04e7eebc8c961",
+      "status": "proven",
+      "tests": [
+        "test_prove_spans_multiple_impls_and_results_files"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_spans_multiple_impls_and_results_files",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 645,
+          "endLine": 684,
+          "hash": "9e8045c1c9de90e5"
+        }
+      ]
+    },
+    "engine::E1.S8.A6": {
+      "hash": "5ee6bb64374d5d6e",
+      "status": "proven",
+      "tests": [
+        "test_prove_collapses_displayname_and_fqn_of_same_test"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_collapses_displayname_and_fqn_of_same_test",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 687,
+          "endLine": 721,
+          "hash": "955e42604e9228e9"
+        }
+      ]
+    },
+    "engine::E1.S8.A7": {
+      "hash": "c4be8ed6f85820b0",
+      "status": "proven",
+      "tests": [
+        "test_dupname_bare_collision_refused_fqn_still_works",
+        "test_prove_refuses_genuine_ambiguous_match"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_dupname_bare_collision_refused_fqn_still_works",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2067,
+          "endLine": 2092,
+          "hash": "15b95c43effbdfcf"
+        },
+        {
+          "test": "test_prove_refuses_genuine_ambiguous_match",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 724,
+          "endLine": 744,
+          "hash": "02c0670e4218076a"
+        }
+      ]
+    },
+    "engine::E1.S8.A8": {
+      "hash": "7f2740154100a785",
+      "status": "proven",
+      "tests": [
+        "test_prove_demotes_proven_on_red"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_demotes_proven_on_red",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1987,
+          "endLine": 2016,
+          "hash": "7f467311f9401237"
+        }
+      ]
+    },
+    "engine::E1.S8.A9": {
+      "hash": "09e7c693141884d5",
+      "status": "proven",
+      "tests": [
+        "test_verify_rechecks_greenness_with_results"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_verify_rechecks_greenness_with_results",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2019,
+          "endLine": 2045,
+          "hash": "a85432327b9e3c4b"
+        }
+      ]
+    },
+    "engine::E1.S9": {
+      "hash": "c5b4efd751539fd4",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S9.A1": {
+      "hash": "da2ecd734db9d3b8",
+      "status": "proven",
+      "tests": [
+        "test_prove_records_coveredFiles_from_coverage"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_records_coveredFiles_from_coverage",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 839,
+          "endLine": 892,
+          "hash": "5db6cf7293988400"
+        }
+      ]
+    },
+    "engine::E1.S9.A2": {
+      "hash": "cbcbd13748538019",
+      "status": "proven",
+      "tests": [
+        "test_conform_reports_conformant_then_drifted"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_conform_reports_conformant_then_drifted",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 895,
+          "endLine": 943,
+          "hash": "97ad557cf64d30f3"
+        }
+      ]
+    },
+    "engine::E1.S9.A3": {
+      "hash": "8174d0e1fe2ffed4",
+      "status": "proven",
+      "tests": [
+        "test_conform_flags_unverifiable_when_no_coveredfiles",
+        "test_verify_fails_on_proven_without_coverage"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_conform_flags_unverifiable_when_no_coveredfiles",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 946,
+          "endLine": 976,
+          "hash": "df23ddbf08e04d6c"
+        },
+        {
+          "test": "test_verify_fails_on_proven_without_coverage",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2048,
+          "endLine": 2064,
+          "hash": "585976acb61cea71"
+        }
+      ]
+    },
+    "engine::E1.S9.A5": {
+      "hash": "c4cf92ae26ce10c1",
+      "status": "proven",
+      "tests": [
+        "test_prove_refuses_without_coverage"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_refuses_without_coverage",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1970,
+          "endLine": 1984,
+          "hash": "4a4cfa77ec09e40d"
+        }
+      ]
+    },
+    "engine::E1.S9.A6": {
+      "hash": "3c5199506a4a8b13",
+      "status": "proven",
+      "tests": [
+        "test_prove_populates_coveredfiles_from_aggregate_cobertura_without_evidence"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_populates_coveredfiles_from_aggregate_cobertura_without_evidence",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2120,
+          "endLine": 2149,
+          "hash": "c7d87d967a840243"
+        }
+      ]
+    },
+    "engine::E1.S9.A7": {
+      "hash": "b287b950c6ea67d1",
+      "status": "proven",
+      "tests": [
+        "test_structural_proof_hashes_declared_code_without_coverage"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_structural_proof_hashes_declared_code_without_coverage",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2487,
+          "endLine": 2522,
+          "hash": "a3bd6a684bbd88c3"
+        }
+      ]
+    },
+    "engine::E1.S9.A4": {
+      "hash": "17d8e5b9e8d50f61",
+      "status": "proven",
+      "tests": [
+        "test_conform_incremental_only_drifted"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_conform_incremental_only_drifted",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1770,
+          "endLine": 1865,
+          "hash": "dd24a36e46810726"
+        }
+      ]
+    },
+    "engine::E1.S10": {
+      "hash": "b3c2e84a9fd221c1",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S10.A1": {
+      "hash": "93464a192e6d6f5b",
+      "status": "proven",
+      "tests": [
+        "test_compute_covered_files_matches_relative_declared_to_absolute_coverage",
+        "test_prove_accepts_when_coverage_intersects_impl",
+        "test_prove_rejects_binding_whose_test_misses_impl_coverage"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_compute_covered_files_matches_relative_declared_to_absolute_coverage",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2475,
+          "endLine": 2484,
+          "hash": "4cf7e4a82c9f9bd8"
+        },
+        {
+          "test": "test_prove_accepts_when_coverage_intersects_impl",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1077,
+          "endLine": 1133,
+          "hash": "e3eed591af98e40e"
+        },
+        {
+          "test": "test_prove_rejects_binding_whose_test_misses_impl_coverage",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1008,
+          "endLine": 1074,
+          "hash": "f075086abc03a3d0"
+        }
+      ]
+    },
+    "engine::E1.S10.A2": {
+      "hash": "09fafc26615fc6d9",
+      "status": "proven",
+      "tests": [
+        "test_prove_warns_on_high_test_share"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_warns_on_high_test_share",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1225,
+          "endLine": 1272,
+          "hash": "49f94275e7945691"
+        }
+      ]
+    },
+    "engine::E1.S11": {
+      "hash": "76cdcd46167b752e",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S11.A1": {
+      "hash": "ac55ef235567d189",
+      "status": "proven",
+      "tests": [
+        "test_parse_junit_outcomes",
+        "test_prove_accepts_junit_results",
+        "test_inprocess_run_matches_subprocess"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_parse_junit_outcomes",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1314,
+          "endLine": 1342,
+          "hash": "e7b178620583ef1f"
+        },
+        {
+          "test": "test_prove_accepts_junit_results",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1345,
+          "endLine": 1374,
+          "hash": "6483d08d64ecd4f4"
+        },
+        {
+          "test": "test_inprocess_run_matches_subprocess",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1377,
+          "endLine": 1404,
+          "hash": "0fd3b272a4f5433b"
+        }
+      ]
+    },
+    "engine::E1.S11.A2": {
+      "hash": "378cc89f2596333a",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S11.A3": {
+      "hash": "d73e004a3bccb142",
+      "status": "proven",
+      "tests": [
+        "test_selfverify_proven_cli_acs_are_coverage_backed_and_conform_clean"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_selfverify_proven_cli_acs_are_coverage_backed_and_conform_clean",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 1947,
+          "endLine": 1963,
+          "hash": "069e511416d1f2dd"
+        }
+      ]
+    },
+    "engine::E1.S11.A4": {
+      "hash": "7ca6e8269dde428c",
+      "status": "proven",
+      "tests": [
+        "test_selfproof_verdict_does_not_discard_prove_rc"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/selfproof.py",
+          "hash": "9d0e52f29e051b0b"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_selfproof_verdict_does_not_discard_prove_rc",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2110,
+          "endLine": 2117,
+          "hash": "c628e3f6a14ff4d1"
+        }
+      ]
+    },
+    "engine::E1.S12": {
+      "hash": "052c29178be8e773",
+      "status": "unproven",
+      "tests": []
+    },
+    "engine::E1.S12.A1": {
+      "hash": "af683f3186955ae6",
+      "status": "proven",
+      "tests": [
+        "test_reverify_runs_tests_and_proves"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_reverify_runs_tests_and_proves",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2237,
+          "endLine": 2326,
+          "hash": "4294b7c0c304f22c"
+        }
+      ]
+    },
+    "engine::E1.S12.A2": {
+      "hash": "812702140607ed66",
+      "status": "proven",
+      "tests": [
+        "test_reverify_runs_tests_and_proves"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_reverify_runs_tests_and_proves",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2237,
+          "endLine": 2326,
+          "hash": "4294b7c0c304f22c"
+        }
+      ]
+    },
+    "engine::E1.S12.A3": {
+      "hash": "692eabcb9c0d444e",
+      "status": "proven",
+      "tests": [
+        "test_reverify_incremental_scope_selects_only_affected"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_reverify_incremental_scope_selects_only_affected",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2329,
+          "endLine": 2442,
+          "hash": "53603805e0db3fcb"
+        }
+      ]
+    },
+    "engine::E1.S12.A4": {
+      "hash": "bb1936beda2666f5",
+      "status": "proven",
+      "tests": [
+        "test_prove_records_test_source_hash",
+        "test_find_method_span_python_and_csharp"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_prove_records_test_source_hash",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2178,
+          "endLine": 2200,
+          "hash": "2c19632870678122"
+        },
+        {
+          "test": "test_find_method_span_python_and_csharp",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2156,
+          "endLine": 2165,
+          "hash": "413d6532407bf791"
+        }
+      ]
+    },
+    "engine::E1.S12.A5": {
+      "hash": "6b444c35cba18e07",
+      "status": "proven",
+      "tests": [
+        "test_conform_detects_test_source_drift"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_conform_detects_test_source_drift",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2203,
+          "endLine": 2229,
+          "hash": "1dbfccb79ee8ac66"
+        }
+      ]
+    },
+    "engine::E1.S12.A6": {
+      "hash": "9cf80df15865a9a0",
+      "status": "proven",
+      "tests": [
+        "test_conform_detects_test_source_drift"
+      ],
+      "coveredFiles": [
+        {
+          "path": "tools/facit/facit.py",
+          "hash": "c446b59475dc733f"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "test_conform_detects_test_source_drift",
+          "path": "tools/facit/tests/test_facit.py",
+          "startLine": 2203,
+          "endLine": 2229,
+          "hash": "1dbfccb79ee8ac66"
+        }
+      ]
+    }
+  }
+}

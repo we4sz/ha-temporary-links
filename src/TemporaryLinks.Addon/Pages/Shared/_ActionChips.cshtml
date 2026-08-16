@@ -1,0 +1,29 @@
+@model string
+@{
+    var actions = TemporaryLinks.Addon.Services.ActionFormatter.Summarize(Model);
+    var shown = actions.Take(3).ToList();
+    var extra = actions.Count - shown.Count;
+}
+@if (actions.Count == 0)
+{
+    <span class="text-muted">—</span>
+}
+else
+{
+    <div class="chips">
+        @foreach (var a in shown)
+        {
+            <span class="chip">
+                <span class="svc">@a.Service</span>
+                @if (!string.IsNullOrEmpty(a.Target))
+                {
+                    <span class="tgt">@a.Target</span>
+                }
+            </span>
+        }
+        @if (extra > 0)
+        {
+            <span class="muted">+@extra more</span>
+        }
+    </div>
+}

@@ -4,13 +4,10 @@
     ViewData["Title"] = "Link Details";
 }
 
-<h1>Link Details</h1>
-
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
-
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
 {
     <div class="alert alert-success">@Model.SuccessMessage</div>
@@ -19,143 +16,158 @@
 @if (Model.Link == null)
 {
     <div class="alert alert-danger">Link not found.</div>
+    <a asp-page="Index" class="btn btn-secondary">← Back to links</a>
 }
 else
 {
-    <div class="card">
-        <h2>@Model.Link.Name</h2>
-        <p><span class="status status-@Model.Link.Status.ToString().ToLower()">@Model.Link.Status</span></p>
-
-        <table>
-            @if (!string.IsNullOrEmpty(Model.Link.Actions))
-            {
-                <tr>
-                    <th>Actions</th>
-                    <td>
-                        <pre style="margin: 0; max-width: 600px; overflow-x: auto;">@Model.Link.Actions</pre>
-                    </td>
-                </tr>
-            }
-            <tr>
-                <th>Valid From</th>
-                <td>@Model.Link.ValidFrom.ToLocalTime().ToString("f")</td>
-            </tr>
-            <tr>
-                <th>Valid Until</th>
-                <td>@Model.Link.ValidUntil.ToLocalTime().ToString("f")</td>
-            </tr>
-            <tr>
-                <th>Usage</th>
-                <td>@Model.Link.UsageCount / @Model.Link.MaxUses</td>
-            </tr>
-            <tr>
-                <th>Created</th>
-                <td>@Model.Link.CreatedAt.ToLocalTime().ToString("f") by @Model.Link.CreatedBy</td>
-            </tr>
-            <tr>
-                <th>Phone Number</th>
-                <td>@Model.Link.RecipientPhoneNumber</td>
-            </tr>
-        </table>
-
-        @if (Model.Link.Status == LinkStatus.Active)
-        {
-            <div class="mt-2">
-                <h3>Link URL</h3>
-                <div class="link-url">@Model.LinkUrl</div>
-                <p class="mt-1 text-muted">Share this URL with the recipient (or send via SMS below)</p>
-            </div>
-
-            <div class="mt-2">
-                @if (Model.IsTwilioConfigured)
-                {
-                    <form method="post" asp-page-handler="SendSms" asp-route-id="@Model.Link.Id"
-                          style="display: inline;">
-                        <button type="submit" class="btn btn-primary">Send SMS</button>
-                    </form>
-                }
-                else
-                {
-                    <div class="alert alert-warning" style="margin-top: 1rem;">
-                        <strong>SMS functionality is disabled.</strong> Please configure Twilio settings (Account SID,
-                        Auth Token, and Phone Number) in the addon configuration to enable SMS sending.
-                    </div>
-                }
-                <a asp-page="Edit" asp-route-id="@Model.Link.Id" class="btn btn-primary">Edit Link</a>
-                <a asp-page="Delete" asp-route-id="@Model.Link.Id" class="btn btn-danger">Revoke Link</a>
-                <a asp-page="Create" asp-route-duplicateFrom="@Model.Link.Id" class="btn">Duplicate Link</a>
-                <a asp-page="Index" class="btn">Back to List</a>
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-warning" style="margin-top: 1rem;">
-                This link is <strong>@Model.Link.Status</strong> and cannot be used. You can duplicate it to create a new link with the same settings.
-            </div>
-            <div class="mt-2">
-                <a asp-page="Create" asp-route-duplicateFrom="@Model.Link.Id" class="btn btn-primary">Duplicate Link</a>
-                <a asp-page="Index" class="btn">Back to List</a>
-            </div>
-        }
+    var link = Model.Link;
+    <div class="page-head">
+        <div class="detail-head">
+            <h1>@link.Name</h1>
+            <span class="status status-@link.Status.ToString().ToLower()">@link.Status</span>
+        </div>
+        <a asp-page="Index" class="btn btn-secondary">← Back</a>
     </div>
 
-    @if (Model.Link.SmsEntries.Any())
+    @if (link.Status == LinkStatus.Active)
     {
-        <div class="card mt-2">
-            <h3>SMS History</h3>
-            <table>
-                <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Content</th>
-                    <th>Twilio SID</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var sms in Model.Link.SmsEntries.OrderByDescending(s => s.Timestamp))
+        <div class="card">
+            <h3>Share link</h3>
+            <div class="share-box">
+                <div class="link-url" id="linkUrl">@Model.LinkUrl</div>
+                <button type="button" class="btn btn-primary" id="copyLinkBtn">Copy link</button>
+                <span id="copyConfirm" class="pill ok" style="display:none;">✓ Copied</span>
+            </div>
+            <p class="form-hint">Send this to the recipient by SMS below, or copy it and share it any way you like.</p>
+
+            <div class="form-actions" style="margin-top:1rem; flex-wrap:wrap;">
+                @if (Model.IsTwilioConfigured && !string.IsNullOrEmpty(link.RecipientPhoneNumber))
                 {
-                    <tr>
-                        <td>@sms.Timestamp.ToLocalTime().ToString("g")</td>
-                        <td style="max-width: 400px; word-wrap: break-word;">@sms.Content</td>
-                        <td style="font-family: monospace; font-size: 0.9em;">@sms.TwilioMessageSid</td>
-                    </tr>
+                    <form method="post" asp-page-handler="SendSms" asp-route-id="@link.Id" style="display:inline;">
+                        <button type="submit" class="btn btn-primary">Send SMS to @link.RecipientPhoneNumber</button>
+                    </form>
                 }
-                </tbody>
-            </table>
+                <a asp-page="Edit" asp-route-id="@link.Id" class="btn btn-secondary">Edit</a>
+                <a asp-page="Create" asp-route-duplicateFrom="@link.Id" class="btn btn-secondary">Duplicate</a>
+                <a asp-page="Delete" asp-route-id="@link.Id" class="btn btn-danger">Revoke</a>
+            </div>
+
+            @if (Model.IsTwilioConfigured && string.IsNullOrEmpty(link.RecipientPhoneNumber))
+            {
+                <div class="alert alert-info" style="margin-top:1rem;">No recipient on this link — add a phone number (Edit) to enable SMS, or just copy the URL above.</div>
+            }
+            else if (!Model.IsTwilioConfigured)
+            {
+                <div class="alert alert-warning" style="margin-top:1rem;">SMS is disabled. Configure Twilio in the add-on options to send links by text — copying the URL always works.</div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="alert alert-warning">This link is <strong>@link.Status.ToString().ToLower()</strong> and can no longer be used. Duplicate it to hand out fresh access with the same settings.</div>
+            <div class="form-actions">
+                <a asp-page="Create" asp-route-duplicateFrom="@link.Id" class="btn btn-primary">Duplicate link</a>
+            </div>
         </div>
     }
 
-    <div class="card mt-2">
-        <h3>Audit Log</h3>
-        @if (Model.Link.AuditEntries.Any())
+    <div class="card">
+        <h3>Details</h3>
+        <dl class="props">
+            <dt>Actions</dt>
+            <dd><partial name="_ActionChips" model="link.Actions" /></dd>
+            <dt>Valid from</dt>
+            <dd>@link.ValidFrom.ToLocalTime().ToString("f")</dd>
+            <dt>Valid until</dt>
+            <dd>@link.ValidUntil.ToLocalTime().ToString("f")</dd>
+            <dt>Usage</dt>
+            <dd>@link.UsageCount / @(link.MaxUses >= 999 ? "∞" : link.MaxUses.ToString())</dd>
+            <dt>Recipient</dt>
+            <dd>@(string.IsNullOrEmpty(link.RecipientPhoneNumber) ? "—" : link.RecipientPhoneNumber)</dd>
+            <dt>Created</dt>
+            <dd>@link.CreatedAt.ToLocalTime().ToString("f") · by @link.CreatedBy</dd>
+        </dl>
+    </div>
+
+    @if (link.SmsEntries.Any())
+    {
+        <div class="card">
+            <h3>Delivery history</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Time</th><th>Message</th><th>Provider ID</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sms in link.SmsEntries.OrderByDescending(s => s.Timestamp))
+                        {
+                            <tr>
+                                <td class="muted" style="white-space:nowrap;">@sms.Timestamp.ToLocalTime().ToString("MMM d, HH:mm")</td>
+                                <td style="max-width:26rem;">@sms.Content</td>
+                                <td class="code muted">@sms.TwilioMessageSid</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <div class="card">
+        <h3>Audit log</h3>
+        @if (link.AuditEntries.Any())
         {
-            <table>
-                <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Event</th>
-                    <th>Description</th>
-                    <th>IP</th>
-                    <th>Success</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var audit in Model.Link.AuditEntries.OrderByDescending(a => a.Timestamp))
-                {
-                    <tr>
-                        <td>@audit.Timestamp.ToLocalTime().ToString("g")</td>
-                        <td>@audit.EventType</td>
-                        <td>@audit.Description</td>
-                        <td>@audit.IpAddress</td>
-                        <td>@(audit.Success ? "Yes" : "No")</td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Time</th><th>Event</th><th>Description</th><th>Result</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var audit in link.AuditEntries.OrderByDescending(a => a.Timestamp))
+                        {
+                            <tr>
+                                <td class="muted" style="white-space:nowrap;">@audit.Timestamp.ToLocalTime().ToString("MMM d, HH:mm")</td>
+                                <td>@audit.EventType</td>
+                                <td class="muted">@audit.Description</td>
+                                <td>
+                                    @if (audit.Success)
+                                    {
+                                        <span class="pill ok">✓ OK</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="pill fail">✕ Failed</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
         else
         {
             <p class="text-muted">No audit entries.</p>
         }
     </div>
+
+    <script>
+        (function () {
+            var btn = document.getElementById('copyLinkBtn');
+            if (!btn) return;
+            btn.addEventListener('click', async function () {
+                var url = document.getElementById('linkUrl').textContent.trim();
+                try { await navigator.clipboard.writeText(url); }
+                catch {
+                    var ta = document.createElement('textarea');
+                    ta.value = url; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                }
+                var c = document.getElementById('copyConfirm');
+                c.style.display = 'inline-flex';
+                setTimeout(function () { c.style.display = 'none'; }, 2000);
+            });
+        })();
+    </script>
 }

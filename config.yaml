@@ -1,14 +1,12 @@
 name: "Temporary Links"
-version: "1.0.1"
+version: "1.1.1"
 slug: "temporary_links"
-description: "Generate one-time-use temporary links that trigger Home Assistant services via SMS"
-url: "https://github.com/bohn/ha-temporary-links"
+description: "Generate temporary links that trigger Home Assistant actions - time-boxed, usage-limited, shareable via SMS or copy"
+url: "https://github.com/we4sz/ha-temporary-links"
 arch:
   - amd64
   - aarch64
   - armv7
-  - armhf
-  - i386
 
 startup: application
 boot: auto
@@ -22,6 +20,7 @@ panel_title: "Temporary Links"
 
 map:
   - data:rw
+  - homeassistant_config:rw
 
 options:
   twilio_account_sid: ""
@@ -30,6 +29,8 @@ options:
   default_message_template: "Your temporary access link: {link}\nValid from {start_time} to {end_time}"
   ha_url: ""
   ha_token: ""
+  public_url: ""
+  share_page_url: "https://we4sz.github.io/ha-temporary-links/open.html"
   log_level: "Information"
 
 schema:
@@ -39,4 +40,6 @@ schema:
   default_message_template: str
   ha_url: str
   ha_token: password
+  public_url: str?
+  share_page_url: str?
   log_level: list(Trace|Debug|Information|Warning|Error|Critical)

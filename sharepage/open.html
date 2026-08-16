@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Temporary access link</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; display: flex;
+               align-items: center; justify-content: center; min-height: 100vh;
+               margin: 0; background: #f4f5f7; }
+        .card { background: #fff; border-radius: 12px; padding: 2rem;
+                box-shadow: 0 2px 12px rgba(0,0,0,.08); text-align: center;
+                max-width: 22rem; }
+        button { font-size: 1.2rem; padding: .8rem 2.4rem; border: 0;
+                 border-radius: 8px; background: #03a9f4; color: #fff;
+                 cursor: pointer; }
+        button:active { background: #0288d1; }
+        .error { color: #b00020; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Temporary access</h2>
+    <p id="hint">Press the button to use your access link.</p>
+    <form id="openForm" method="post">
+        <button type="submit" id="openBtn">Open</button>
+    </form>
+</div>
+<script>
+    (function () {
+        var raw = (location.hash || '').slice(1);
+        var hook;
+        try {
+            hook = decodeURIComponent(raw);
+        } catch (e) {
+            // Truncated mid-percent-escape (SMS clients do this) — fall through
+            // to the same "link is incomplete" branch as a missing hash.
+            hook = '';
+        }
+        var form = document.getElementById('openForm');
+        // Only ever POST to a Home Assistant webhook relay — this page must not
+        // be usable as an open redirector.
+        if (hook.indexOf('https://hooks.nabu.casa/') === 0) {
+            form.action = hook;
+        } else {
+            form.style.display = 'none';
+            document.getElementById('hint').textContent =
+                'This link is incomplete — ask the sender to share it again.';
+            document.getElementById('hint').className = 'error';
+        }
+    })();
+</script>
+</body>
+</html>

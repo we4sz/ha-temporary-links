@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openapimapper.dev/facit/facit.schema.json",
+  "title": "Engine Facit",
+  "description": "The single source of truth for what the engine is: epics -> stories -> acceptance criteria, in conceptual vocabulary. No markdown; this JSON is canonical. IDs are unique, immutable, and parent-bound (E{n}.S{k}.A{m}); k and m are assigned once at creation and never renumber, so the lock and the AC->test map key on them safely.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scope", "preamble", "glossary", "epics"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level"],
+      "description": "What this facit specifies and where it sits in the composable tree. The facit is build-outable: an app facit (a whole single-scope application), an engine facit (generic), a domain facit per domain, a target facit per target, and a utility facit per shared utility. A utility is a reusable, OPTIONAL helper a scope may RECOMMEND; it is not bound to a domain. IDs (E{n}.S{k}.A{m}) are local to each facit; qualify globally by scope.",
+      "properties": {
+        "level": { "type": "string", "enum": ["app", "engine", "domain", "target", "utility"] },
+        "domain": { "type": "string", "description": "Required when level is domain or target (e.g. apimapping)." },
+        "target": { "type": "string", "description": "Required when level is target (e.g. openapi-export)." },
+        "utility": { "type": "string", "description": "Required when level is utility (e.g. crawl, fetch-crawl-data)." }
+      },
+      "allOf": [
+        { "if": { "properties": { "level": { "const": "domain" } } }, "then": { "required": ["domain"] } },
+        { "if": { "properties": { "level": { "const": "target" } } }, "then": { "required": ["domain", "target"] } },
+        { "if": { "properties": { "level": { "const": "utility" } } }, "then": { "required": ["utility"] } }
+      ]
+    },
+    "extends": { "type": ["string", "null"], "description": "Scope ref of the parent facit this builds on: a domain facit extends \"engine\"; a target facit extends its domain (e.g. \"domain:apimapping\"); the engine facit and a standalone utility facit extend null." },
+    "uses": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Dependency declaration, for a target facit: the variations it REQUIRES (must be satisfied to be downloadable) and the utilities it RECOMMENDS (optional shared helpers to acquire/prepare its input). References by id into the variation and utility catalogs.",
+      "properties": {
+        "requiredVariations": { "type": "array", "items": { "type": "string" }, "description": "Variation ids this target requires (must be confirmed for the target to be downloadable)." },
+        "optionalVariations": { "type": "array", "items": { "type": "string" }, "description": "Variation ids this target consumes when confirmed to enrich its output, but does not require (their absence never blocks download)." },
+        "recommendedUtilities": { "type": "array", "items": { "type": "string" }, "description": "Utility ids this target recommends (optional helpers, e.g. crawl)." }
+      }
+    },
+    "preamble": { "type": "string", "minLength": 1, "description": "The framing prose: what this facit specifies. Conceptual vocabulary only." },
+    "howToRead": { "type": "string", "description": "Roles, story format, build posture." },
+    "glossary": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "term", "definition"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^G\\.[a-z0-9-]+$", "description": "Stable glossary id, e.g. G.manifest" },
+          "term": { "type": "string", "minLength": 1 },
+          "definition": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "epics": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/epic" }
+    }
+  },
+  "$defs": {
+    "epic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "framing", "stories"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^E[0-9]+$", "description": "Stable epic id, e.g. E1. Never renumbered." },
+        "title": { "type": "string", "minLength": 1 },
+        "framing": { "type": "string", "minLength": 1, "description": "The 2-3 sentence epic intro." },
+        "stories": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/story" } },
+        "notes": { "type": "array", "items": { "type": "string" }, "description": "Epic-level closing cross-reference notes (e.g. which epic owns a mechanic referenced here)." }
+      }
+    },
+    "story": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "want", "soThat", "acceptanceCriteria"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^E[0-9]+\\.S[0-9]+$", "description": "Unique, immutable, parent-bound, e.g. E1.S3. The S{k} is assigned once and frozen." },
+        "role": { "type": "string", "minLength": 1, "description": "The 'As a [role]'." },
+        "want": { "type": "string", "minLength": 1, "description": "The 'I want [capability]'." },
+        "soThat": { "type": "string", "minLength": 1, "description": "The 'so that [benefit]'." },
+        "acceptanceCriteria": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ac" } },
+        "notes": { "type": "array", "items": { "type": "string" }, "description": "Cross-reference notes and illustrative examples that accompany the story." }
+      }
+    },
+    "ac": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^E[0-9]+\\.S[0-9]+\\.A[0-9]+$", "description": "Unique, immutable, parent-bound, e.g. E1.S3.A4. The A{m} is assigned once and frozen." },
+        "text": { "type": "string", "minLength": 1, "description": "The full criterion, verbatim, in Given/When/Then form." },
+        "given": { "type": "string" },
+        "when": { "type": "string" },
+        "then": { "type": "string" }
+      }
+    }
+  }
+}

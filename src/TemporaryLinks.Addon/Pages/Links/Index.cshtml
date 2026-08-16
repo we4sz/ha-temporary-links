@@ -1,21 +1,22 @@
 @page
 @model TemporaryLinks.Addon.Pages.Links.IndexModel
 @{
-    ViewData["Title"] = "All Links";
+    ViewData["Title"] = "Links";
 }
 
-<h1>All Links</h1>
-
-<div class="mb-2">
-    <a asp-page="Create" class="btn btn-primary">Create New Link</a>
+<div class="page-head">
+    <div>
+        <h1>Links</h1>
+        <p class="subtitle">Time-boxed, usage-limited access you've handed out.</p>
+    </div>
+    <a asp-page="Create" class="btn btn-primary">+ Create link</a>
 </div>
 
 <div class="card">
-    <form method="get" class="mb-2">
-        <label>Filter by status:</label>
-        <select name="status" class="form-control" style="width: auto; display: inline-block;" onchange="this.form.submit()">
-            <option value="">All</option>
-            <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
+    <form method="get" class="toolbar">
+        <label for="statusFilter" class="muted">Filter</label>
+        <select id="statusFilter" name="StatusFilter" onchange="this.form.submit()" style="width: auto;">
+            <option value="">All statuses</option>
             <option value="Active" selected="@(Model.StatusFilter == "Active")">Active</option>
             <option value="Used" selected="@(Model.StatusFilter == "Used")">Used</option>
             <option value="Expired" selected="@(Model.StatusFilter == "Expired")">Expired</option>
@@ -25,52 +26,54 @@
 
     @if (Model.Links.Any())
     {
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Actions</th>
-                    <th>Valid From</th>
-                    <th>Valid Until</th>
-                    <th>Usage</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var link in Model.Links)
-                {
+        <div class="table-wrap">
+            <table>
+                <thead>
                     <tr>
-                        <td>@link.Name</td>
-                        <td>
-                            @if (!string.IsNullOrEmpty(link.Actions))
-                            {
-                                <code style="max-width: 300px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@link.Actions</code>
-                            }
-                            else
-                            {
-                                <span class="text-muted">-</span>
-                            }
-                        </td>
-                        <td>@link.ValidFrom.ToLocalTime().ToString("g")</td>
-                        <td>@link.ValidUntil.ToLocalTime().ToString("g")</td>
-                        <td>@link.UsageCount / @link.MaxUses</td>
-                        <td><span class="status status-@link.Status.ToString().ToLower()">@link.Status</span></td>
-                        <td>
-                            <a asp-page="Details" asp-route-id="@link.Id" class="btn btn-primary btn-sm">View</a>
-                            <a asp-page="Create" asp-route-duplicateFrom="@link.Id" class="btn btn-sm">Duplicate</a>
-                            @if (link.Status == LinkStatus.Active)
-                            {
-                                <a asp-page="Delete" asp-route-id="@link.Id" class="btn btn-danger btn-sm">Revoke</a>
-                            }
-                        </td>
+                        <th>Name</th>
+                        <th>Actions</th>
+                        <th>Valid window</th>
+                        <th class="num">Usage</th>
+                        <th>Status</th>
+                        <th></th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var link in Model.Links)
+                    {
+                        <tr>
+                            <td><span class="primary-cell">@link.Name</span></td>
+                            <td><partial name="_ActionChips" model="link.Actions" /></td>
+                            <td>
+                                <div class="stack">
+                                    <span>@link.ValidFrom.ToLocalTime().ToString("MMM d, HH:mm")</span>
+                                    <span class="sub">until @link.ValidUntil.ToLocalTime().ToString("MMM d, HH:mm")</span>
+                                </div>
+                            </td>
+                            <td class="num">@link.UsageCount / @(link.MaxUses >= 999 ? "∞" : link.MaxUses.ToString())</td>
+                            <td><span class="status status-@link.Status.ToString().ToLower()">@link.Status</span></td>
+                            <td>
+                                <div class="row-actions">
+                                    <a asp-page="Details" asp-route-id="@link.Id" class="btn btn-secondary btn-sm">View</a>
+                                    <a asp-page="Create" asp-route-duplicateFrom="@link.Id" class="btn btn-secondary btn-sm">Duplicate</a>
+                                    @if (link.Status == LinkStatus.Active)
+                                    {
+                                        <a asp-page="Delete" asp-route-id="@link.Id" class="btn btn-danger btn-sm">Revoke</a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
     else
     {
-        <p class="text-muted">No links found.</p>
+        <div class="empty">
+            <div class="empty-icon">🔗</div>
+            <p>No links@(string.IsNullOrEmpty(Model.StatusFilter) ? "" : " with this status") yet.</p>
+            <a asp-page="Create" class="btn btn-primary">Create your first link</a>
+        </div>
     }
 </div>

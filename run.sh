@@ -21,8 +21,10 @@ export Logging__LogLevel__Default="$LOG_LEVEL"
 export HomeAssistant__BaseUri="http://supervisor/core/api/"
 export HomeAssistant__Token="$SUPERVISOR_TOKEN"
 
-# Database path (persisted in /data)
-export ConnectionStrings__DefaultConnection="Data Source=/data/temporarylinks.db"
+# Database path (persisted in /data). Match the tuned fallback in Program.cs
+# (Default Timeout=30;Pooling=false) so production runs with the same SQLite
+# settings that prevent 'database is locked' dropped writes.
+export ConnectionStrings__DefaultConnection="Data Source=/data/temporarylinks.db;Default Timeout=30;Pooling=false"
 
 # Ingress configuration
 export ASPNETCORE_URLS="http://0.0.0.0:8099"

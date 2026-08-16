@@ -1,0 +1,7 @@
+{
+  "testRoots": ["tools/facit/tests"],
+  "language": "python",
+  "testCommand": "FACIT_INPROCESS=1 COVERAGE_FILE={outdir}/.coverage python3 -m pytest tools/facit/tests/test_facit.py --cov=tools/facit --cov-config=tools/facit/.coveragerc --cov-context=test --cov-report= --junitxml={outdir}/junit.xml -p no:cacheprovider -q -k \"{filter}\"",
+  "filterItem": "{test}",
+  "filterJoin": " or "
+}

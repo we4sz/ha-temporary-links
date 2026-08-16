@@ -4,46 +4,54 @@
     ViewData["Title"] = "Contacts";
 }
 
-<h1>Contacts</h1>
-
-<div class="mt-2">
-    <a asp-page="Create" class="btn btn-primary">Add New Contact</a>
+<div class="page-head">
+    <div>
+        <h1>Contacts</h1>
+        <p class="subtitle">Reusable recipients you can pick when creating a link.</p>
+    </div>
+    <a asp-page="Create" class="btn btn-primary">+ Add contact</a>
 </div>
 
-@if (Model.Contacts.Any())
-{
-    <div class="card mt-2">
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Phone Number</th>
-                    <th>Email</th>
-                    <th>Info</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var contact in Model.Contacts)
-                {
+<div class="card">
+    @if (Model.Contacts.Any())
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
                     <tr>
-                        <td>@contact.Name</td>
-                        <td>@contact.PhoneNumber</td>
-                        <td>@(contact.Email ?? "-")</td>
-                        <td style="max-width: 300px;">@(contact.Info ?? "-")</td>
-                        <td>
-                            <a asp-page="Edit" asp-route-id="@contact.Id" class="btn btn-sm">Edit</a>
-                            <a asp-page="Delete" asp-route-id="@contact.Id" class="btn btn-sm btn-danger">Delete</a>
-                        </td>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Notes</th>
+                        <th></th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else
-{
-    <div class="card mt-2">
-        <p class="text-muted">No contacts found. Add your first contact to get started.</p>
-    </div>
-}
+                </thead>
+                <tbody>
+                    @foreach (var contact in Model.Contacts)
+                    {
+                        <tr>
+                            <td><span class="primary-cell">@contact.Name</span></td>
+                            <td class="code">@contact.PhoneNumber</td>
+                            <td class="muted">@(string.IsNullOrEmpty(contact.Email) ? "—" : contact.Email)</td>
+                            <td class="muted" style="max-width:20rem;">@(string.IsNullOrEmpty(contact.Info) ? "—" : contact.Info)</td>
+                            <td>
+                                <div class="row-actions">
+                                    <a asp-page="Edit" asp-route-id="@contact.Id" class="btn btn-secondary btn-sm">Edit</a>
+                                    <a asp-page="Delete" asp-route-id="@contact.Id" class="btn btn-danger btn-sm">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty">
+            <div class="empty-icon">👤</div>
+            <p>No contacts yet.</p>
+            <a asp-page="Create" class="btn btn-primary">Add your first contact</a>
+        </div>
+    }
+</div>

@@ -1,0 +1,1163 @@
+{
+  "schemaVersion": 1,
+  "facitVersion": "self",
+  "generatedAt": "2026-06-30T00:00:00Z",
+  "entries": [
+    {
+      "acId": "E1.S1.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:61-159",
+          "note": "compile discovers + schema-validates a facit root and reports nodes/hash."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_cli_spec",
+          "note": "proving test"
+        }
+      ],
+      "notes": "compile discovers + schema-validates a facit root and reports nodes/hash.",
+      "proof": {
+        "tests": [
+          "test_compile_cli_spec"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S1.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:96-159",
+          "note": "globally-qualified ids + facit count + stable hash — not pinned by a dedicated test."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_reports_counts_and_stable_hash",
+          "note": "proving test"
+        }
+      ],
+      "notes": "globally-qualified ids + facit count + stable hash — not pinned by a dedicated test.",
+      "proof": {
+        "tests": [
+          "test_compile_reports_counts_and_stable_hash"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S1.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "exit-code contract not pinned by a dedicated compile-error test."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_exit_codes_valid_zero_invalid_nonzero",
+          "note": "proving test"
+        }
+      ],
+      "notes": "exit-code contract not pinned by a dedicated compile-error test.",
+      "proof": {
+        "tests": [
+          "test_compile_exit_codes_valid_zero_invalid_nonzero"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S2.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "validate reports VALID + node count/hash and exits zero on a valid root."
+        },
+        {
+          "kind": "test",
+          "ref": "test_validate_cli_spec",
+          "note": "proving test"
+        }
+      ],
+      "notes": "validate reports VALID + node count/hash and exits zero on a valid root.",
+      "proof": {
+        "tests": [
+          "test_validate_cli_spec"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S2.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "validate-on-invalid (prints errors + non-zero) not pinned by a dedicated test."
+        },
+        {
+          "kind": "test",
+          "ref": "test_validate_invalid_prints_errors_nonzero",
+          "note": "proving test"
+        }
+      ],
+      "notes": "validate-on-invalid (prints errors + non-zero) not pinned by a dedicated test.",
+      "proof": {
+        "tests": [
+          "test_validate_invalid_prints_errors_nonzero"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S3.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "duplicate-id / parent-bound integrity not pinned by a dedicated test."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_flags_duplicate_id",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_flags_non_parent_bound_ac",
+          "note": "proving test"
+        }
+      ],
+      "notes": "duplicate-id / parent-bound integrity not pinned by a dedicated test.",
+      "proof": {
+        "tests": [
+          "test_compile_flags_duplicate_id",
+          "test_compile_flags_non_parent_bound_ac"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S3.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "extends-warning not pinned."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_warns_unknown_extends",
+          "note": "proving test"
+        }
+      ],
+      "notes": "extends-warning not pinned.",
+      "proof": {
+        "tests": [
+          "test_compile_warns_unknown_extends"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S3.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "recommended-utility-warning not pinned."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_warns_unknown_recommended_utility",
+          "note": "proving test"
+        }
+      ],
+      "notes": "recommended-utility-warning not pinned.",
+      "proof": {
+        "tests": [
+          "test_compile_warns_unknown_recommended_utility"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S4.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "default root = platform facit when none given."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_default_root",
+          "note": "proving test"
+        }
+      ],
+      "notes": "default root = platform facit when none given.",
+      "proof": {
+        "tests": [
+          "test_compile_default_root"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S4.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "identical behaviour across default vs explicit --root (same hash + node count)."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_explicit_docs_root",
+          "note": "proving test"
+        }
+      ],
+      "notes": "identical behaviour across default vs explicit --root (same hash + node count).",
+      "proof": {
+        "tests": [
+          "test_compile_explicit_docs_root"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S4.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "dogfood: compile + validate succeed on the CLI's own facit."
+        },
+        {
+          "kind": "test",
+          "ref": "test_compile_cli_spec",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "test_validate_cli_spec",
+          "note": "proving test"
+        }
+      ],
+      "notes": "dogfood: compile + validate succeed on the CLI's own facit.",
+      "proof": {
+        "tests": [
+          "test_compile_cli_spec",
+          "test_validate_cli_spec"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S5.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:176-200",
+          "note": "lock writes per-node hash/status/tests — exercised but not asserted structurally."
+        },
+        {
+          "kind": "test",
+          "ref": "test_lock_writes_per_node_hash_status_tests_and_metadata",
+          "note": "proving test"
+        }
+      ],
+      "notes": "lock writes per-node hash/status/tests — exercised but not asserted structurally.",
+      "proof": {
+        "tests": [
+          "test_lock_writes_per_node_hash_status_tests_and_metadata"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S5.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:176-200",
+          "note": "lock refuses + reports on a schema-invalid facit."
+        },
+        {
+          "kind": "test",
+          "ref": "test_lock_refuses_invalid_facit",
+          "note": "proving test"
+        }
+      ],
+      "notes": "lock refuses + reports on a schema-invalid facit.",
+      "proof": {
+        "tests": [
+          "test_lock_refuses_invalid_facit"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S5.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:176-260",
+          "note": "re-lock carries proven forward only for unchanged nodes; changed node resets."
+        },
+        {
+          "kind": "test",
+          "ref": "test_relock_carries_proven_forward",
+          "note": "proving test"
+        }
+      ],
+      "notes": "re-lock carries proven forward only for unchanged nodes; changed node resets.",
+      "proof": {
+        "tests": [
+          "test_relock_carries_proven_forward",
+          "test_relock_preserves_testsources"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S6.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "added/removed not pinned (only changed is)."
+        },
+        {
+          "kind": "test",
+          "ref": "test_diff_lists_added_changed_and_removed",
+          "note": "proving test"
+        }
+      ],
+      "notes": "added/removed not pinned (only changed is).",
+      "proof": {
+        "tests": [
+          "test_diff_lists_added_changed_and_removed"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S6.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "one AC edited -> exactly that one node reported changed."
+        },
+        {
+          "kind": "test",
+          "ref": "test_diff_single_ac_change",
+          "note": "proving test"
+        }
+      ],
+      "notes": "one AC edited -> exactly that one node reported changed.",
+      "proof": {
+        "tests": [
+          "test_diff_single_ac_change"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S6.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "live == lock -> diff reports zero changes."
+        },
+        {
+          "kind": "test",
+          "ref": "test_lock_then_diff_clean",
+          "note": "proving test"
+        }
+      ],
+      "notes": "live == lock -> diff reports zero changes.",
+      "proof": {
+        "tests": [
+          "test_lock_then_diff_clean"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S7.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "status coverage report not pinned by a test."
+        },
+        {
+          "kind": "test",
+          "ref": "test_status_reports_counts",
+          "note": "proving test"
+        }
+      ],
+      "notes": "status coverage report not pinned by a test.",
+      "proof": {
+        "tests": [
+          "test_status_reports_counts"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S7.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "gap no-file listing not pinned."
+        },
+        {
+          "kind": "test",
+          "ref": "test_gap_no_file_lists_every_ac",
+          "note": "proving test"
+        }
+      ],
+      "notes": "gap no-file listing not pinned.",
+      "proof": {
+        "tests": [
+          "test_gap_no_file_lists_every_ac"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S7.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "gap coverage/unknown-ac not pinned."
+        },
+        {
+          "kind": "test",
+          "ref": "test_gap_file_reports_coverage_and_flags_unknown",
+          "note": "proving test"
+        }
+      ],
+      "notes": "gap coverage/unknown-ac not pinned.",
+      "proof": {
+        "tests": [
+          "test_gap_file_reports_coverage_and_flags_unknown"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:538-740",
+          "note": "prove sets proven + records tests when bound test Passed and diff-clean."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_marks_ac_proven_when_test_passes",
+          "note": "proving test"
+        }
+      ],
+      "notes": "prove sets proven + records tests when bound test Passed and diff-clean.",
+      "proof": {
+        "tests": [
+          "test_prove_marks_ac_proven_when_test_passes"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:538-740",
+          "note": "prove refuses + non-zero when a bound test is failed/absent."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_refuses_when_test_failed",
+          "note": "proving test"
+        }
+      ],
+      "notes": "prove refuses + non-zero when a bound test is failed/absent.",
+      "proof": {
+        "tests": [
+          "test_prove_refuses_when_test_failed"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:554-565",
+          "note": "verify rejects a proven node with no binding."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_refuses_proven_without_binding",
+          "note": "proving test"
+        }
+      ],
+      "notes": "verify rejects a proven node with no binding.",
+      "proof": {
+        "tests": [
+          "test_prove_refuses_proven_without_binding"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A4",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:538-740",
+          "note": "prove refuses a diff-dirty node."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_refuses_when_node_diff_dirty",
+          "note": "proving test"
+        }
+      ],
+      "notes": "prove refuses a diff-dirty node.",
+      "proof": {
+        "tests": [
+          "test_prove_refuses_when_node_diff_dirty"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A5",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:538-740",
+          "note": "repeated --impl + --results merge across maps/files."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_spans_multiple_impls_and_results_files",
+          "note": "proving test"
+        }
+      ],
+      "notes": "repeated --impl + --results merge across maps/files.",
+      "proof": {
+        "tests": [
+          "test_prove_spans_multiple_impls_and_results_files"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A6",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:342-369",
+          "note": "display+FQN of one test collapse, not ambiguous."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_collapses_displayname_and_fqn_of_same_test",
+          "note": "proving test"
+        }
+      ],
+      "notes": "display+FQN of one test collapse, not ambiguous.",
+      "proof": {
+        "tests": [
+          "test_prove_collapses_displayname_and_fqn_of_same_test"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A7",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:342-369",
+          "note": "two different tests, differing outcomes -> ambiguous, refused."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_refuses_genuine_ambiguous_match",
+          "note": "proving test"
+        }
+      ],
+      "notes": "two different tests, differing outcomes -> ambiguous, refused.",
+      "proof": {
+        "tests": [
+          "test_dupname_bare_collision_refused_fqn_still_works",
+          "test_prove_refuses_genuine_ambiguous_match"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S9.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:374-482",
+          "note": "certify records coveredFiles [{path,hash}] from coverage."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_records_coveredFiles_from_coverage",
+          "note": "proving test"
+        }
+      ],
+      "notes": "certify records coveredFiles [{path,hash}] from coverage.",
+      "proof": {
+        "tests": [
+          "test_prove_records_coveredFiles_from_coverage"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S9.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:485-535",
+          "note": "conform reports conformant then drifted on a covered-file change."
+        },
+        {
+          "kind": "test",
+          "ref": "test_conform_reports_conformant_then_drifted",
+          "note": "proving test"
+        }
+      ],
+      "notes": "conform reports conformant then drifted on a covered-file change.",
+      "proof": {
+        "tests": [
+          "test_conform_reports_conformant_then_drifted"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S9.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:485-535",
+          "note": "proven-without-coveredFiles -> unverifiable."
+        },
+        {
+          "kind": "test",
+          "ref": "test_conform_flags_unverifiable_when_no_coveredfiles",
+          "note": "proving test"
+        }
+      ],
+      "notes": "proven-without-coveredFiles -> unverifiable.",
+      "proof": {
+        "tests": [
+          "test_conform_flags_unverifiable_when_no_coveredfiles",
+          "test_verify_fails_on_proven_without_coverage"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S9.A4",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:485-535",
+          "note": "incremental re-run of only drifted ACs not pinned by a dedicated test."
+        },
+        {
+          "kind": "test",
+          "ref": "test_conform_incremental_only_drifted",
+          "note": "proving test"
+        }
+      ],
+      "notes": "incremental re-run of only drifted ACs not pinned by a dedicated test.",
+      "proof": {
+        "tests": [
+          "test_conform_incremental_only_drifted"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S10.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:538-740",
+          "note": "coverage-miss gate refuses a test that doesn't execute the AC's impl."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_rejects_binding_whose_test_misses_impl_coverage",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_accepts_when_coverage_intersects_impl",
+          "note": "proving test"
+        }
+      ],
+      "notes": "coverage-miss gate refuses a test that doesn't execute the AC's impl.",
+      "proof": {
+        "tests": [
+          "test_compute_covered_files_matches_relative_declared_to_absolute_coverage",
+          "test_prove_accepts_when_coverage_intersects_impl",
+          "test_prove_rejects_binding_whose_test_misses_impl_coverage"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S10.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:538-740",
+          "note": "inflation warning when one test is bound to many ACs."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_warns_on_high_test_share",
+          "note": "proving test"
+        }
+      ],
+      "notes": "inflation warning when one test is bound to many ACs.",
+      "proof": {
+        "tests": [
+          "test_prove_warns_on_high_test_share"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S11.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py:263-340",
+          "note": "ingests junit (Python) alongside TRX (.NET) through the same verbs."
+        },
+        {
+          "kind": "test",
+          "ref": "test_parse_junit_outcomes",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_accepts_junit_results",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "test_inprocess_run_matches_subprocess",
+          "note": "proving test"
+        }
+      ],
+      "notes": "ingests junit (Python) alongside TRX (.NET) through the same verbs.",
+      "proof": {
+        "tests": [
+          "test_parse_junit_outcomes",
+          "test_prove_accepts_junit_results",
+          "test_inprocess_run_matches_subprocess"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S11.A2",
+      "status": "partial",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "self-verify on its own facit — demonstrated by the dogfood run, not unit-proven."
+        }
+      ],
+      "notes": "self-verify on its own facit — demonstrated by the dogfood run, not unit-proven."
+    },
+    {
+      "acId": "E1.S11.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "every proven CLI AC coverage-backed + conform-clean — shown by the dogfood run."
+        },
+        {
+          "kind": "test",
+          "ref": "test_selfverify_proven_cli_acs_are_coverage_backed_and_conform_clean",
+          "note": "proving test"
+        }
+      ],
+      "notes": "every proven CLI AC coverage-backed + conform-clean — shown by the dogfood run.",
+      "proof": {
+        "tests": [
+          "test_selfverify_proven_cli_acs_are_coverage_backed_and_conform_clean"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S5.A4",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "atomic lock write via tempfile+os.replace; no partial/temp left."
+        },
+        {
+          "kind": "test",
+          "ref": "test_atomic_write_no_tmp_leftover",
+          "note": "proving test"
+        }
+      ],
+      "notes": "atomic lock write via tempfile+os.replace; no partial/temp left.",
+      "proof": {
+        "tests": [
+          "test_atomic_write_no_tmp_leftover"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A8",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "a red/absent bound test demotes a locked-proven AC to unproven."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_demotes_proven_on_red",
+          "note": "proving test"
+        }
+      ],
+      "notes": "a red/absent bound test demotes a locked-proven AC to unproven.",
+      "proof": {
+        "tests": [
+          "test_prove_demotes_proven_on_red"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S8.A9",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "prove --verify --results re-checks tests-green-now."
+        },
+        {
+          "kind": "test",
+          "ref": "test_verify_rechecks_greenness_with_results",
+          "note": "proving test"
+        }
+      ],
+      "notes": "prove --verify --results re-checks tests-green-now.",
+      "proof": {
+        "tests": [
+          "test_verify_rechecks_greenness_with_results"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S9.A5",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "prove refuses without a populated coveredFiles trigger (strict)."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_refuses_without_coverage",
+          "note": "proving test"
+        }
+      ],
+      "notes": "prove refuses without a populated coveredFiles trigger (strict).",
+      "proof": {
+        "tests": [
+          "test_prove_refuses_without_coverage"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S11.A4",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/selfproof.py",
+          "note": "selfproof _verdict does not discard prove's rc."
+        },
+        {
+          "kind": "test",
+          "ref": "test_selfproof_verdict_does_not_discard_prove_rc",
+          "note": "proving test"
+        }
+      ],
+      "notes": "selfproof _verdict does not discard prove rc (implemented in selfproof.py).",
+      "proof": {
+        "tests": [
+          "test_selfproof_verdict_does_not_discard_prove_rc"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S9.A6",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "aggregate no-evidence fallback populates coveredFiles"
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_populates_coveredfiles_from_aggregate_cobertura_without_evidence",
+          "note": "proving test"
+        }
+      ],
+      "notes": "aggregate cobertura + no declared evidence → coveredFiles from covered source under src-root.",
+      "proof": {
+        "tests": [
+          "test_prove_populates_coveredfiles_from_aggregate_cobertura_without_evidence"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S12.A4",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "prove records each proving test's source location + line-range hash."
+        },
+        {
+          "kind": "test",
+          "ref": "test_prove_records_test_source_hash",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "test_find_method_span_python_and_csharp",
+          "note": "proving test"
+        }
+      ],
+      "notes": "prove records each proving test's source location + line-range hash.",
+      "proof": {
+        "tests": [
+          "test_prove_records_test_source_hash",
+          "test_find_method_span_python_and_csharp"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S12.A5",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "conform flags proving-test source drift."
+        },
+        {
+          "kind": "test",
+          "ref": "test_conform_detects_test_source_drift",
+          "note": "proving test"
+        }
+      ],
+      "notes": "conform flags proving-test source drift.",
+      "proof": {
+        "tests": [
+          "test_conform_detects_test_source_drift"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S12.A6",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "changed test re-opened for re-run + re-review."
+        },
+        {
+          "kind": "test",
+          "ref": "test_conform_detects_test_source_drift",
+          "note": "proving test"
+        }
+      ],
+      "notes": "changed test re-opened for re-run + re-review.",
+      "proof": {
+        "tests": [
+          "test_conform_detects_test_source_drift"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S12.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "cmd_reverify uses the configured testCommand template (runner-agnostic)."
+        },
+        {
+          "kind": "test",
+          "ref": "test_reverify_runs_tests_and_proves",
+          "note": "proving test"
+        }
+      ],
+      "notes": "cmd_reverify reads testCommand from facit.config.json and runs it per AC.",
+      "proof": {
+        "tests": [
+          "test_reverify_runs_tests_and_proves"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S12.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "cmd_reverify invokes the command, ingests results+coverage, and delegates to cmd_prove."
+        },
+        {
+          "kind": "test",
+          "ref": "test_reverify_runs_tests_and_proves",
+          "note": "proving test"
+        }
+      ],
+      "notes": "reverify proves exactly as prove would — green now and coverage-backed.",
+      "proof": {
+        "tests": [
+          "test_reverify_runs_tests_and_proves"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S12.A3",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "incremental scope: spec-drift OR coveredFiles-drift OR testSources-drift."
+        },
+        {
+          "kind": "test",
+          "ref": "test_reverify_incremental_scope_selects_only_affected",
+          "note": "proving test"
+        }
+      ],
+      "notes": "without --all/--ac, only ACs with drift are re-run.",
+      "proof": {
+        "tests": [
+          "test_reverify_incremental_scope_selects_only_affected"
+        ],
+        "coveredFiles": []
+      }
+    },
+    {
+      "acId": "E1.S9.A7",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "tools/facit/facit.py",
+          "note": "structural proof hashes declared governed code directly"
+        },
+        {
+          "kind": "test",
+          "ref": "test_structural_proof_hashes_declared_code_without_coverage",
+          "note": "proving test"
+        }
+      ],
+      "notes": "structural proof: declared governed code hashed directly as trigger; refuses if none declared.",
+      "proof": {
+        "tests": [
+          "test_structural_proof_hashes_declared_code_without_coverage"
+        ],
+        "coveredFiles": []
+      }
+    }
+  ]
+}

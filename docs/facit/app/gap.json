@@ -1,0 +1,630 @@
+{
+  "schemaVersion": 1,
+  "facitVersion": "93d0fd1f4cc6f65f",
+  "generatedAt": "2026-08-16",
+  "summary": {
+    "total": 112,
+    "sound": 83,
+    "partial": 2,
+    "missing": 27,
+    "contradicted": 0
+  },
+  "items": [
+    {
+      "acId": "E1.S1.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S1.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S1.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S1.A4",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S1.A5",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S2.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S2.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S2.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S2.A4",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S3.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S3.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S3.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S3.A4",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S4.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S4.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S4.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S4.A4",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S5.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S5.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S1.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S1.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S2.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S2.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S2.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S2.A4",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S2.A5",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S2.A6",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S3.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S3.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S3.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S4.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S4.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S4.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E3.S1.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E3.S1.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E3.S2.A1",
+      "gapType": "sound",
+      "severity": "minor",
+      "whatsMissing": "Sending is not guarded by link status — an SMS can be sent for an expired/used/revoked link whose trigger URL is already dead.",
+      "action": "Refuse (or warn on) sending for non-active links."
+    },
+    {
+      "acId": "E3.S2.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E3.S2.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E3.S3.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E3.S3.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E4.S1.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E4.S1.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E4.S2.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E4.S2.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E4.S3.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E4.S3.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E4.S4.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E5.S1.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E5.S2.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E5.S2.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E5.S3.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E5.S3.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E6.S1.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E6.S1.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E6.S2.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E6.S2.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E6.S3.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E6.S3.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S1.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S6.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S6.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S6.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S7.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S7.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S7.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S5.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S5.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E5.S2.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S2.A5",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S5.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S5.A4",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S1.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S1.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S1.A3",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S2.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "When no POST/confirm-page path exists the add-on silently issues a preview-bot-consumable GET link.",
+      "action": "Warn (or fail closed) before sharing a bot-consumable link."
+    },
+    {
+      "acId": "E7.S3.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S3.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S4.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S5.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "The shared-page host runs JS with the fragment in scope and could exfiltrate every hook; not surfaced as full trust.",
+      "action": "State the trust plainly in UI/docs; recommend first-party/self-hosted."
+    },
+    {
+      "acId": "E7.S6.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "Any HA service/template can be smuggled into a link's actions.",
+      "action": "Allowlist permitted action domains/services."
+    },
+    {
+      "acId": "E7.S6.A2",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "The add-on uses a full-admin token for everything.",
+      "action": "Use least-privilege / supervisor-scoped access (see E9.S8)."
+    },
+    {
+      "acId": "E8.S1.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "action": "Add a recipient success confirmation."
+    },
+    {
+      "acId": "E8.S1.A2",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "A refused link (expired/used/revoked) gives the recipient no meaningful message.",
+      "action": "Add recipient-facing refusal explanations."
+    },
+    {
+      "acId": "E8.S2.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "No operator notification when a link is used.",
+      "action": "Emit an HA notification on success, toggleable."
+    },
+    {
+      "acId": "E8.S2.A2",
+      "gapType": "missing",
+      "severity": "minor",
+      "action": "Optional notification on out-of-grant attempts."
+    },
+    {
+      "acId": "E8.S3.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "No localisation; HA add-ons are expected to be multilingual.",
+      "action": "Externalise strings; add HA add-on translations."
+    },
+    {
+      "acId": "E9.S1.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "If ingress is bypassed the dashboard is fully unauthenticated.",
+      "action": "Defence-in-depth auth / shared-secret independent of ingress."
+    },
+    {
+      "acId": "E9.S1.A2",
+      "gapType": "partial",
+      "severity": "major",
+      "whatsMissing": "Spoofable forwarded IPs poison the audit trail; X-Ingress-Path unvalidated.",
+      "action": "Validate ingress path; don't trust forwarded IPs for audit."
+    },
+    {
+      "acId": "E9.S2.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E9.S3.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "A half-open connection wedges the listener forever with no signal.",
+      "action": "Add heartbeat/receive timeout → forced reconnect."
+    },
+    {
+      "acId": "E9.S3.A2",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "Token expiry/revocation loops silently forever.",
+      "action": "Surface a distinct actionable state; back off."
+    },
+    {
+      "acId": "E9.S4.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "A transient messaging-provider outage at boot takes the whole add-on down.",
+      "action": "Degrade SMS only; start with a warning."
+    },
+    {
+      "acId": "E9.S5.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "A failed migration crash-loops with no backup and no rollback path.",
+      "action": "Pre-migration backup + clear failure handling."
+    },
+    {
+      "acId": "E9.S6.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "A wedged-but-live process is never restarted by the home.",
+      "action": "Add /health (DB + listener liveness) + watchdog in config.yaml."
+    },
+    {
+      "acId": "E9.S7.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "Nothing runs tests, the facit gate, or a multi-arch build on change.",
+      "action": "Add CI: dotnet test + facit validate + per-arch build."
+    },
+    {
+      "acId": "E9.S8.A1",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Dead supervisor-token path; operator forced to hand-create a full-admin token; dual config mechanisms.",
+      "action": "Use SUPERVISOR_TOKEN + scoped API by default; manual override only; one config path."
+    },
+    {
+      "acId": "E10.S1.A1",
+      "gapType": "missing",
+      "severity": "major",
+      "whatsMissing": "No recurring schedule — only one contiguous window.",
+      "action": "Model day-of-week + daily time windows; guard executes within an occurrence."
+    },
+    {
+      "acId": "E10.S1.A2",
+      "gapType": "missing",
+      "severity": "minor",
+      "action": "Per-occurrence allowance."
+    },
+    {
+      "acId": "E10.S2.A1",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "One link = one recipient number.",
+      "action": "Multi-recipient / group send with per-recipient delivery records."
+    },
+    {
+      "acId": "E10.S3.A1",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "No scannable code for a link.",
+      "action": "Render a QR for the share URL."
+    },
+    {
+      "acId": "E10.S4.A1",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Links list is unbounded, status-only, no search.",
+      "action": "Add search/filter (name/recipient/date) + paging."
+    },
+    {
+      "acId": "E10.S4.A2",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Older audit events are unreachable in the UI.",
+      "action": "Paging/filtering/date range over full history."
+    },
+    {
+      "acId": "E10.S4.A3",
+      "gapType": "missing",
+      "severity": "minor",
+      "action": "Export link + audit history (CSV/JSON)."
+    },
+    {
+      "acId": "E10.S5.A1",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Every link is attributed to 'WebUI'; the authenticated user is discarded.",
+      "action": "Attribute to the ingress-authenticated household member."
+    },
+    {
+      "acId": "E10.S5.A2",
+      "gapType": "partial",
+      "severity": "major",
+      "whatsMissing": "Silent timezone assumptions can shift the whole window if container TZ != operator TZ.",
+      "action": "Make the intended timezone explicit and consistent form→storage→guard→display."
+    },
+    {
+      "acId": "E1.S1.A6",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S4.A5",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E1.S7.A4",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S7.A1",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E7.S7.A2",
+      "gapType": "sound",
+      "severity": "none"
+    },
+    {
+      "acId": "E2.S6.A1",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Both sharing modes still exist; one-tap GET remains the fallback.",
+      "action": "Collapse sharing to confirm-page-only; delete the GET path and its armed-mode branching."
+    },
+    {
+      "acId": "E2.S6.A2",
+      "gapType": "missing",
+      "severity": "minor",
+      "whatsMissing": "Creation currently falls back to a direct GET link when no confirm-page hosting exists.",
+      "action": "Refuse creation without confirm-page hosting (supersedes the E7.S2.A1 warning-level behaviour)."
+    }
+  ]
+}

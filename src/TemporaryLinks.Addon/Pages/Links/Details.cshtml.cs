@@ -29,7 +29,7 @@ public class DetailsModel : PageModel
     public async Task<IActionResult> OnGetAsync(Guid id)
     {
         Link = await _linkService.GetLinkByIdAsync(id);
-        LinkUrl = Link?.CloudhookUrl ?? "";
+        LinkUrl = Link == null ? "" : _linkService.GetShareUrl(Link);
         IsTwilioConfigured = _twilioService.IsConfigured;
 
         return Page();

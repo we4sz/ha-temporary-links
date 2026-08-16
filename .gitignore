@@ -40,3 +40,10 @@ artifacts/
 # Windows
 Thumbs.db
 ehthumbs.db
+
+# Test artifacts
+TestResults*/
+
+# Python
+__pycache__/
+*.pyc
