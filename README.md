@@ -15,7 +15,11 @@ user stories + acceptance criteria as validated JSON. How we work: [`CLAUDE.md`]
    HA Cloud / Nabu Casa). The automation never runs the link's actions itself — it only
    **announces** the press: inside the validity window it fires `temp_link_triggered`,
    outside it `temp_link_blocked` (so even refused attempts are audited).
-3. On `temp_link_triggered` the add-on judges the link (unknown / exhausted / revoked /
+3. What is shared is always a **confirm page** carrying the trigger URL in its fragment;
+   the recipient presses one button and the page POSTs the trigger. That press is the only
+   gesture the automation accepts, so there is nothing for a preview bot to fetch. With no
+   page to share (no `share_page_url` and no public URL), creating a link is refused.
+4. On `temp_link_triggered` the add-on judges the link (unknown / exhausted / revoked /
    expired / not-yet-valid), **atomically claims a use**, and only then runs the actions —
    the allowance binds the actions, not just the bookkeeping. The automation is deleted
    (with retry) when the link dies, re-armed at startup if it predates the current model,
@@ -49,12 +53,13 @@ Read this before exposing anything.
   container's data volume; protect backups accordingly.
 - **Secrets** (HA token, Twilio credentials) live in the add-on options (password-typed
   fields), never in the repo or the database.
-- **Preview-bot immunity:** when the home has HA Cloud remote access, shared links point
-  to a confirm page (hosted at `/local/` via the remote UI) and the trigger is POST-only,
-  so chat-app preview bots can neither fire nor consume a link. The public URL is
-  **auto-discovered from HA Cloud** — the `public_url` option is only an override for
-  unusual setups (own domain/proxy). Without any public URL, links fall back to the
-  direct one-tap form, which preview bots can consume.
+- **Preview-bot immunity:** every shared link is a confirm page — the hosted copy at
+  `share_page_url` (the shipped default), or one served from the home's own public URL at
+  `/local/` — and the trigger accepts only that page's button press (POST). Chat-app preview
+  bots can neither fire nor consume a link, and there is no one-tap form to fall back to:
+  with no page available, creating a link is **refused** rather than downgraded. The public
+  URL is **auto-discovered from HA Cloud** — `public_url` is only an override for unusual
+  setups (own domain/proxy).
 
 ## Install
 
@@ -66,7 +71,9 @@ Install through the add-on store, straight from this repository:
    the first build takes a few minutes).
 3. Configure options: `ha_url` (e.g. `http://homeassistant.local:8123`), `ha_token`
    (a long-lived access token), optionally Twilio credentials for SMS. `share_page_url`
-   already defaults to the hosted confirm page, so links are bot-immune out of the box.
+   already defaults to the hosted confirm page, so links work out of the box; clear it only
+   if the home has HA Cloud remote access (or `public_url`) to serve the page itself —
+   with neither, link creation is refused.
 4. HA Cloud (Nabu Casa) must be connected — cloudhooks are what make links publicly
    reachable. Open the dashboard through the add-on's panel (ingress) only.
 

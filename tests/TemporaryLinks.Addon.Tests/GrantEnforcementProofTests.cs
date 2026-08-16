@@ -97,7 +97,7 @@ public class GrantEnforcementProofTests
     [Fact]
     public async Task Failed_creation_leaves_no_orphaned_trigger_and_no_link()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         h.Ha.ThrowOnCloudhook = new InvalidOperationException("HA Cloud unavailable");
         var now = DateTimeOffset.UtcNow;
 

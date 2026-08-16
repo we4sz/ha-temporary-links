@@ -7,8 +7,8 @@ namespace TemporaryLinks.Addon.IntegrationTests;
 /// <summary>
 /// Proves the add-on ↔ Home Assistant seam against a REAL HA instance (see
 /// tests/integration/run-ha-tests.sh): that HA accepts the generated automation,
-/// that the home itself enforces the validity window, that the confirm-page mode is
-/// POST-only, and that the action-picker feed and service execution are real.
+/// that the home itself enforces the validity window, that a link is fired only by the
+/// confirm page's POST, and that the action-picker feed and service execution are real.
 /// Unit tests only inspect the payloads we SEND; these prove how HA answers.
 /// </summary>
 [Collection("ha")]
@@ -79,8 +79,7 @@ public sealed class HaSeamTests(HaFixture ha)
             Assert.True(AutomationModel.MatchesCurrentModel(
                 stored.Value,
                 $"temp_link_{token}",
-                AutomationModel.WindowTemplate(validFrom, validUntil),
-                acceptsPost: false));
+                AutomationModel.WindowTemplate(validFrom, validUntil)));
 
             // Stored is not enough — HA must actually load it (a template syntax error
             // would surface here, not at the config POST).
@@ -93,10 +92,12 @@ public sealed class HaSeamTests(HaFixture ha)
     }
 
     [SkippableFact]
-    public async Task One_tap_link_inside_window_fires_the_tracking_event()
+    public async Task Inside_the_window_the_confirm_pages_press_fires_the_tracking_event()
     {
         ha.SkipUnlessConfigured();
-        var service = ha.CreateService(); // no confirm page -> one-tap GET links
+        // No confirm page configured on this instance — arming is the same either way, since
+        // the page's press is the only sharing gesture there is (E2.S6.A1).
+        var service = ha.CreateService();
         var token = NewToken();
 
         var automationId = await service.CreateWebhookAutomationAsync(
@@ -107,7 +108,11 @@ public sealed class HaSeamTests(HaFixture ha)
             await ha.WaitUntilAutomationLoadedAsync(automationId, TimeSpan.FromSeconds(15));
             await using var events = await ha.SubscribeAsync("temp_link_triggered");
 
-            var response = await ha.GetWebhookAsync($"temp_link_{token}");
+            // A plain fetch of the trigger — the one-tap form — is refused by the home.
+            var get = await ha.GetWebhookAsync($"temp_link_{token}");
+            Assert.Equal(HttpStatusCode.MethodNotAllowed, get.StatusCode);
+
+            var response = await ha.PostWebhookAsync($"temp_link_{token}");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             var evt = await events.WaitForMatchAsync(
@@ -137,7 +142,7 @@ public sealed class HaSeamTests(HaFixture ha)
             await using var triggered = await ha.SubscribeAsync("temp_link_triggered");
             await using var blocked = await ha.SubscribeAsync("temp_link_blocked");
 
-            await ha.GetWebhookAsync($"temp_link_{token}");
+            await ha.PostWebhookAsync($"temp_link_{token}");
 
             // The home refuses the use itself — no use is ever announced...
             var useEvent = await triggered.WaitForMatchAsync(
@@ -173,7 +178,7 @@ public sealed class HaSeamTests(HaFixture ha)
 
             var firedBefore = DateTimeOffset.UtcNow.AddSeconds(-5);
             await using var events = await ha.SubscribeAsync("temp_link_triggered");
-            await ha.GetWebhookAsync($"temp_link_{token}");
+            await ha.PostWebhookAsync($"temp_link_{token}");
             await events.WaitForMatchAsync(
                 e => e.GetProperty("token").GetString() == token, TimeSpan.FromSeconds(10));
 

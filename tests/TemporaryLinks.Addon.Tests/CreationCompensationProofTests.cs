@@ -20,7 +20,9 @@ public class CreationCompensationProofTests
     public async Task Store_failure_after_the_trigger_exists_leaves_nothing_behind()
     {
         var token = "fixed-token-for-collision-000000";
-        using var h = new LinkServiceHarness(tokenGenerator: new FixedTokenGenerator(token));
+        using var h = new LinkServiceHarness(
+            publicUrl: "https://example.ui.nabu.casa",
+            tokenGenerator: new FixedTokenGenerator(token));
         var now = DateTimeOffset.UtcNow;
 
         // The first link takes the token; the second creation cannot be stored.
@@ -42,7 +44,7 @@ public class CreationCompensationProofTests
     [Fact]
     public async Task Relay_failure_removes_the_trigger_and_leaves_no_link()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         h.Ha.ThrowOnCloudhook = new InvalidOperationException("HA Cloud unavailable");
         var now = DateTimeOffset.UtcNow;
 

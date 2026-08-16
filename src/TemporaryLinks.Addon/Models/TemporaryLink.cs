@@ -17,9 +17,10 @@ public class TemporaryLink
     public required string CloudhookId { get; set; }
     public required string CloudhookUrl { get; set; }
 
-    /// <summary>The gesture the link's trigger was ARMED to accept: true = an explicit POST
-    /// (confirm page), false = a plain GET (one tap). Null for links armed before this was
-    /// recorded — those fall back to the current sharing mode until they are re-armed.</summary>
+    /// <summary>The gesture the link's trigger was ARMED to accept: true = the confirm page's
+    /// explicit POST, which is the only mode the add-on arms now; false = the plain GET of a
+    /// link issued before that, until the boot pass re-arms it. Null for links armed before
+    /// this was recorded — those assume the current mode until they are re-armed.</summary>
     public bool? TriggerAcceptsPost { get; set; }
 
     /// <summary>When the add-on last processed a trigger for this link. The watermark the

@@ -20,8 +20,8 @@ public class BotImmunityProofTests
             }),
             NullLogger<HomeAssistantService>.Instance);
 
-    // Proves app::E2.S5.A1 — with the confirm page in play, the trigger only accepts
-    // POST, and preview bots only ever issue GET: a prefetch can neither run the
+    // Proves app::E2.S5.A1 — the confirm page's press is the only gesture the trigger
+    // accepts, and preview bots only ever issue GET: a prefetch can neither run the
     // actions nor consume a use.
     [Fact]
     public async Task Trigger_is_post_only_when_the_confirm_page_is_configured()
@@ -38,22 +38,6 @@ public class BotImmunityProofTests
         var methods = config.RootElement.GetProperty("trigger")[0]
             .GetProperty("allowed_methods").EnumerateArray().Select(m => m.GetString()).ToList();
         Assert.Equal(["POST"], methods);
-    }
-
-    // Without a public URL the legacy direct GET link keeps working (feature is opt-in).
-    [Fact]
-    public async Task Trigger_stays_get_when_no_public_url_is_configured()
-    {
-        var handler = new CapturingHandler();
-        var ha = NewHaService(handler, null);
-        var now = DateTimeOffset.UtcNow;
-
-        await ha.CreateWebhookAutomationAsync("tok123", "Gate", "[]", now, now.AddHours(1));
-
-        using var config = JsonDocument.Parse(handler.Requests.Single().Body!);
-        var methods = config.RootElement.GetProperty("trigger")[0]
-            .GetProperty("allowed_methods").EnumerateArray().Select(m => m.GetString()).ToList();
-        Assert.Equal(["GET"], methods);
     }
 
     // Proves app::E2.S5.A2 — the shared URL is the confirm page with the cloudhook only
@@ -86,15 +70,6 @@ public class BotImmunityProofTests
         Assert.Contains("fetch(hook", SharePage.Html);
     }
 
-    // Without the feature, the share URL is the raw cloudhook (unchanged behaviour).
-    [Fact]
-    public async Task Share_url_is_the_raw_cloudhook_without_public_url()
-    {
-        using var h = new LinkServiceHarness();
-        var link = await h.SeedLinkAsync();
-
-        Assert.Equal(link.CloudhookUrl, h.Service.GetShareUrl(link));
-    }
 }
 
 public class PublicUrlDiscoveryProofTests
@@ -133,9 +108,10 @@ public class PublicUrlDiscoveryProofTests
         Assert.Equal("https://my.own.domain", resolved);
     }
 
-    // Neither configured nor discoverable → null, and links fall back to the direct form.
+    // Neither configured nor discoverable → null: nothing to self-host the confirm page on,
+    // so unless a shared page is configured, creating a link is refused (E2.S6.A2).
     [Fact]
-    public async Task Without_remote_access_links_fall_back_to_direct_form()
+    public async Task Without_remote_access_no_public_url_is_resolved()
     {
         var ha = new FakeHomeAssistantService { RemoteUiUrl = null };
         var config = NewConfig();
@@ -169,7 +145,8 @@ public class SharedPageProofTests
         Assert.Contains(Uri.EscapeDataString(link.CloudhookUrl), url.Split('#')[1]);
     }
 
-    // The shared page also makes the trigger POST-only — same bot immunity as self-hosting.
+    // A link shared through the shared page is fired the same way — the trigger takes the
+    // page's POST and nothing else, exactly as with self-hosting.
     [Fact]
     public async Task Shared_page_makes_trigger_post_only()
     {

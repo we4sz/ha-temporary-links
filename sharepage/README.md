@@ -17,4 +17,6 @@ configuration. Anyone who prefers their own host can copy `open.html` anywhere s
 
 Installations that prefer not to depend on a shared host can leave `share_page_url`
 empty: the add-on then self-hosts the same page via HA Cloud remote access (`/local/`),
-auto-discovered — or falls back to direct one-tap links with no confirm page at all.
+auto-discovered. With neither — no shared page and no public URL — there is no page to
+share a link with, and the add-on refuses to create one rather than hand out something a
+preview bot could fire.

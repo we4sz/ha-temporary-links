@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "lockedAt": "2026-08-16T13:06:34Z",
-  "facitHash": "bb8f2a1ef7d16768",
+  "lockedAt": "2026-08-16T13:45:25Z",
+  "facitHash": "a11477e14119bd3e",
   "nodes": {
     "app::E1.S1": {
       "hash": "a210187e906e9412",
@@ -21,7 +21,7 @@
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -30,7 +30,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/RecipientOptionalProofTests.cs",
           "startLine": 11,
           "endLine": 24,
-          "hash": "ca4829b5d59901a7"
+          "hash": "ae32f68c7b2e5ffd"
         }
       ]
     },
@@ -43,11 +43,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -56,7 +56,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/CoverageProofTests.cs",
           "startLine": 20,
           "endLine": 29,
-          "hash": "4d220ec5ba2b2f61"
+          "hash": "a984a357ec8e2154"
         }
       ]
     },
@@ -69,7 +69,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -78,7 +78,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/CoverageProofTests.cs",
           "startLine": 33,
           "endLine": 41,
-          "hash": "81dd4cb760da7906"
+          "hash": "63d89e828bd91692"
         }
       ]
     },
@@ -92,11 +92,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -104,15 +104,15 @@
           "test": "TemporaryLinks.Addon.Tests.CreationCompensationProofTests.Store_failure_after_the_trigger_exists_leaves_nothing_behind",
           "path": "tests/TemporaryLinks.Addon.Tests/CreationCompensationProofTests.cs",
           "startLine": 20,
-          "endLine": 38,
-          "hash": "9d0609a4a04bd71c"
+          "endLine": 40,
+          "hash": "16bce95ecd17d3ef"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.CreationCompensationProofTests.Relay_failure_removes_the_trigger_and_leaves_no_link",
           "path": "tests/TemporaryLinks.Addon.Tests/CreationCompensationProofTests.cs",
-          "startLine": 43,
-          "endLine": 56,
-          "hash": "2ad826c375062ddf"
+          "startLine": 45,
+          "endLine": 58,
+          "hash": "d7065e48b79d9da7"
         }
       ]
     },
@@ -141,41 +141,41 @@
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
         {
           "test": "TemporaryLinks.Addon.Tests.ActionContractProofTests.Service_key_is_normalized_to_the_execution_contract",
           "path": "tests/TemporaryLinks.Addon.Tests/ActionContractProofTests.cs",
-          "startLine": 38,
-          "endLine": 51,
-          "hash": "be389c432922bc23"
+          "startLine": 41,
+          "endLine": 54,
+          "hash": "404ab03957b01a77"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.ActionContractProofTests.Top_level_entity_id_becomes_a_target",
           "path": "tests/TemporaryLinks.Addon.Tests/ActionContractProofTests.cs",
-          "startLine": 56,
-          "endLine": 70,
-          "hash": "c956f2ea02a3d6e1"
+          "startLine": 59,
+          "endLine": 73,
+          "hash": "37a6126f5d2e8473"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.ActionContractProofTests.A_form_execution_would_refuse_is_refused_at_creation",
           "path": "tests/TemporaryLinks.Addon.Tests/ActionContractProofTests.cs",
-          "startLine": 81,
-          "endLine": 92,
-          "hash": "d25ed3d7fec457b2"
+          "startLine": 84,
+          "endLine": 95,
+          "hash": "a9096f92e46e53f4"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.ActionContractProofTests.What_creation_accepted_is_what_execution_runs",
           "path": "tests/TemporaryLinks.Addon.Tests/ActionContractProofTests.cs",
-          "startLine": 97,
-          "endLine": 109,
-          "hash": "2516d848a3c311d7"
+          "startLine": 100,
+          "endLine": 112,
+          "hash": "74a83fc55e3e1b34"
         }
       ]
     },
@@ -193,7 +193,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -215,7 +215,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -237,7 +237,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -259,7 +259,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -281,7 +281,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -308,7 +308,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -330,7 +330,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -352,7 +352,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -374,7 +374,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -401,7 +401,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -428,7 +428,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -450,7 +450,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -473,7 +473,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -560,11 +560,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Models/TemporaryLink.cs",
-          "hash": "7feb2a19d352f605"
+          "hash": "ea24451dcecd65b6"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -573,7 +573,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/RecipientOptionalProofTests.cs",
           "startLine": 11,
           "endLine": 24,
-          "hash": "ca4829b5d59901a7"
+          "hash": "ae32f68c7b2e5ffd"
         }
       ]
     },
@@ -586,7 +586,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -608,7 +608,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -639,7 +639,7 @@
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         }
       ],
       "testSources": [
@@ -682,7 +682,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         }
       ],
       "testSources": [
@@ -711,7 +711,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -733,11 +733,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -764,7 +764,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -787,7 +787,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -816,7 +816,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -840,11 +840,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/AutomationModel.cs",
-          "hash": "513d1026f343879a"
+          "hash": "450eb6be85259458"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -882,11 +882,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/AutomationModel.cs",
-          "hash": "513d1026f343879a"
+          "hash": "450eb6be85259458"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -922,7 +922,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -949,7 +949,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -971,7 +971,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -993,7 +993,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1039,8 +1039,12 @@
       ],
       "coveredFiles": [
         {
+          "path": "src/TemporaryLinks.Addon/Services/AutomationModel.cs",
+          "hash": "450eb6be85259458"
+        },
+        {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         }
       ],
       "testSources": [
@@ -1062,19 +1066,19 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
-          "hash": "9b0f812c8798b19d"
+          "hash": "91a0ef50c560d604"
         }
       ],
       "testSources": [
         {
           "test": "TemporaryLinks.Addon.Tests.BotImmunityProofTests.Share_url_is_the_confirm_page_with_hook_in_fragment",
           "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
-          "startLine": 63,
-          "endLine": 87,
+          "startLine": 47,
+          "endLine": 71,
           "hash": "29a0b9d0dfae1d27"
         }
       ]
@@ -1088,19 +1092,19 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/PublicUrlResolver.cs",
-          "hash": "b73031a70b968278"
+          "hash": "d3678685507013d9"
         }
       ],
       "testSources": [
         {
           "test": "TemporaryLinks.Addon.Tests.PublicUrlDiscoveryProofTests.Public_url_is_discovered_from_the_home_when_not_configured",
           "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
-          "startLine": 111,
-          "endLine": 121,
+          "startLine": 86,
+          "endLine": 96,
           "hash": "28f9b45efafbd2fb"
         }
       ]
@@ -1114,15 +1118,15 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
         {
           "test": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Shared_page_takes_precedence_and_carries_hook_only_in_fragment",
           "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
-          "startLine": 156,
-          "endLine": 170,
+          "startLine": 132,
+          "endLine": 146,
           "hash": "f4088c7a2fa4e15b"
         }
       ]
@@ -1138,29 +1142,29 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
-          "hash": "9b0f812c8798b19d"
+          "hash": "91a0ef50c560d604"
         }
       ],
       "testSources": [
         {
           "test": "TemporaryLinks.Addon.Tests.BotImmunityProofTests.Share_url_is_the_confirm_page_with_hook_in_fragment",
           "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
-          "startLine": 63,
-          "endLine": 87,
+          "startLine": 47,
+          "endLine": 71,
           "hash": "29a0b9d0dfae1d27"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Published_page_matches_the_embedded_page_invariants",
           "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
-          "startLine": 198,
-          "endLine": 214,
+          "startLine": 175,
+          "endLine": 191,
           "hash": "c6157329407ce47c"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Written_page_sends_inline_and_never_navigates_to_the_reply",
           "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
-          "startLine": 250,
-          "endLine": 270,
+          "startLine": 227,
+          "endLine": 247,
           "hash": "08462863705eea1f"
         }
       ]
@@ -1174,15 +1178,15 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
-          "hash": "9b0f812c8798b19d"
+          "hash": "91a0ef50c560d604"
         }
       ],
       "testSources": [
         {
           "test": "TemporaryLinks.Addon.Tests.SharedPageProofTests.Page_shows_the_release_version_in_every_copy",
           "path": "tests/TemporaryLinks.Addon.Tests/BotImmunityProofTests.cs",
-          "startLine": 219,
-          "endLine": 245,
+          "startLine": 196,
+          "endLine": 222,
           "hash": "90fd3bcb0f195aa1"
         }
       ]
@@ -1193,14 +1197,88 @@
       "tests": []
     },
     "app::E2.S6.A1": {
-      "hash": "89a817f204a7d246",
-      "status": "unproven",
-      "tests": []
+      "hash": "346a86613bb57560",
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Arming_is_post_only_even_with_no_confirm_page_configured",
+        "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_new_link_is_shared_through_the_self_hosted_confirm_page",
+        "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_shared_confirm_page_wins_over_self_hosting",
+        "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_get_armed_link_is_rearmed_to_post_and_then_shares_through_the_page"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Services/AutomationModel.cs",
+          "hash": "450eb6be85259458"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
+          "hash": "69fa732c21b1466e"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Services/SharePage.cs",
+          "hash": "91a0ef50c560d604"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Arming_is_post_only_even_with_no_confirm_page_configured",
+          "path": "tests/TemporaryLinks.Addon.Tests/SingleSharingModeProofTests.cs",
+          "startLine": 21,
+          "endLine": 40,
+          "hash": "b24af0c37d736b20"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_new_link_is_shared_through_the_self_hosted_confirm_page",
+          "path": "tests/TemporaryLinks.Addon.Tests/SingleSharingModeProofTests.cs",
+          "startLine": 45,
+          "endLine": 58,
+          "hash": "7ef68c9fd0358e6f"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_shared_confirm_page_wins_over_self_hosting",
+          "path": "tests/TemporaryLinks.Addon.Tests/SingleSharingModeProofTests.cs",
+          "startLine": 63,
+          "endLine": 76,
+          "hash": "b154f8545ff00a1c"
+        },
+        {
+          "test": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_get_armed_link_is_rearmed_to_post_and_then_shares_through_the_page",
+          "path": "tests/TemporaryLinks.Addon.Tests/SingleSharingModeProofTests.cs",
+          "startLine": 106,
+          "endLine": 125,
+          "hash": "1147db4ad23864cf"
+        }
+      ]
     },
     "app::E2.S6.A2": {
       "hash": "ec8e5ae37e1305c3",
-      "status": "unproven",
-      "tests": []
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Creation_without_confirm_page_hosting_is_refused_and_creates_nothing"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
+          "hash": "4ba5882243435e32"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
+          "hash": "69fa732c21b1466e"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Services/PublicUrlResolver.cs",
+          "hash": "d3678685507013d9"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Creation_without_confirm_page_hosting_is_refused_and_creates_nothing",
+          "path": "tests/TemporaryLinks.Addon.Tests/SingleSharingModeProofTests.cs",
+          "startLine": 82,
+          "endLine": 100,
+          "hash": "9aa281a9125f9469"
+        }
+      ]
     },
     "app::E3.S1": {
       "hash": "37783dada1ded292",
@@ -1216,7 +1294,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1238,7 +1316,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1265,7 +1343,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1287,7 +1365,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1309,7 +1387,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1523,14 +1601,14 @@
           "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
           "startLine": 152,
           "endLine": 171,
-          "hash": "5fba50329905cc16"
+          "hash": "7b862d4e134dd6c2"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.TemplateContractProofTests.A_refused_form_never_survives_as_a_template_via_link_creation",
           "path": "tests/TemporaryLinks.Addon.Tests/TemplateContractProofTests.cs",
           "startLine": 175,
-          "endLine": 192,
-          "hash": "c6a044de1658325d"
+          "endLine": 193,
+          "hash": "f3009a97fd87df9d"
         }
       ]
     },
@@ -1557,7 +1635,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/PageHandlerProofTests.cs",
           "startLine": 100,
           "endLine": 121,
-          "hash": "fe2c14fdc84d699a"
+          "hash": "70cacf5194a104ca"
         }
       ]
     },
@@ -1579,7 +1657,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/PageHandlerProofTests.cs",
           "startLine": 125,
           "endLine": 146,
-          "hash": "644adcde0016d7e4"
+          "hash": "244682a0431e2eae"
         }
       ]
     },
@@ -1651,7 +1729,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1693,7 +1771,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1702,7 +1780,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/CoverageProofTests.cs",
           "startLine": 174,
           "endLine": 185,
-          "hash": "b59c0d2970ff49ba"
+          "hash": "f2f21bec5c528989"
         }
       ]
     },
@@ -1766,11 +1844,11 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1799,7 +1877,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1824,15 +1902,15 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Models/TemporaryLink.cs",
-          "hash": "7feb2a19d352f605"
+          "hash": "ea24451dcecd65b6"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1872,9 +1950,34 @@
       "tests": []
     },
     "app::E7.S2.A1": {
-      "hash": "be1bd05952d65360",
-      "status": "unproven",
-      "tests": []
+      "hash": "1e932eec872d4c2b",
+      "status": "proven",
+      "tests": [
+        "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Creation_without_confirm_page_hosting_is_refused_and_creates_nothing"
+      ],
+      "coveredFiles": [
+        {
+          "path": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs",
+          "hash": "4ba5882243435e32"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
+          "hash": "69fa732c21b1466e"
+        },
+        {
+          "path": "src/TemporaryLinks.Addon/Services/PublicUrlResolver.cs",
+          "hash": "d3678685507013d9"
+        }
+      ],
+      "testSources": [
+        {
+          "test": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Creation_without_confirm_page_hosting_is_refused_and_creates_nothing",
+          "path": "tests/TemporaryLinks.Addon.Tests/SingleSharingModeProofTests.cs",
+          "startLine": 82,
+          "endLine": 100,
+          "hash": "9aa281a9125f9469"
+        }
+      ]
     },
     "app::E7.S3": {
       "hash": "341b7f3a0379063b",
@@ -1892,7 +1995,7 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -1977,15 +2080,15 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Services/AutomationModel.cs",
-          "hash": "513d1026f343879a"
+          "hash": "450eb6be85259458"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs",
-          "hash": "43dcabef4f0fa3b1"
+          "hash": "269f98de9bf7e742"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
@@ -2001,7 +2104,7 @@
           "path": "tests/TemporaryLinks.Addon.Tests/TriggerRearmProofTests.cs",
           "startLine": 64,
           "endLine": 75,
-          "hash": "eccc7d305c196d51"
+          "hash": "6578565917511dff"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_missing_trigger_is_rearmed",
@@ -2013,15 +2116,15 @@
         {
           "test": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_sharing_mode_change_rearms_the_accepted_gesture",
           "path": "tests/TemporaryLinks.Addon.Tests/TriggerRearmProofTests.cs",
-          "startLine": 95,
-          "endLine": 111,
-          "hash": "0d27dfda51d76c16"
+          "startLine": 96,
+          "endLine": 110,
+          "hash": "c25a0f8d90bde633"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.Dead_links_are_not_rearmed",
           "path": "tests/TemporaryLinks.Addon.Tests/TriggerRearmProofTests.cs",
-          "startLine": 115,
-          "endLine": 125,
+          "startLine": 114,
+          "endLine": 124,
           "hash": "69f3983b6a983146"
         }
       ]
@@ -2037,33 +2140,33 @@
       "coveredFiles": [
         {
           "path": "src/TemporaryLinks.Addon/Models/TemporaryLink.cs",
-          "hash": "7feb2a19d352f605"
+          "hash": "ea24451dcecd65b6"
         },
         {
           "path": "src/TemporaryLinks.Addon/Services/LinkService.cs",
-          "hash": "3b1bbca7f3e349e8"
+          "hash": "69fa732c21b1466e"
         }
       ],
       "testSources": [
         {
           "test": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_get_armed_link_keeps_handing_out_the_url_its_trigger_accepts",
           "path": "tests/TemporaryLinks.Addon.Tests/TriggerRearmProofTests.cs",
-          "startLine": 147,
-          "endLine": 153,
+          "startLine": 146,
+          "endLine": 152,
           "hash": "47f47db3385d5e08"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_post_armed_link_is_shared_through_the_confirm_page",
           "path": "tests/TemporaryLinks.Addon.Tests/TriggerRearmProofTests.cs",
-          "startLine": 158,
-          "endLine": 167,
+          "startLine": 157,
+          "endLine": 166,
           "hash": "6a66f2f73fa41f42"
         },
         {
           "test": "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.Creation_records_the_gesture_it_armed",
           "path": "tests/TemporaryLinks.Addon.Tests/TriggerRearmProofTests.cs",
-          "startLine": 172,
-          "endLine": 182,
+          "startLine": 171,
+          "endLine": 181,
           "hash": "52a9a9a2b5e2be10"
         }
       ]

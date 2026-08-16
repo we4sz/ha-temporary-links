@@ -10,8 +10,9 @@ public class AddonConfiguration
 
     /// <summary>
     /// Public base URL of the Home Assistant instance (e.g. the Nabu Casa remote URL).
-    /// When set, shared links point to the bot-immune confirm page under /local/ and the
-    /// trigger webhook only accepts POST. When empty, links are the raw cloudhook URL (GET).
+    /// When set, shared links point to the confirm page the add-on serves under /local/.
+    /// With neither this nor <see cref="SharePageUrl"/> there is no page to share, and
+    /// creating a link is refused.
     /// </summary>
     public string? PublicUrl { get; set; }
 

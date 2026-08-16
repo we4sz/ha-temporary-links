@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.0 — 2026-08-16
+
+### Changed
+- **One way to share a link: the confirm page.** Every link is now handed out as the confirm
+  page (the hosted one, or the copy the add-on serves from your home's public URL), and its
+  trigger accepts only that page's button press. The direct one-tap URL is gone — with it goes
+  the last way a chat app's link preview could quietly consume someone's access. Links created
+  by an earlier version are re-armed to the new gesture at startup; until that lands (an
+  unreachable home, say) such a link keeps handing out the URL its own trigger still accepts,
+  so nothing breaks mid-flight.
+- **Creating a link now requires a confirm page to share it with.** The shipped
+  `share_page_url` default provides one, so nothing changes for a normal install. If you
+  cleared that option *and* have no HA Cloud remote access (or `public_url`), creation is now
+  refused with an explanation of what to enable, instead of silently falling back to a link a
+  preview bot could fire.
+
 ## 1.1.4 — 2026-08-16
 
 ### Added

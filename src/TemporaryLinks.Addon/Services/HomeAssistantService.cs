@@ -67,7 +67,7 @@ public class HomeAssistantService : IHomeAssistantService
         }
 
         var automation = AutomationModel.BuildAutomation(
-            token, linkName, validFrom, validUntil, AutomationModel.AcceptsPost(_config));
+            token, linkName, validFrom, validUntil);
 
         var content = new StringContent(
             JsonSerializer.Serialize(automation, _jsonOptions),

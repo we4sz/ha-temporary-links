@@ -1,5 +1,4 @@
 using System.Text.Json;
-using TemporaryLinks.Addon.Configuration;
 
 namespace TemporaryLinks.Addon.Services;
 
@@ -11,6 +10,10 @@ namespace TemporaryLinks.Addon.Services;
 /// inside the validity window it announces a use (<see cref="TriggeredEvent"/>), outside it
 /// announces a refusal (<see cref="BlockedEvent"/>). The home therefore still decides in/out of
 /// window — it just no longer swallows the attempt, so every refusal stays auditable.
+///
+/// There is one sharing mode: the confirm page's explicit form POST. The trigger accepts that
+/// gesture and nothing else — no configuration can arm the one-tap GET form a preview bot
+/// could consume (E2.S6.A1).
 /// </summary>
 public static class AutomationModel
 {
@@ -20,12 +23,6 @@ public static class AutomationModel
     /// <summary>Announced by the home when a trigger fires outside the validity window.
     /// The add-on audits the refusal and never claims a use for it.</summary>
     public const string BlockedEvent = "temp_link_blocked";
-
-    /// <summary>True when links are shared through a confirm page, which fires the trigger with
-    /// an explicit POST — the gesture preview bots never make.</summary>
-    public static bool AcceptsPost(AddonConfiguration config) =>
-        !string.IsNullOrWhiteSpace(config.SharePageUrl) ||
-        !string.IsNullOrWhiteSpace(config.PublicUrl);
 
     /// <summary>The home-evaluated template that decides whether a fired trigger is inside the
     /// link's validity window.</summary>
@@ -38,8 +35,7 @@ public static class AutomationModel
         string token,
         string linkName,
         DateTimeOffset validFrom,
-        DateTimeOffset validUntil,
-        bool acceptsPost)
+        DateTimeOffset validUntil)
     {
         var webhookId = WebhookIdFor(token);
         var eventData = new
@@ -62,9 +58,9 @@ public static class AutomationModel
                 {
                     platform = "webhook",
                     webhook_id = webhookId,
-                    // With a confirm page in play (shared or self-hosted), only the page's
-                    // explicit form POST fires the trigger — preview bots only ever GET.
-                    allowed_methods = acceptsPost ? new[] { "POST" } : new[] { "GET" },
+                    // Only the confirm page's explicit form POST fires the trigger — preview
+                    // bots only ever GET, and there is no other way to share a link.
+                    allowed_methods = new[] { "POST" },
                     local_only = false,
                 },
             },
@@ -107,14 +103,14 @@ public static class AutomationModel
 
     /// <summary>
     /// Whether an automation already stored in the home still matches the CURRENT enforcement
-    /// model: the tracking-events-only choose, this link's window, and the gesture the current
-    /// sharing mode arms. Anything older (a v1.0 automation embedding the link's real actions,
-    /// a top-level window condition that swallows refusals, a stale method) fails to match and
-    /// must be re-armed. Home Assistant stores the config back with plural keys, so both
+    /// model: the tracking-events-only choose, this link's window, and the confirm page's POST
+    /// gesture. Anything older (a v1.0 automation embedding the link's real actions, a
+    /// top-level window condition that swallows refusals, a one-tap GET method) fails to match
+    /// and must be re-armed. Home Assistant stores the config back with plural keys, so both
     /// spellings are accepted on read-back.
     /// </summary>
     public static bool MatchesCurrentModel(
-        JsonElement stored, string webhookId, string windowTemplate, bool acceptsPost)
+        JsonElement stored, string webhookId, string windowTemplate)
     {
         if (stored.ValueKind != JsonValueKind.Object)
         {
@@ -142,7 +138,7 @@ public static class AutomationModel
         if (!trigger.TryGetProperty("allowed_methods", out var methods) ||
             methods.ValueKind != JsonValueKind.Array ||
             methods.GetArrayLength() != 1 ||
-            methods[0].GetString() != (acceptsPost ? "POST" : "GET"))
+            methods[0].GetString() != "POST")
         {
             return false;
         }

@@ -151,7 +151,7 @@ public class TemplateContractProofTests
     [Fact]
     public async Task Save_as_template_at_link_creation_stores_the_normalized_form()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var now = DateTime.Now;
         var page = NewLinksCreate(h);
         page.Input = new TemporaryLinks.Addon.Pages.Links.CreateModel.CreateLinkInput
@@ -174,7 +174,8 @@ public class TemplateContractProofTests
     [Fact]
     public async Task A_refused_form_never_survives_as_a_template_via_link_creation()
     {
-        using var h = new LinkServiceHarness();
+        // Hosting is available, so the refusal under test is the ACTIONS', not the install's.
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var now = DateTime.Now;
         var page = NewLinksCreate(h);
         page.Input = new TemporaryLinks.Addon.Pages.Links.CreateModel.CreateLinkInput

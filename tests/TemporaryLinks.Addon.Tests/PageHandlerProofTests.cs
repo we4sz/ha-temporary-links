@@ -99,7 +99,7 @@ public class PageHandlerProofTests
     [Fact]
     public async Task Save_as_template_at_creation_dedupes_by_actions()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var now = DateTime.Now;
 
         async Task CreateWithSave(string actions)
@@ -124,7 +124,7 @@ public class PageHandlerProofTests
     [Fact]
     public async Task Save_as_contact_at_creation_dedupes_by_number()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var now = DateTime.Now;
 
         async Task CreateWithSave()

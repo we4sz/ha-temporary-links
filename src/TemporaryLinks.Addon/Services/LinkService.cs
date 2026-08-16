@@ -47,12 +47,16 @@ public class LinkService : ILinkService
         string actions,
         int maxUses = 1)
     {
+        // A link is shared through the confirm page and nothing else, so an installation with
+        // no page to share cannot issue one at all: refuse here, before anything exists in the
+        // home, rather than handing out a link nobody can press (E2.S6.A2 / E7.S2.A1).
+        RequireConfirmPageHosting();
+
         // Bring the actions to exactly the contract execution enforces BEFORE anything is
         // created in the home: a link accepted here can never later fail on their form.
         var normalizedActions = ActionsNormalizer.Normalize(actions);
 
         var token = _tokenGenerator.GenerateSecureToken();
-        var acceptsPost = AutomationModel.AcceptsPost(_config);
 
         string webhookId = await _haService.CreateWebhookAutomationAsync(
             token, name, normalizedActions, validFrom, validUntil);
@@ -85,7 +89,7 @@ public class LinkService : ILinkService
             CloudhookId = cloudhook.CloudhookId,
             CloudhookUrl = cloudhook.CloudhookUrl,
             WebhookId = webhookId,
-            TriggerAcceptsPost = acceptsPost,
+            TriggerAcceptsPost = true,
             LastTriggerProcessedAt = DateTimeOffset.UtcNow,
         };
 
@@ -107,6 +111,25 @@ public class LinkService : ILinkService
             $"Link created by {createdBy} (max uses: {maxUses})");
 
         return link;
+    }
+
+    /// <summary>The confirm page is the only way a link is shared, so one must be reachable
+    /// before a link is worth creating: a shared page, or the home's own public URL to serve
+    /// it from. With neither, creation is refused with what to enable — never quietly
+    /// downgraded to a link a preview bot could consume.</summary>
+    private void RequireConfirmPageHosting()
+    {
+        if (!string.IsNullOrWhiteSpace(_config.SharePageUrl) ||
+            !string.IsNullOrWhiteSpace(_config.PublicUrl))
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            "No link was created: links are shared through a confirm page, and this " +
+            "installation has none. Set the add-on option share_page_url (the hosted default " +
+            "works as-is), or turn on Home Assistant Cloud remote access — or set public_url " +
+            "for your own domain — so the add-on can serve the page itself.");
     }
 
     /// <summary>Takes back everything a failed creation already put in the home. Both steps
@@ -173,7 +196,7 @@ public class LinkService : ILinkService
         link.RecipientPhoneNumber = recipientPhoneNumber;
         link.CustomMessage = customMessage;
         link.MaxUses = maxUses;
-        link.TriggerAcceptsPost = AutomationModel.AcceptsPost(_config);
+        link.TriggerAcceptsPost = true;
 
         await _context.SaveChangesAsync();
 
@@ -551,7 +574,6 @@ public class LinkService : ILinkService
 
     public async Task<TriggerRearmResult> RearmTriggersAsync(CancellationToken cancellationToken = default)
     {
-        var acceptsPost = AutomationModel.AcceptsPost(_config);
         var links = await _context.TemporaryLinks
             .Where(l => l.Status == LinkStatus.Active)
             .ToListAsync(cancellationToken);
@@ -574,12 +596,11 @@ public class LinkService : ILinkService
                 // Already the current model, window and gesture — leave it alone, so a boot
                 // costs no audit noise.
                 if (stored is not null &&
-                    link.TriggerAcceptsPost == acceptsPost &&
+                    link.TriggerAcceptsPost == true &&
                     AutomationModel.MatchesCurrentModel(
                         stored.Value,
                         link.WebhookId,
-                        AutomationModel.WindowTemplate(link.ValidFrom, link.ValidUntil),
-                        acceptsPost))
+                        AutomationModel.WindowTemplate(link.ValidFrom, link.ValidUntil)))
                 {
                     continue;
                 }
@@ -588,7 +609,7 @@ public class LinkService : ILinkService
                     link.Token, link.Name, link.Actions,
                     link.ValidFrom, link.ValidUntil, cancellationToken);
 
-                link.TriggerAcceptsPost = acceptsPost;
+                link.TriggerAcceptsPost = true;
                 await _context.SaveChangesAsync(cancellationToken);
 
                 await AddAuditEntryAsync(link.Id, "TriggerRearmed",
@@ -712,15 +733,17 @@ public class LinkService : ILinkService
 
     public string GetShareUrl(TemporaryLink link)
     {
-        // The URL's FORM must match the gesture this link's trigger was ARMED to accept —
-        // not what the current configuration would arm today, or a link issued before a
-        // configuration change would be refused by its own trigger (E7.S7.A2). Links armed
-        // before that was recorded fall back to the current mode until they are re-armed.
-        var acceptsPost = link.TriggerAcceptsPost ?? AutomationModel.AcceptsPost(_config);
+        // The URL's FORM must match the gesture this link's trigger was ARMED to accept — not
+        // the one sharing mode the add-on arms today, or a link issued before the upgrade
+        // would be refused by its own trigger (E7.S7.A2). Links armed before that was
+        // recorded fall back to the current mode until the boot pass re-arms them.
+        var acceptsPost = link.TriggerAcceptsPost ?? true;
 
         if (!acceptsPost)
         {
-            // A one-tap trigger answers a plain fetch; a confirm page would POST at it.
+            // Issued before the confirm page became the only sharing mode, and not yet
+            // re-armed (the home was unreachable at boot): its trigger still answers a plain
+            // fetch, and a confirm page would POST at it. The re-arm pass retires this form.
             return link.CloudhookUrl;
         }
 
@@ -736,8 +759,10 @@ public class LinkService : ILinkService
                    $"#{Uri.EscapeDataString(link.CloudhookUrl)}";
         }
 
-        // Armed for the confirm page, but no page is configured any more: the raw hook is all
-        // there is to hand out until the trigger is re-armed to the current mode.
+        // Armed for the confirm page, but the hosting it was created with has since been
+        // removed: the raw trigger is all that is left to show. It is not consumable by a
+        // preview bot (the trigger takes POST only) — it is simply unusable until a page is
+        // configured again, which is exactly what creation now refuses to start without.
         return link.CloudhookUrl;
     }
 

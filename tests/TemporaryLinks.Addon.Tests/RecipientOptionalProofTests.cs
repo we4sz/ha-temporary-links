@@ -10,7 +10,7 @@ public class RecipientOptionalProofTests
     [Fact]
     public async Task Link_can_be_created_without_a_recipient()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var now = DateTimeOffset.UtcNow;
 
         var link = await h.Service.CreateLinkAsync(

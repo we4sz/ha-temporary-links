@@ -52,12 +52,9 @@ public sealed class FakeHomeAssistantService : IHomeAssistantService
         CreatedAutomations.Add(id);
         ArmedWindows.Add((id, validFrom, validUntil));
         StoredAutomations[id] = JsonSerializer.Serialize(
-            AutomationModel.BuildAutomation(token, linkName, validFrom, validUntil, AcceptsPost));
+            AutomationModel.BuildAutomation(token, linkName, validFrom, validUntil));
         return Task.FromResult(id);
     }
-
-    /// <summary>The sharing mode this fake home arms new triggers with.</summary>
-    public bool AcceptsPost { get; set; }
 
     public Task<bool> DeleteWebhookAutomationAsync(
         string automationId, CancellationToken cancellationToken = default)
@@ -170,7 +167,6 @@ public sealed class LinkServiceHarness : IDisposable
             PublicUrl = publicUrl,
             SharePageUrl = sharePageUrl,
         };
-        Ha.AcceptsPost = AutomationModel.AcceptsPost(_config);
 
         Service = new LinkService(
             Db, tokenGenerator ?? new TokenGenerator(), Twilio, Ha, Options.Create(_config),
@@ -218,13 +214,21 @@ public sealed class LinkServiceHarness : IDisposable
         {
             Ha.StoredAutomations[link.WebhookId] = JsonSerializer.Serialize(
                 AutomationModel.BuildAutomation(
-                    link.Token, link.Name, link.ValidFrom, link.ValidUntil, Ha.AcceptsPost));
+                    link.Token, link.Name, link.ValidFrom, link.ValidUntil));
             Ha.CreatedAutomations.Clear();
             Ha.ArmedWindows.Clear();
         }
 
         return link;
     }
+
+    /// <summary>Puts the current trigger model, armed for the OLD one-tap gesture, in the fake
+    /// home — a link issued before the confirm page became the only sharing mode.</summary>
+    public void ArmLegacyGetGesture(TemporaryLink link) =>
+        Ha.StoredAutomations[link.WebhookId] = JsonSerializer.Serialize(
+            AutomationModel.BuildAutomation(
+                link.Token, link.Name, link.ValidFrom, link.ValidUntil))
+            .Replace("\"POST\"", "\"GET\"");
 
     public Task<List<LinkUsageAudit>> AuditsForAsync(Guid linkId) =>
         Db.LinkUsageAudits.Where(a => a.TemporaryLinkId == linkId)

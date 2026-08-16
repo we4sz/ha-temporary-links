@@ -19,7 +19,7 @@ public class CoverageProofTests
     [Fact]
     public async Task Creating_a_link_hosts_a_trigger_and_records_its_url()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var link = await CreateAsync(h);
 
         Assert.Contains(link.WebhookId, h.Ha.CreatedAutomations);
@@ -32,7 +32,7 @@ public class CoverageProofTests
     [Fact]
     public async Task Creation_is_audited_with_creator_and_allowance()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var link = await CreateAsync(h, maxUses: 5, createdBy: "alice");
 
         var created = Assert.Single(await h.AuditsForAsync(link.Id), a => a.EventType == "Created");
@@ -173,7 +173,7 @@ public class CoverageProofTests
     [Fact]
     public async Task Consequential_events_each_produce_an_audit_entry()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var link = await CreateAsync(h, maxUses: 2);
         await h.Service.SendSmsAsync(link);
         await h.Service.ExecuteLinkAsync(link.Token, "webhook", "test");

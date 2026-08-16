@@ -46,8 +46,8 @@ public interface ILinkService
     /// missed press is counted and audited, and never executed late.</summary>
     Task<int> ReconcileOfflineTriggersAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>The URL to hand to the recipient: the bot-immune confirm page when a
-    /// public URL is configured, otherwise the raw cloudhook URL.</summary>
+    /// <summary>The URL to hand to the recipient: the confirm page — shared if one is
+    /// configured, otherwise the copy the add-on serves from the home's public URL.</summary>
     string GetShareUrl(TemporaryLink link);
 }
 

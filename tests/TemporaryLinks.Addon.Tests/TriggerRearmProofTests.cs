@@ -64,7 +64,7 @@ public class TriggerRearmProofTests
     public async Task A_current_trigger_is_left_alone()
     {
         using var h = new LinkServiceHarness();
-        var link = await h.SeedLinkAsync(triggerAcceptsPost: false, armInFakeHome: true);
+        var link = await h.SeedLinkAsync(triggerAcceptsPost: true, armInFakeHome: true);
 
         var result = await h.Service.RearmTriggersAsync();
 
@@ -89,17 +89,16 @@ public class TriggerRearmProofTests
         Assert.Single(await h.AuditsForAsync(link.Id), a => a.EventType == "TriggerRearmed");
     }
 
-    // Proves app::E7.S7.A1 — a sharing-mode change (a confirm page is now configured) re-arms
-    // the accepted gesture of every existing link's trigger.
+    // Proves app::E7.S7.A1 — a sharing-mode change re-arms the accepted gesture of every
+    // existing link's trigger: one issued for the old one-tap form is brought to the confirm
+    // page's POST, which is now the only gesture there is.
     [Fact]
     public async Task A_sharing_mode_change_rearms_the_accepted_gesture()
     {
         using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
-        // Armed as one-tap GET before the confirm page existed.
+        // Armed as one-tap GET, before the confirm page became the only sharing mode.
         var link = await h.SeedLinkAsync(triggerAcceptsPost: false);
-        h.Ha.StoredAutomations[link.WebhookId] = JsonSerializer.Serialize(
-            AutomationModel.BuildAutomation(
-                link.Token, link.Name, link.ValidFrom, link.ValidUntil, acceptsPost: false));
+        h.ArmLegacyGetGesture(link);
 
         var result = await h.Service.RearmTriggersAsync();
 

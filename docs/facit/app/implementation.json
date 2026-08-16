@@ -1648,8 +1648,13 @@
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:109-117",
-          "note": "allowed_methods POST-only when public_url set — preview bots only GET, so a prefetch gets 405 and nothing runs"
+          "ref": "src/TemporaryLinks.Addon/Services/AutomationModel.cs:63",
+          "note": "allowed_methods is POST-only — preview bots only GET, so a prefetch gets 405 and nothing runs"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:69-70",
+          "note": "CreateWebhookAutomationAsync arms exactly that automation in the home"
         },
         {
           "kind": "test",
@@ -1657,7 +1662,7 @@
           "note": "proving test"
         }
       ],
-      "notes": "Active automatically when a public URL is configured OR discovered from HA Cloud (E2.S5.A3). Without it, behaviour falls back to direct GET links. Research spike (2026-07-02): WhatsApp/iMessage prefetch = GET without JS; Facebook may run some JS but no bot submits forms; fragments are never sent to servers.",
+      "notes": "Since 1.2.0 the confirm page is the only sharing mode (E2.S6.A1), so this holds on every installation: the trigger is POST-only whatever is configured, and there is no direct GET form to fall back to. Research spike (2026-07-02): WhatsApp/iMessage prefetch = GET without JS; Facebook may run some JS but no bot submits forms; fragments are never sent to servers.",
       "proof": {
         "tests": [
           "TemporaryLinks.Addon.Tests.BotImmunityProofTests.Trigger_is_post_only_when_the_confirm_page_is_configured"
@@ -1732,7 +1737,7 @@
         {
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Services/PublicUrlResolver.cs",
-          "note": "configured public_url wins; else discovered from HA Cloud; else null → direct-link fallback"
+          "note": "configured public_url wins; else discovered from HA Cloud; else null — with no shared page either, creation is refused (E2.S6.A2)"
         },
         {
           "kind": "code",
@@ -1745,7 +1750,7 @@
           "note": "proving test"
         }
       ],
-      "notes": "cloud/status field parsing (remote_domain/remote_enabled) should be smoke-checked once against a real HA Cloud instance.",
+      "notes": "cloud/status field parsing (remote_domain/remote_enabled) should be smoke-checked once against a real HA Cloud instance. A discovered URL is what the add-on self-hosts the confirm page on when share_page_url is empty.",
       "proof": {
         "tests": [
           "TemporaryLinks.Addon.Tests.PublicUrlDiscoveryProofTests.Public_url_is_discovered_from_the_home_when_not_configured"
@@ -1837,6 +1842,108 @@
       "proof": {
         "tests": [
           "TemporaryLinks.Addon.Tests.SharedPageProofTests.Page_shows_the_release_version_in_every_copy"
+        ]
+      }
+    },
+    {
+      "acId": "E2.S6.A1",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/AutomationModel.cs:63",
+          "note": "allowed_methods is always [\"POST\"] — the armed gesture no longer depends on any option, so no configuration can produce a one-tap GET link"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/AutomationModel.cs:112-142",
+          "note": "MatchesCurrentModel requires the POST method, so a GET-armed trigger is re-armed at boot (E7.S7.A1)"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:734-779",
+          "note": "GetShareUrl: a POST-armed link is ALWAYS the confirm page — SharePageUrl wins, else the self-hosted /local/temporary_links/open.html under PublicUrl, hook only in the #fragment"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:92",
+          "note": "every new link records TriggerAcceptsPost = true; likewise on amendment (:199) and on every re-arm (:612)"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/SharePage.cs",
+          "note": "the page itself is unchanged: one visible button, an explicit form POST to the hook carried in the fragment"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Arming_is_post_only_even_with_no_confirm_page_configured",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_new_link_is_shared_through_the_self_hosted_confirm_page",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_shared_confirm_page_wins_over_self_hosting",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_get_armed_link_is_rearmed_to_post_and_then_shares_through_the_page",
+          "note": "proving test"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.IntegrationTests.HaSeamTests.Inside_the_window_the_confirm_pages_press_fires_the_tracking_event",
+          "note": "opt-in integration proof against a real home: a plain fetch of the trigger is refused with 405, the page's POST fires it"
+        }
+      ],
+      "notes": "One sharing mode: the confirm page's button press. Arming is config-independent, and the share URL of any POST-armed link is the page (shared copy first, else the self-hosted one). The single armed-mode branch that remains is legacy fidelity, not a second mode: a link armed GET by an older version keeps handing out the URL its own trigger accepts until the boot re-arm flips it to POST (E7.S7.A2), after which it too shares through the page.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Arming_is_post_only_even_with_no_confirm_page_configured",
+          "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_new_link_is_shared_through_the_self_hosted_confirm_page",
+          "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_shared_confirm_page_wins_over_self_hosting",
+          "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.A_get_armed_link_is_rearmed_to_post_and_then_shares_through_the_page"
+        ]
+      }
+    },
+    {
+      "acId": "E2.S6.A2",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:53",
+          "note": "CreateLinkAsync refuses FIRST — before the actions are normalized and before anything is created in the home"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:116-133",
+          "note": "RequireConfirmPageHosting: with no SharePageUrl and no PublicUrl, InvalidOperationException naming share_page_url, HA Cloud remote access and public_url"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:209",
+          "note": "the creation form surfaces the message verbatim as a model error (E1.S1.A5)"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/PublicUrlResolver.cs:19-36",
+          "note": "what feeds PublicUrl: the configured value, else the home's cloud remote UI URL, else null"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Creation_without_confirm_page_hosting_is_refused_and_creates_nothing",
+          "note": "proving test"
+        }
+      ],
+      "notes": "Fails closed and fails early: nothing is put in the home, no link is stored, and the operator is told exactly which of the two ways out to take. config.yaml ships share_page_url pointing at the hosted page, so only an install that cleared it AND has no cloud remote access can hit the refusal.",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Creation_without_confirm_page_hosting_is_refused_and_creates_nothing"
         ]
       }
     },
@@ -1962,14 +2069,40 @@
     },
     {
       "acId": "E7.S2.A1",
-      "status": "missing",
+      "status": "implemented",
       "evidence": [
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/HomeAssistantService.cs:113-117",
-          "note": "falls back to GET-triggerable when no confirm page"
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:53",
+          "note": "CreateLinkAsync refuses FIRST — before the actions are normalized and before anything is created in the home"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:116-133",
+          "note": "RequireConfirmPageHosting: with no SharePageUrl and no PublicUrl, InvalidOperationException naming share_page_url, HA Cloud remote access and public_url"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml.cs:209",
+          "note": "the creation form surfaces the message verbatim as a model error (E1.S1.A5)"
+        },
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Services/PublicUrlResolver.cs:19-36",
+          "note": "what feeds PublicUrl: the configured value, else the home's cloud remote UI URL, else null"
+        },
+        {
+          "kind": "test",
+          "ref": "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Creation_without_confirm_page_hosting_is_refused_and_creates_nothing",
+          "note": "proving test"
         }
-      ]
+      ],
+      "notes": "The same refusal as E2.S6.A2, which is what this AC now asks for: an unenforceable link is not warned about, it is never issued. No preview-bot-consumable form exists to fall back to any more (E2.S6.A1).",
+      "proof": {
+        "tests": [
+          "TemporaryLinks.Addon.Tests.SingleSharingModeProofTests.Creation_without_confirm_page_hosting_is_refused_and_creates_nothing"
+        ]
+      }
     },
     {
       "acId": "E7.S3.A1",
@@ -2458,13 +2591,13 @@
         },
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:539-595",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:575-629",
           "note": "RearmTriggersAsync: per active link, read the stored automation and re-arm in place (idempotent POST, same id) unless it already matches; each re-arm audited 'TriggerRearmed'; a missing automation is re-armed too"
         },
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/AutomationModel.cs:116-190",
-          "note": "MatchesCurrentModel: current shape (choose -> triggered/blocked events), this link's window template, current allowed_methods, no top-level condition; tolerant of HA's plural keys"
+          "ref": "src/TemporaryLinks.Addon/Services/AutomationModel.cs:112-180",
+          "note": "MatchesCurrentModel: current shape (choose -> triggered/blocked events), this link's window template, the POST-only method of the single sharing mode, no top-level condition; tolerant of HA's plural keys"
         },
         {
           "kind": "code",
@@ -2534,13 +2667,13 @@
         },
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:700-726",
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:734-778",
           "note": "GetShareUrl derives the URL's form from the link's armed mode, not from current config"
         },
         {
           "kind": "code",
-          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:55-88",
-          "note": "creation records the armed mode; also set on amendment (:176) and on every re-arm (:578)"
+          "ref": "src/TemporaryLinks.Addon/Services/LinkService.cs:40-114",
+          "note": "creation records the armed gesture (:92); also set on amendment (:199) and on every re-arm (:612)"
         },
         {
           "kind": "test",
@@ -2558,7 +2691,7 @@
           "note": "proving test"
         }
       ],
-      "notes": "Startup re-arming (E7.S7.A1) aligns armed modes with the current configuration; a link that could not be re-armed keeps handing out the URL its trigger actually accepts. Pre-upgrade links (null armed mode) fall back to the current configuration until the boot pass re-arms them.",
+      "notes": "Startup re-arming (E7.S7.A1) brings every active link to the single sharing mode; a link that could not be re-armed yet keeps handing out the URL its trigger actually accepts, so an old one-tap link is never 405'd by its own trigger mid-flight. Pre-upgrade links with no recorded gesture assume the current one until the boot pass re-arms them.",
       "proof": {
         "tests": [
           "TemporaryLinks.Addon.Tests.TriggerRearmProofTests.A_get_armed_link_keeps_handing_out_the_url_its_trigger_accepts",

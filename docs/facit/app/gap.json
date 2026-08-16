@@ -4,9 +4,9 @@
   "generatedAt": "2026-08-16",
   "summary": {
     "total": 116,
-    "sound": 87,
+    "sound": 90,
     "partial": 2,
-    "missing": 27,
+    "missing": 24,
     "contradicted": 0
   },
   "items": [
@@ -384,10 +384,8 @@
     },
     {
       "acId": "E7.S2.A1",
-      "gapType": "missing",
-      "severity": "major",
-      "whatsMissing": "When no POST/confirm-page path exists the add-on silently issues a preview-bot-consumable GET link.",
-      "action": "Warn (or fail closed) before sharing a bot-consumable link."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S3.A1",
@@ -614,17 +612,13 @@
     },
     {
       "acId": "E2.S6.A1",
-      "gapType": "missing",
-      "severity": "minor",
-      "whatsMissing": "Both sharing modes still exist; one-tap GET remains the fallback.",
-      "action": "Collapse sharing to confirm-page-only; delete the GET path and its armed-mode branching."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E2.S6.A2",
-      "gapType": "missing",
-      "severity": "minor",
-      "whatsMissing": "Creation currently falls back to a direct GET link when no confirm-page hosting exists.",
-      "action": "Refuse creation without confirm-page hosting (supersedes the E7.S2.A1 warning-level behaviour)."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E2.S5.A5",

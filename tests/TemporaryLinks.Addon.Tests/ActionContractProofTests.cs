@@ -11,6 +11,9 @@ namespace TemporaryLinks.Addon.Tests;
 /// <summary>
 /// Creation and execution must agree on what an action is. Anything creation accepts must be
 /// executable — otherwise a link is born healthy and then burns a use failing on its own form.
+///
+/// Every harness here has a public URL: creation requires a confirm page to share (E2.S6.A2),
+/// so a refusal in these tests is always about the ACTIONS, never about the installation.
 /// </summary>
 public class ActionContractProofTests
 {
@@ -37,7 +40,7 @@ public class ActionContractProofTests
     [Fact]
     public async Task Service_key_is_normalized_to_the_execution_contract()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
 
         var stored = await CreatedActionsAsync(h,
             """[{"service":"lock.unlock","target":{"entity_id":"lock.front_door"}}]""");
@@ -55,7 +58,7 @@ public class ActionContractProofTests
     [Fact]
     public async Task Top_level_entity_id_becomes_a_target()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
 
         var stored = await CreatedActionsAsync(h,
             """[{"service":"light.turn_on","entity_id":"light.hall","data":{"brightness":200}}]""");
@@ -80,7 +83,7 @@ public class ActionContractProofTests
     [InlineData("not json at all")]
     public async Task A_form_execution_would_refuse_is_refused_at_creation(string actions)
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var now = DateTimeOffset.UtcNow;
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -96,7 +99,7 @@ public class ActionContractProofTests
     [Fact]
     public async Task What_creation_accepted_is_what_execution_runs()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
         var stored = await CreatedActionsAsync(h,
             """[{"service":"light.turn_on","entity_id":"light.hall"}]""");
 
@@ -112,7 +115,7 @@ public class ActionContractProofTests
     [Fact]
     public async Task The_canonical_form_passes_through_unchanged()
     {
-        using var h = new LinkServiceHarness();
+        using var h = new LinkServiceHarness(publicUrl: "https://example.ui.nabu.casa");
 
         var stored = await CreatedActionsAsync(h,
             """[{"action":"lock.unlock","target":{"entity_id":"lock.front_door"}}]""");
