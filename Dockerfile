@@ -3,12 +3,10 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /src
 
-# Copy solution and project files
-COPY ["ha-temporary-links.sln", "./"]
+# Restore the app project directly — the solution also lists test projects,
+# which are not copied into (or wanted in) the image build.
 COPY ["src/TemporaryLinks.Addon/TemporaryLinks.Addon.csproj", "src/TemporaryLinks.Addon/"]
-
-# Restore dependencies
-RUN dotnet restore
+RUN dotnet restore src/TemporaryLinks.Addon/TemporaryLinks.Addon.csproj
 
 # Copy all source files
 COPY . .
@@ -42,6 +40,6 @@ LABEL \
     io.hass.name="Temporary Links" \
     io.hass.description="Generate one-time-use temporary links" \
     io.hass.type="addon" \
-    io.hass.version="1.1.0"
+    io.hass.version="1.1.1"
 
 CMD ["/run.sh"]
