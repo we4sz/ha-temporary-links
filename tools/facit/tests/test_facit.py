@@ -2194,7 +2194,7 @@ def test_prove_records_test_source_hash(tmpdir=None):
         assert rc == 0, f"prove must pass:\n{out}"
         node = read_lock(os.path.join(spec_dir, "facit.lock.json"))["nodes"]["engine::E1.S1.A1"]
         ts = node.get("testSources", [])
-        assert ts and ts[0]["path"] == os.path.abspath(tpath), f"expected testSources for the proving test: {node}"
+        assert ts and ts[0]["path"] == os.path.realpath(os.path.abspath(tpath)), f"expected testSources for the proving test: {node}"
         assert ts[0]["startLine"] == 1 and ts[0]["endLine"] == 3, ts[0]
         assert len(ts[0]["hash"]) == 16, ts[0]
     print("PASS test_prove_records_test_source_hash")
@@ -2606,7 +2606,7 @@ def test_prove_records_test_sources_from_config_testroots():
         assert rc == 0, f"prove must pass:\n{out}"
         node = read_lock(os.path.join(spec_dir, "facit.lock.json"))["nodes"]["engine::E1.S1.A1"]
         ts = node.get("testSources", [])
-        assert ts and ts[0]["path"] == os.path.abspath(tpath), (
+        assert ts and ts[0]["path"] == os.path.realpath(os.path.abspath(tpath)), (
             f"testSources must be populated from config-only testRoots (no --test-root flag): {node}")
     print("PASS test_prove_records_test_sources_from_config_testroots")
 

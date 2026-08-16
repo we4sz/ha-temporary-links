@@ -4,9 +4,9 @@
   "generatedAt": "2026-08-16",
   "summary": {
     "total": 110,
-    "sound": 81,
-    "partial": 3,
-    "missing": 26,
+    "sound": 83,
+    "partial": 2,
+    "missing": 25,
     "contradicted": 0
   },
   "items": [
@@ -396,10 +396,8 @@
     },
     {
       "acId": "E7.S3.A2",
-      "gapType": "partial",
-      "severity": "major",
-      "whatsMissing": "The tuned connection string (busy timeout, pooling) is dead in production: run.sh exports ConnectionStrings__DefaultConnection which always wins.",
-      "action": "Make production use the tuned settings (fold them into run.sh or stop overriding)."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S4.A1",
@@ -601,10 +599,8 @@
     },
     {
       "acId": "E1.S7.A4",
-      "gapType": "missing",
-      "severity": "minor",
-      "whatsMissing": "The picker silently discards an unparseable hand-edited draft.",
-      "action": "Preserve the draft and tell the operator when a picker addition cannot parse it."
+      "gapType": "sound",
+      "severity": "none"
     },
     {
       "acId": "E7.S7.A1",

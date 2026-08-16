@@ -817,7 +817,16 @@ def _locate_test_source(test_id, test_roots):
                     start, end = span
                     body = "\n".join(lines[start - 1:end])
                     h = hashlib.sha256(body.encode("utf-8")).hexdigest()[:16]
-                    return {"test": test_id, "path": os.path.abspath(fpath),
+                    # Same convention as coveredFiles: repo-relative when possible, else
+                    # absolute — an absolute path for an in-repo test would bind the lock
+                    # to the machine/worktree that ran prove.
+                    abs_f = os.path.realpath(os.path.abspath(fpath))
+                    try:
+                        rel = os.path.relpath(abs_f, REPO_ROOT)
+                        stored_path = abs_f if rel.startswith("..") else rel
+                    except ValueError:
+                        stored_path = abs_f
+                    return {"test": test_id, "path": stored_path,
                             "startLine": start, "endLine": end, "hash": h}
     return None
 
@@ -835,6 +844,8 @@ def _compute_test_sources(test_ids, test_roots):
 def _test_source_hash_now(ts):
     """Recompute the hash of a recorded testSource's line range. Returns hash or None if gone."""
     path = ts["path"]
+    if not os.path.isabs(path):  # canonical form is repo-relative; absolute = legacy locks
+        path = os.path.join(REPO_ROOT, path)
     if not os.path.exists(path):
         return None
     with open(path, "r", encoding="utf-8", errors="replace") as fh:

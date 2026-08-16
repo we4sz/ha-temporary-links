@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.1.1 — 2026-08-16
+
+### Fixed
+- **Pre-upgrade links are migrated:** on startup every active link's automation is re-armed to
+  the current enforcement model, so links created by 1.0 (whose automations embedded their real
+  actions) stop double-executing and start obeying the usage allowance and validity window.
+- **Usage counting is race-proof end to end:** the tracked entity no longer writes a stale count
+  back over the atomic claim; an exhausted-but-active link (e.g. after its allowance is edited
+  down) is retired on the next trigger instead of lingering.
+- **Presses during add-on downtime are reconciled:** on reconnect the add-on compares each
+  automation's last-fired time with what it processed — a missed in-window press is counted and
+  audited (actions are deliberately never run late), so no use is silently forgotten.
+- **Out-of-window attempts are audited:** the automation now always reports the attempt (a
+  blocked press fires a distinct event) while the home still refuses the use itself.
+- **Share URLs always match the armed trigger:** the accepted gesture (one-tap GET vs confirm-page
+  POST) is recorded per link, so a configuration change can no longer hand out links the trigger
+  rejects with 405.
+- Actions written in Home Assistant's own automation syntax (`service`, top-level `entity_id`)
+  are normalized at creation instead of burning a use and failing at execution; invalid actions
+  are refused at creation with a clear message.
+- A failed trigger removal is retried by the sweep until it lands; a successful use is no longer
+  reported as an error just because cleanup failed; a store failure during creation no longer
+  orphans a live automation and cloudhook.
+- The shipped container now runs with the tuned SQLite settings (busy timeout, no pooling); the
+  confirm page survives truncated links; the action picker no longer discards a hand-edited
+  draft it cannot parse.
+
 ## 1.1.0 — 2026-07-02
 
 ### Fixed

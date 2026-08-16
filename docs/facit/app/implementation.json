@@ -1516,6 +1516,18 @@
       "notes": "Composition-time validity by domain filtering. Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Client-side picker JS (domain filtering) — needs a browser/e2e harness.]"
     },
     {
+      "acId": "E1.S7.A4",
+      "status": "implemented",
+      "evidence": [
+        {
+          "kind": "code",
+          "ref": "src/TemporaryLinks.Addon/Pages/Links/Create.cshtml",
+          "note": "pickerAdd Add-handler: JSON.parse failure on the current draft returns without touching ta.value; shows #pickerError inline near the picker instead of overwriting the textarea with just the picked action"
+        }
+      ],
+      "notes": "Draft-preserving picker Add handler. Client-side JS; not unit-provable in dotnet.  [Verified by inspection: Client-side picker JS — needs a browser/e2e harness.]"
+    },
+    {
       "acId": "E2.S5.A1",
       "status": "implemented",
       "evidence": [
@@ -1835,6 +1847,11 @@
           "kind": "code",
           "ref": "src/TemporaryLinks.Addon/Program.cs:98-103",
           "note": "Default Timeout=30 so a contended write waits instead of dropping the use"
+        },
+        {
+          "kind": "code",
+          "ref": "run.sh:25-27",
+          "note": "The shipped container exports the SAME tuned connection string (Default Timeout=30;Pooling=false) — production no longer bypasses the fallback in Program.cs"
         }
       ],
       "notes": "Config-level; not unit-proven.  [Verified by inspection: SQLite busy-timeout connection string — config, verified by inspection.]"
