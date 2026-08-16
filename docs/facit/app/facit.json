@@ -403,7 +403,7 @@
           "acceptanceCriteria": [
             {
               "id": "E2.S6.A1",
-              "text": "Given any link is shared, when its share URL is produced, then it points to a confirm page (shared or self-hosted) and the trigger accepts only the page's explicit confirmation gesture — no direct one-tap form of the link exists."
+              "text": "Given any link is shared, when its share URL is produced, then it points to a confirm page (shared or self-hosted) whose confirmation is a single, clearly visible button press, and the trigger accepts only that page's press — no direct one-tap form of the link exists."
             },
             {
               "id": "E2.S6.A2",
@@ -690,7 +690,7 @@
           "acceptanceCriteria": [
             {
               "id": "E7.S2.A1",
-              "text": "Given no bot-immune (POST plus confirm-page) path is available, when a link would otherwise be shared as a bare directly-triggerable URL, then the operator is warned that the link is preview-bot-consumable before it is shared."
+              "text": "Given no bot-immune (confirm-page) path is available, when a link would be created, then creation is refused with a clear explanation of what to enable (see E2.S6.A2) — an unenforceable, preview-bot-consumable link is never issued, warned about, or otherwise shared."
             }
           ]
         },
