@@ -61,3 +61,18 @@ python3 tools/facit/facit.py status       # spec coverage + proven ACs
 ```
 
 Development loop: stories → gap → build ([`CLAUDE.md`](CLAUDE.md)). The facit wins conflicts.
+
+### Integration tests (opt-in, needs Docker)
+
+The default `dotnet test` gate never touches Home Assistant — the suite in
+[`tests/TemporaryLinks.Addon.IntegrationTests/`](tests/TemporaryLinks.Addon.IntegrationTests/)
+self-skips unless `HA_TEST_URL` is set. To prove the add-on ↔ HA seam (automation
+accepted and loaded, validity window enforced by the home, confirm-page links POST-only,
+action-picker feed and service execution real) against a throwaway real HA container:
+
+```sh
+tests/integration/run-ha-tests.sh
+```
+
+The one seam it cannot reach locally is Nabu Casa (cloudhook creation + the remote-UI
+confirm page) — that still needs a one-time manual check on a cloud-connected instance.
