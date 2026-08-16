@@ -18,20 +18,26 @@ public class ExecuteLinkProofTests
         Assert.Empty(h.Db.LinkUsageAudits);
     }
 
-    // Proves app::E2.S2.A2 — exhausted link refused as already-used, audited as failure.
+    // Proves app::E2.S2.A2 — an exhausted link is refused as already-used and audited as a
+    // failure; a link at its allowance but still marked active is ALSO retired on the spot,
+    // trigger and all, instead of being left standing for the next attempt.
     [Fact]
     public async Task Exhausted_link_is_refused_as_already_used()
     {
         using var h = new LinkServiceHarness();
-        var link = await h.SeedLinkAsync(maxUses: 1, usageCount: 1);
+        var link = await h.SeedLinkAsync(maxUses: 1, usageCount: 1, status: LinkStatus.Active);
+        var webhookId = link.WebhookId;
 
         var result = await h.Service.ExecuteLinkAsync(link.Token, null, null);
 
         Assert.Equal(LinkExecutionStatus.AlreadyUsed, result.Status);
         Assert.Equal(1, link.UsageCount);
-        var audit = Assert.Single(await h.AuditsForAsync(link.Id));
-        Assert.Equal("ExecutionAttempt", audit.EventType);
-        Assert.False(audit.Success);
+        Assert.Equal(0, h.Ha.ExecutedActionsCount);
+        var audits = await h.AuditsForAsync(link.Id);
+        var attempt = Assert.Single(audits, a => a.EventType == "ExecutionAttempt");
+        Assert.False(attempt.Success);
+        Assert.Equal(LinkStatus.Used, link.Status);
+        Assert.Contains(webhookId, h.Ha.DeletedAutomations);
     }
 
     // Proves app::E2.S2.A3 — revoked link refused, audited as failure.
@@ -57,12 +63,13 @@ public class ExecuteLinkProofTests
         using var h = new LinkServiceHarness();
         var now = DateTimeOffset.UtcNow;
         var link = await h.SeedLinkAsync(validFrom: now.AddHours(-3), validUntil: now.AddHours(-1));
+        var webhookId = link.WebhookId;
 
         var result = await h.Service.ExecuteLinkAsync(link.Token, null, null);
 
         Assert.Equal(LinkExecutionStatus.Expired, result.Status);
         Assert.Equal(LinkStatus.Expired, link.Status);
-        Assert.Contains(link.WebhookId, h.Ha.DeletedAutomations);
+        Assert.Contains(webhookId, h.Ha.DeletedAutomations);
         var audits = await h.AuditsForAsync(link.Id);
         Assert.Single(audits, a => a.EventType == "ExecutionAttempt" && !a.Success);
         Assert.Single(audits, a => a.EventType == "WebhookDeleted");
@@ -108,17 +115,22 @@ public class ExecuteLinkProofTests
     {
         using var h = new LinkServiceHarness();
         var link = await h.SeedLinkAsync(maxUses: 1);
+        var webhookId = link.WebhookId;
 
         var result = await h.Service.ExecuteLinkAsync(link.Token, null, null);
 
         Assert.Equal(LinkExecutionStatus.Success, result.Status);
         Assert.Equal(LinkStatus.Used, link.Status);
-        Assert.Contains(link.WebhookId, h.Ha.DeletedAutomations);
+        Assert.Contains(webhookId, h.Ha.DeletedAutomations);
         var audits = await h.AuditsForAsync(link.Id);
         Assert.Single(audits, a => a.EventType == "WebhookDeleted");
+        // Confirmed removal clears the marker, so the sweep does not retry it.
+        Assert.Equal(string.Empty, link.WebhookId);
     }
 
-    // Proves app::E2.S3.A2 — trigger-removal failure: the use still counts and is audited.
+    // Proves app::E2.S3.A2 — trigger-removal failure: the use still counts, is audited, and
+    // is still reported as the SUCCESS it was; only the cleanup failed, and it is audited
+    // distinctly (and left standing for the sweep to retry).
     [Fact]
     public async Task Trigger_removal_failure_does_not_undo_the_use()
     {
@@ -128,12 +140,13 @@ public class ExecuteLinkProofTests
 
         var result = await h.Service.ExecuteLinkAsync(link.Token, null, null);
 
-        Assert.Equal(LinkExecutionStatus.Error, result.Status);
+        Assert.Equal(LinkExecutionStatus.Success, result.Status);
         Assert.Equal(1, link.UsageCount);
         Assert.Equal(LinkStatus.Used, link.Status);
         var audits = await h.AuditsForAsync(link.Id);
         Assert.Single(audits, a => a.EventType == "Executed" && a.Success);
-        Assert.Single(audits, a => a.EventType == "ExecutionException");
+        Assert.Single(audits, a => a.EventType == "WebhookDeleteFailed" && !a.Success);
+        Assert.False(string.IsNullOrEmpty(link.WebhookId));
     }
 
     // Proves app::E2.S3.A3 — a use below the allowance keeps the link active and hosted.

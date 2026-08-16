@@ -49,78 +49,25 @@ public class HomeAssistantService : IHomeAssistantService
         DateTimeOffset validUntil,
         CancellationToken cancellationToken = default)
     {
-        var webhookId = $"temp_link_{token}";
-        var automationId = $"temp_link_{token}";
+        var automationId = AutomationModel.WebhookIdFor(token);
 
-        // Parse custom actions from JSON
-        object customActions;
+        // Parse the link's actions purely to validate them here — the automation NEVER
+        // carries them. It only announces the attempt to the add-on, which runs the actions
+        // itself after atomically claiming a use (E7.S1), so the allowance binds the actions
+        // rather than being counted after the fact.
         try
         {
-            customActions = JsonSerializer.Deserialize<object>(actionsJson, _jsonOptions)
-                            ?? throw new InvalidOperationException("Actions JSON is null");
+            _ = JsonSerializer.Deserialize<object>(actionsJson, _jsonOptions)
+                ?? throw new InvalidOperationException("Actions JSON is null");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to parse actions JSON: {ActionsJson}", actionsJson);
+            _logger.LogError(ex, "Failed to parse actions JSON");
             throw new InvalidOperationException($"Invalid actions JSON: {ex.Message}");
         }
 
-        // The automation fires ONLY the tracking event — it never runs the link's real
-        // actions. The add-on runs them itself after atomically claiming a use (E7.S1), so
-        // the allowance binds the actions rather than being counted after the fact. The
-        // JSON was parsed above purely to validate it at creation time.
-        _ = customActions;
-        var actionsArray = new List<object>
-        {
-            new
-            {
-                @event = "temp_link_triggered",
-                event_data = new
-                {
-                    token,
-                    link_name = linkName,
-                    webhook_id = webhookId
-                }
-            }
-        };
-
-        // Create automation config. The condition makes the HOME enforce the validity
-        // window: outside it the automation refuses to run, whatever hits the webhook.
-        var windowGuard =
-            $"{{{{ as_datetime('{validFrom.UtcDateTime:yyyy-MM-dd'T'HH:mm:ss}+00:00') <= now() " +
-            $"and now() <= as_datetime('{validUntil.UtcDateTime:yyyy-MM-dd'T'HH:mm:ss}+00:00') }}}}";
-
-        var automation = new
-        {
-            id = automationId, // Include the ID in the payload
-            alias = $"Temp Link: {linkName}",
-            description = $"Webhook handler for temporary link: {linkName}. Valid from {validFrom:u} to {validUntil:u}",
-            trigger = new[]
-            {
-                new
-                {
-                    platform = "webhook",
-                    webhook_id = webhookId,
-                    // With a confirm page in play (shared or self-hosted), only the page's
-                    // explicit form POST fires the trigger — preview bots only ever GET.
-                    allowed_methods = string.IsNullOrWhiteSpace(_config.SharePageUrl) &&
-                                      string.IsNullOrWhiteSpace(_config.PublicUrl)
-                        ? new[] { "GET" }
-                        : new[] { "POST" },
-                    local_only = false
-                }
-            },
-            condition = new[]
-            {
-                new
-                {
-                    condition = "template",
-                    value_template = windowGuard
-                }
-            },
-            action = actionsArray, // Event + custom actions
-            mode = "single"
-        };
+        var automation = AutomationModel.BuildAutomation(
+            token, linkName, validFrom, validUntil, AutomationModel.AcceptsPost(_config));
 
         var content = new StringContent(
             JsonSerializer.Serialize(automation, _jsonOptions),
@@ -256,7 +203,7 @@ public class HomeAssistantService : IHomeAssistantService
         return result;
     }
 
-    public async Task DeleteWebhookAutomationAsync(
+    public async Task<bool> DeleteWebhookAutomationAsync(
         string automationId,
         CancellationToken cancellationToken = default)
     {
@@ -266,10 +213,76 @@ public class HomeAssistantService : IHomeAssistantService
             $"config/automation/config/{automationId}",
             cancellationToken);
 
-        if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // Already gone — the trigger is confirmed absent, nothing was removed now.
+            return false;
+        }
+
+        if (!response.IsSuccessStatusCode)
         {
             throw new InvalidOperationException($"Failed to delete webhook automation: {response.StatusCode}");
         }
+
+        return true;
+    }
+
+    public async Task<JsonElement?> TryGetAutomationConfigAsync(
+        string automationId,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync(
+            $"config/automation/config/{automationId}", cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"Failed to read automation {automationId}: {response.StatusCode}");
+        }
+
+        using var doc = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+        return doc.RootElement.Clone();
+    }
+
+    public async Task<IReadOnlyDictionary<string, DateTimeOffset>> GetAutomationLastTriggeredAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync("states", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+
+        var result = new Dictionary<string, DateTimeOffset>();
+        foreach (var state in doc.RootElement.EnumerateArray())
+        {
+            if (state.GetProperty("entity_id").GetString() is not { } entityId ||
+                !entityId.StartsWith("automation.", StringComparison.Ordinal) ||
+                !state.TryGetProperty("attributes", out var attributes) ||
+                attributes.ValueKind != JsonValueKind.Object ||
+                !attributes.TryGetProperty("id", out var id) ||
+                id.GetString() is not { Length: > 0 } automationId ||
+                !attributes.TryGetProperty("last_triggered", out var lastTriggered) ||
+                lastTriggered.ValueKind != JsonValueKind.String ||
+                !DateTimeOffset.TryParse(
+                    lastTriggered.GetString(),
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AdjustToUniversal |
+                    System.Globalization.DateTimeStyles.AssumeUniversal,
+                    out var fired))
+            {
+                continue;
+            }
+
+            result[automationId] = fired;
+        }
+
+        return result;
     }
 
     public async Task<CloudhookResult> CreateCloudhookAsync(
@@ -290,6 +303,24 @@ public class HomeAssistantService : IHomeAssistantService
         }
 
         throw new InvalidOperationException($"Failed to create cloudhook for webhook {webhookId}");
+    }
+
+    public async Task DeleteCloudhookAsync(
+        string webhookId,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Deleting cloudhook for webhook {WebhookId}", webhookId);
+
+        var result = await SendWebSocketCommandAsync<object>(
+            "cloud/cloudhook/delete",
+            new { webhook_id = webhookId },
+            cancellationToken);
+
+        if (result == null)
+        {
+            throw new InvalidOperationException(
+                $"Failed to delete cloudhook for webhook {webhookId}");
+        }
     }
 
     public async Task<string?> GetRemoteUiUrlAsync(CancellationToken cancellationToken = default)

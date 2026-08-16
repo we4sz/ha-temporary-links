@@ -115,6 +115,7 @@ builder.Services.AddScoped<ILinkService, LinkService>();
 // Background services
 builder.Services.AddHostedService<LinkExpirationService>();
 builder.Services.AddHostedService<HaEventListenerService>();
+builder.Services.AddHostedService<TriggerRearmService>();
 
 // Razor Pages
 var razorPages = builder.Services.AddRazorPages();

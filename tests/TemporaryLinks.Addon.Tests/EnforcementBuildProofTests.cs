@@ -40,8 +40,14 @@ public class EnforcementBuildProofTests
             r => r.Method == HttpMethod.Post && r.Path.Contains("config/automation/config/"));
         using var config = JsonDocument.Parse(post.Body!);
         var actions = config.RootElement.GetProperty("action");
+        // One action: a choose that announces either a use or a refusal — nothing else.
         Assert.Equal(1, actions.GetArrayLength());
-        Assert.Equal("temp_link_triggered", actions[0].GetProperty("event").GetString());
+        var choose = actions[0].GetProperty("choose");
+        Assert.Equal(1, choose.GetArrayLength());
+        Assert.Equal("temp_link_triggered",
+            choose[0].GetProperty("sequence")[0].GetProperty("event").GetString());
+        Assert.Equal("temp_link_blocked",
+            actions[0].GetProperty("default")[0].GetProperty("event").GetString());
         Assert.DoesNotContain("lock.unlock", post.Body);
     }
 

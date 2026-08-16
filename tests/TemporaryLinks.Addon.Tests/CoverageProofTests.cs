@@ -111,12 +111,13 @@ public class CoverageProofTests
         using var h = new LinkServiceHarness();
         var now = DateTimeOffset.UtcNow;
         var link = await h.SeedLinkAsync(validFrom: now.AddHours(-2), validUntil: now.AddHours(-1));
+        var webhookId = link.WebhookId;
 
         await h.Service.ExpireOldLinksAsync();
 
         var reloaded = await h.Service.GetLinkByIdAsync(link.Id);
         Assert.Equal(LinkStatus.Expired, reloaded!.Status);
-        Assert.Contains(link.WebhookId, h.Ha.DeletedAutomations);
+        Assert.Contains(webhookId, h.Ha.DeletedAutomations);
         Assert.Contains(reloaded.AuditEntries, a => a.EventType == "Expired");
     }
 

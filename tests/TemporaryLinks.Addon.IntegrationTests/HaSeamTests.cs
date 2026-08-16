@@ -49,19 +49,38 @@ public sealed class HaSeamTests(HaFixture ha)
         var service = ha.CreateService();
         var token = NewToken();
 
+        var validFrom = DateTimeOffset.UtcNow.AddHours(-1);
+        var validUntil = DateTimeOffset.UtcNow.AddHours(1);
         var automationId = await service.CreateWebhookAutomationAsync(
-            token, "Integration Test Link", TestActions,
-            DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow.AddHours(1));
+            token, "Integration Test Link", TestActions, validFrom, validUntil);
         try
         {
             var stored = await ha.TryGetAutomationConfigAsync(automationId);
             Assert.NotNull(stored);
-            // HA normalizes automation config to plural keys (triggers/conditions);
+            // HA normalizes automation config to plural keys (triggers/actions);
             // older versions echo back the singular ones we send.
             var trigger = PluralOrSingular(stored.Value, "triggers", "trigger")[0];
             Assert.Equal($"temp_link_{token}", trigger.GetProperty("webhook_id").GetString());
-            Assert.Equal("template", PluralOrSingular(stored.Value, "conditions", "condition")[0]
-                .GetProperty("condition").GetString());
+
+            // The window guard lives inside the automation's choose, and the fallback
+            // announces the refusal (E2.S2.A4/A5) rather than swallowing it.
+            var step = PluralOrSingular(stored.Value, "actions", "action")[0];
+            var inWindow = step.GetProperty("choose")[0];
+            Assert.Equal("template",
+                PluralOrSingular(inWindow, "conditions", "condition")[0]
+                    .GetProperty("condition").GetString());
+            Assert.Equal("temp_link_triggered",
+                inWindow.GetProperty("sequence")[0].GetProperty("event").GetString());
+            Assert.Equal("temp_link_blocked",
+                step.GetProperty("default")[0].GetProperty("event").GetString());
+
+            // The re-arm check must recognise what a REAL home stores back as current, or
+            // every boot would re-arm every link (E7.S7.A1).
+            Assert.True(AutomationModel.MatchesCurrentModel(
+                stored.Value,
+                $"temp_link_{token}",
+                AutomationModel.WindowTemplate(validFrom, validUntil),
+                acceptsPost: false));
 
             // Stored is not enough — HA must actually load it (a template syntax error
             // would surface here, not at the config POST).
@@ -103,7 +122,7 @@ public sealed class HaSeamTests(HaFixture ha)
     }
 
     [SkippableFact]
-    public async Task Outside_the_window_the_home_itself_blocks_the_trigger()
+    public async Task Outside_the_window_the_home_blocks_the_trigger_and_reports_the_refusal()
     {
         ha.SkipUnlessConfigured();
         var service = ha.CreateService();
@@ -115,13 +134,65 @@ public sealed class HaSeamTests(HaFixture ha)
         try
         {
             await ha.WaitUntilAutomationLoadedAsync(automationId, TimeSpan.FromSeconds(15));
-            await using var events = await ha.SubscribeAsync("temp_link_triggered");
+            await using var triggered = await ha.SubscribeAsync("temp_link_triggered");
+            await using var blocked = await ha.SubscribeAsync("temp_link_blocked");
 
             await ha.GetWebhookAsync($"temp_link_{token}");
 
-            var evt = await events.WaitForMatchAsync(
+            // The home refuses the use itself — no use is ever announced...
+            var useEvent = await triggered.WaitForMatchAsync(
                 e => e.GetProperty("token").GetString() == token, TimeSpan.FromSeconds(4));
-            Assert.Null(evt); // the condition refused it — enforced by the home, not by us
+            Assert.Null(useEvent);
+
+            // ...but the attempt still reaches the add-on, so the refusal can be audited.
+            var refusal = await blocked.WaitForMatchAsync(
+                e => e.GetProperty("token").GetString() == token, TimeSpan.FromSeconds(10));
+            Assert.NotNull(refusal);
+            Assert.Equal($"temp_link_{token}", refusal.Value.GetProperty("webhook_id").GetString());
+        }
+        finally
+        {
+            await service.DeleteWebhookAutomationAsync(automationId);
+        }
+    }
+
+    [SkippableFact]
+    public async Task The_home_reports_when_a_links_trigger_last_ran()
+    {
+        ha.SkipUnlessConfigured();
+        var service = ha.CreateService();
+        var token = NewToken();
+
+        var automationId = await service.CreateWebhookAutomationAsync(
+            token, "Last Triggered Link", TestActions,
+            DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow.AddHours(1));
+        try
+        {
+            await ha.WaitUntilAutomationLoadedAsync(automationId, TimeSpan.FromSeconds(15));
+            Assert.DoesNotContain(automationId, await service.GetAutomationLastTriggeredAsync());
+
+            var firedBefore = DateTimeOffset.UtcNow.AddSeconds(-5);
+            await using var events = await ha.SubscribeAsync("temp_link_triggered");
+            await ha.GetWebhookAsync($"temp_link_{token}");
+            await events.WaitForMatchAsync(
+                e => e.GetProperty("token").GetString() == token, TimeSpan.FromSeconds(10));
+
+            // What the offline reconciliation reads to spot a press it never saw (E7.S1.A3).
+            DateTimeOffset? lastTriggered = null;
+            for (var attempt = 0; attempt < 20 && lastTriggered is null; attempt++)
+            {
+                var all = await service.GetAutomationLastTriggeredAsync();
+                if (all.TryGetValue(automationId, out var fired))
+                {
+                    lastTriggered = fired;
+                    break;
+                }
+                await Task.Delay(250);
+            }
+
+            Assert.NotNull(lastTriggered);
+            Assert.True(lastTriggered > firedBefore,
+                $"last_triggered {lastTriggered} should be after {firedBefore}");
         }
         finally
         {

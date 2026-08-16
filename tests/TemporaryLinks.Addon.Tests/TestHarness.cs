@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -14,17 +15,28 @@ public sealed class FakeHomeAssistantService : IHomeAssistantService
     public List<string> CreatedAutomations { get; } = [];
     public List<(string AutomationId, DateTimeOffset ValidFrom, DateTimeOffset ValidUntil)> ArmedWindows { get; } = [];
     public List<string> DeletedAutomations { get; } = [];
+    public List<string> DeletedCloudhooks { get; } = [];
+    public List<string> ExecutedActions { get; } = [];
     private int _executedActions;
     public int ExecutedActionsCount => Volatile.Read(ref _executedActions);
     public Exception? ThrowOnDelete { get; set; }
     public Exception? ThrowOnCloudhook { get; set; }
     public Exception? ThrowOnExecuteActions { get; set; }
+    public Exception? ThrowOnCreateAutomation { get; set; }
+
+    /// <summary>What the home currently stores per automation id, for the re-arm check.
+    /// An id that is absent behaves like an automation the home does not have.</summary>
+    public Dictionary<string, string> StoredAutomations { get; } = [];
+
+    /// <summary>What the home reports as each automation's last run.</summary>
+    public Dictionary<string, DateTimeOffset> LastTriggered { get; } = [];
 
     public Task ExecuteActionsAsync(
         string actionsJson, CancellationToken cancellationToken = default)
     {
         if (ThrowOnExecuteActions != null)
             throw ThrowOnExecuteActions;
+        ExecutedActions.Add(actionsJson);
         Interlocked.Increment(ref _executedActions);
         return Task.CompletedTask;
     }
@@ -34,20 +46,42 @@ public sealed class FakeHomeAssistantService : IHomeAssistantService
         DateTimeOffset validFrom, DateTimeOffset validUntil,
         CancellationToken cancellationToken = default)
     {
-        var id = $"temp_link_{token}";
+        if (ThrowOnCreateAutomation != null)
+            throw ThrowOnCreateAutomation;
+        var id = AutomationModel.WebhookIdFor(token);
         CreatedAutomations.Add(id);
         ArmedWindows.Add((id, validFrom, validUntil));
+        StoredAutomations[id] = JsonSerializer.Serialize(
+            AutomationModel.BuildAutomation(token, linkName, validFrom, validUntil, AcceptsPost));
         return Task.FromResult(id);
     }
 
-    public Task DeleteWebhookAutomationAsync(
+    /// <summary>The sharing mode this fake home arms new triggers with.</summary>
+    public bool AcceptsPost { get; set; }
+
+    public Task<bool> DeleteWebhookAutomationAsync(
         string automationId, CancellationToken cancellationToken = default)
     {
         if (ThrowOnDelete != null)
             throw ThrowOnDelete;
         DeletedAutomations.Add(automationId);
-        return Task.CompletedTask;
+        StoredAutomations.Remove(automationId);
+        return Task.FromResult(true);
     }
+
+    public Task<JsonElement?> TryGetAutomationConfigAsync(
+        string automationId, CancellationToken cancellationToken = default)
+    {
+        if (!StoredAutomations.TryGetValue(automationId, out var json))
+            return Task.FromResult<JsonElement?>(null);
+        return Task.FromResult<JsonElement?>(
+            JsonDocument.Parse(json).RootElement.Clone());
+    }
+
+    public Task<IReadOnlyDictionary<string, DateTimeOffset>> GetAutomationLastTriggeredAsync(
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyDictionary<string, DateTimeOffset>>(
+            new Dictionary<string, DateTimeOffset>(LastTriggered));
 
     public Task<CloudhookResult> CreateCloudhookAsync(
         string webhookId, CancellationToken cancellationToken = default)
@@ -56,6 +90,13 @@ public sealed class FakeHomeAssistantService : IHomeAssistantService
             throw ThrowOnCloudhook;
         return Task.FromResult(new CloudhookResult(
             webhookId, $"cloud_{webhookId}", $"https://hooks.nabu.casa/{webhookId}"));
+    }
+
+    public Task DeleteCloudhookAsync(
+        string webhookId, CancellationToken cancellationToken = default)
+    {
+        DeletedCloudhooks.Add(webhookId);
+        return Task.CompletedTask;
     }
 
     public string? RemoteUiUrl { get; set; }
@@ -110,7 +151,8 @@ public sealed class LinkServiceHarness : IDisposable
         string defaultTemplate =
             "Your temporary access link: {link}\nValid from {start_time} to {end_time}",
         string? publicUrl = null,
-        string? sharePageUrl = null)
+        string? sharePageUrl = null,
+        ITokenGenerator? tokenGenerator = null)
     {
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();
@@ -128,9 +170,10 @@ public sealed class LinkServiceHarness : IDisposable
             PublicUrl = publicUrl,
             SharePageUrl = sharePageUrl,
         };
+        Ha.AcceptsPost = AutomationModel.AcceptsPost(_config);
 
         Service = new LinkService(
-            Db, new TokenGenerator(), Twilio, Ha, Options.Create(_config),
+            Db, tokenGenerator ?? new TokenGenerator(), Twilio, Ha, Options.Create(_config),
             NullLogger<LinkService>.Instance);
     }
 
@@ -141,12 +184,17 @@ public sealed class LinkServiceHarness : IDisposable
         int usageCount = 0,
         LinkStatus status = LinkStatus.Active,
         string? customMessage = null,
-        string? recipientPhone = "+15551234567")
+        string? recipientPhone = "+15551234567",
+        bool? triggerAcceptsPost = null,
+        DateTimeOffset? lastTriggerProcessedAt = null,
+        string? webhookId = null,
+        bool armInFakeHome = false)
     {
         var now = DateTimeOffset.UtcNow;
+        var token = new TokenGenerator().GenerateSecureToken();
         var link = new TemporaryLink
         {
-            Token = new TokenGenerator().GenerateSecureToken(),
+            Token = token,
             Name = "Test link",
             Actions = "[]",
             ValidFrom = validFrom ?? now.AddHours(-1),
@@ -157,12 +205,24 @@ public sealed class LinkServiceHarness : IDisposable
             CustomMessage = customMessage,
             CreatedBy = "test",
             Status = status,
-            WebhookId = "temp_link_test",
+            WebhookId = webhookId ?? AutomationModel.WebhookIdFor(token),
             CloudhookId = "cloud_test",
             CloudhookUrl = "https://hooks.nabu.casa/temp_link_test",
+            TriggerAcceptsPost = triggerAcceptsPost,
+            LastTriggerProcessedAt = lastTriggerProcessedAt,
         };
         Db.TemporaryLinks.Add(link);
         await Db.SaveChangesAsync();
+
+        if (armInFakeHome)
+        {
+            Ha.StoredAutomations[link.WebhookId] = JsonSerializer.Serialize(
+                AutomationModel.BuildAutomation(
+                    link.Token, link.Name, link.ValidFrom, link.ValidUntil, Ha.AcceptsPost));
+            Ha.CreatedAutomations.Clear();
+            Ha.ArmedWindows.Clear();
+        }
+
         return link;
     }
 
